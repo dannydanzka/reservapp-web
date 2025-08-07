@@ -1,0 +1,45 @@
+<svg width="300" height="600" viewBox="0 0 300 600" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Phone outline -->
+  <rect x="0" y="0" width="300" height="600" rx="40" fill="#1F2937" />
+  <rect x="10" y="40" width="280" height="520" rx="30" fill="#FFFFFF" />
+  
+  <!-- Status bar -->
+  <rect x="20" y="50" width="260" height="30" fill="#F3F4F6" rx="15" />
+  <text x="30" y="68" font-family="Arial, sans-serif" font-size="12" fill="#6B7280">9:41 AM</text>
+  <text x="250" y="68" font-family="Arial, sans-serif" font-size="12" fill="#6B7280" text-anchor="end">100%</text>
+  
+  <!-- Header -->
+  <rect x="20" y="90" width="260" height="60" fill="#8B5CF6" rx="10" />
+  <text x="150" y="115" font-family="Arial, sans-serif" font-size="16" fill="#FFFFFF" font-weight="bold" text-anchor="middle">ReservApp</text>
+  <text x="150" y="135" font-family="Arial, sans-serif" font-size="12" fill="#FFFFFF" opacity="0.8" text-anchor="middle">Servicios Premium</text>
+  
+  <!-- Service cards -->
+  <rect x="30" y="170" width="240" height="80" fill="#F97316" rx="15" opacity="0.9" />
+  <text x="50" y="195" font-family="Arial, sans-serif" font-size="14" fill="#FFFFFF" font-weight="bold">🏨 Alojamiento</text>
+  <text x="50" y="215" font-family="Arial, sans-serif" font-size="10" fill="#FFFFFF" opacity="0.8">Hoteles y venues únicos</text>
+  <text x="50" y="235" font-family="Arial, sans-serif" font-size="10" fill="#FFFFFF" opacity="0.8">Reservación instantánea</text>
+  
+  <rect x="30" y="270" width="240" height="80" fill="#10B981" rx="15" opacity="0.9" />
+  <text x="50" y="295" font-family="Arial, sans-serif" font-size="14" fill="#FFFFFF" font-weight="bold">🍽️ Gastronomía</text>
+  <text x="50" y="315" font-family="Arial, sans-serif" font-size="10" fill="#FFFFFF" opacity="0.8">Restaurantes premium</text>
+  <text x="50" y="335" font-family="Arial, sans-serif" font-size="10" fill="#FFFFFF" opacity="0.8">Mesa garantizada</text>
+  
+  <rect x="30" y="370" width="240" height="80" fill="#EC4899" rx="15" opacity="0.9" />
+  <text x="50" y="395" font-family="Arial, sans-serif" font-size="14" fill="#FFFFFF" font-weight="bold">💆 Spa &amp; Belleza</text>
+  <text x="50" y="415" font-family="Arial, sans-serif" font-size="10" fill="#FFFFFF" opacity="0.8">Relajación total</text>
+  <text x="50" y="435" font-family="Arial, sans-serif" font-size="10" fill="#FFFFFF" opacity="0.8">Cita confirmada</text>
+  
+  <!-- Bottom navigation -->
+  <rect x="20" y="500" width="260" height="60" fill="#F9FAFB" rx="10" />
+  <circle cx="60" cy="530" r="12" fill="#8B5CF6" />
+  <text x="60" y="535" font-family="Arial, sans-serif" font-size="10" fill="#FFFFFF" text-anchor="middle">🏠</text>
+  <circle cx="120" cy="530" r="12" fill="#E5E7EB" />
+  <text x="120" y="535" font-family="Arial, sans-serif" font-size="10" fill="#6B7280" text-anchor="middle">🔍</text>
+  <circle cx="180" cy="530" r="12" fill="#E5E7EB" />
+  <text x="180" y="535" font-family="Arial, sans-serif" font-size="10" fill="#6B7280" text-anchor="middle">💳</text>
+  <circle cx="240" cy="530" r="12" fill="#E5E7EB" />
+  <text x="240" y="535" font-family="Arial, sans-serif" font-size="10" fill="#6B7280" text-anchor="middle">👤</text>
+  
+  <!-- Home indicator -->
+  <rect x="130" y="580" width="40" height="4" rx="2" fill="#D1D5DB" />
+</svg>

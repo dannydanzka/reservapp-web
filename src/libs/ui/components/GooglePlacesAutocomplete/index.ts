@@ -1,0 +1,1 @@
+export { GooglePlacesAutocomplete } from './GooglePlacesAutocomplete';

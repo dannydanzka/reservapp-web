@@ -1,0 +1,1 @@
+export { StripePaymentForm } from './StripePaymentForm';

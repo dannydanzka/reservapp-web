@@ -1,0 +1,198 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+// User Management
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  password  String
+  firstName String
+  lastName  String
+  phone     String?
+  isActive  Boolean  @default(true)
+  role      UserRole @default(USER)
+  stripeCustomerId String? @unique
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  reservations Reservation[]
+  payments     Payment[]
+
+  @@map("users")
+}
+
+enum UserRole {
+  USER
+  EMPLOYEE
+  MANAGER
+  ADMIN
+}
+
+// Venue Management
+model Venue {
+  id          String     @id @default(cuid())
+  name        String
+  description String?    @db.Text
+  category    VenueType
+  address     String
+  city        String
+  state       String     @default("Estado")
+  country     String     @default("México")
+  zipCode     String?
+  phone       String?
+  email       String?
+  website     String?
+  latitude    Decimal?   @db.Decimal(10, 8)
+  longitude   Decimal?   @db.Decimal(11, 8)
+  rating      Decimal?   @db.Decimal(2, 1)
+  checkInTime String?    @default("15:00") // For accommodation venues
+  checkOutTime String?   @default("11:00") // For accommodation venues
+  isActive    Boolean    @default(true)
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+
+  // Relations
+  services     Service[]
+  reservations Reservation[]
+
+  @@map("venues")
+}
+
+enum VenueType {
+  ACCOMMODATION
+  RESTAURANT
+  SPA
+  TOUR_OPERATOR
+  EVENT_CENTER
+  ENTERTAINMENT
+}
+
+// Service Management
+model Service {
+  id               String      @id @default(cuid())
+  name             String
+  description      String?     @db.Text
+  category         ServiceType
+  subcategory      String?
+  price            Decimal     @db.Decimal(10, 2)
+  currency         String      @default("MXN")
+  duration         Int?        // Duration in minutes
+  capacity         Int         @default(1)
+  isActive         Boolean     @default(true)
+  requiresApproval Boolean     @default(false)
+  cancellationPolicy String?   @db.Text
+  images           Json?       // Array of image URLs
+  amenities        Json?       // Array of amenities/features
+  availability     Json?       // Availability schedule
+  metadata         Json?       // Additional flexible data
+  createdAt        DateTime    @default(now())
+  updatedAt        DateTime    @updatedAt
+
+  // Relations
+  venue        Venue         @relation(fields: [venueId], references: [id], onDelete: Cascade)
+  venueId      String
+  reservations Reservation[]
+
+  @@map("services")
+}
+
+enum ServiceType {
+  ACCOMMODATION
+  DINING
+  SPA_WELLNESS
+  TOUR_EXPERIENCE
+  EVENT_MEETING
+  TRANSPORTATION
+  ENTERTAINMENT
+}
+
+// Reservation Management
+model Reservation {
+  id             String            @id @default(cuid())
+  confirmationId String            @unique @default(cuid())
+  status         ReservationStatus @default(PENDING)
+  checkInDate    DateTime
+  checkOutDate   DateTime
+  guests         Int               @default(1)
+  totalAmount    Decimal           @db.Decimal(10, 2)
+  currency       String            @default("MXN")
+  notes          String?           @db.Text
+  specialRequests String?          @db.Text
+  metadata       Json?             // Flexible additional data
+  createdAt      DateTime          @default(now())
+  updatedAt      DateTime          @updatedAt
+
+  // Relations
+  user      User      @relation(fields: [userId], references: [id])
+  userId    String
+  venue     Venue     @relation(fields: [venueId], references: [id])
+  venueId   String
+  service   Service   @relation(fields: [serviceId], references: [id])
+  serviceId String
+  payments  Payment[]
+
+  @@map("reservations")
+}
+
+enum ReservationStatus {
+  PENDING
+  CONFIRMED
+  CHECKED_IN
+  CHECKED_OUT
+  CANCELLED
+  NO_SHOW
+}
+
+// Payment Management
+model Payment {
+  id                String        @id @default(cuid())
+  stripePaymentId   String?       @unique
+  amount            Decimal       @db.Decimal(10, 2)
+  currency          String        @default("MXN")
+  status            PaymentStatus @default(PENDING)
+  paymentMethod     String?
+  transactionDate   DateTime?
+  description       String?
+  metadata          Json?
+  createdAt         DateTime      @default(now())
+  updatedAt         DateTime      @updatedAt
+
+  // Relations
+  user          User        @relation(fields: [userId], references: [id])
+  userId        String
+  reservation   Reservation @relation(fields: [reservationId], references: [id])
+  reservationId String
+
+  @@map("payments")
+}
+
+enum PaymentStatus {
+  PENDING
+  PROCESSING
+  COMPLETED
+  FAILED
+  CANCELLED
+  REFUNDED
+}
+
+// System Configuration
+model SystemConfig {
+  id        String   @id @default(cuid())
+  key       String   @unique
+  value     Json
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("system_config")
+}

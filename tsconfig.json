@@ -1,0 +1,110 @@
+{
+  "compilerOptions": {
+    "lib": [
+      "dom",
+      "dom.iterable",
+      "es6"
+    ],
+    "allowJs": true,
+    "skipLibCheck": true,
+    "strict": true,
+    "noEmit": true,
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
+    "module": "esnext",
+    "moduleResolution": "bundler",
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "jsx": "preserve",
+    "incremental": true,
+    "verbatimModuleSyntax": false,
+    "plugins": [
+      {
+        "name": "next"
+      }
+    ],
+    "baseUrl": ".",
+    "paths": {
+      "@/*": [
+        "./src/*"
+      ],
+      "@app/*": [
+        "./src/app/*"
+      ],
+      "@modules/*": [
+        "./src/modules/*"
+      ],
+      "@libs/*": [
+        "./src/libs/*"
+      ],
+      "@core": [
+        "./src/libs/core"
+      ],
+      "@core/*": [
+        "./src/libs/core/*"
+      ],
+      "@data": [
+        "./src/libs/data"
+      ],
+      "@data/*": [
+        "./src/libs/data/*"
+      ],
+      "@domain": [
+        "./src/libs/domain"
+      ],
+      "@domain/*": [
+        "./src/libs/domain/*"
+      ],
+      "@presentation": [
+        "./src/libs/presentation"
+      ],
+      "@presentation/*": [
+        "./src/libs/presentation/*"
+      ],
+      "@services": [
+        "./src/libs/services"
+      ],
+      "@services/*": [
+        "./src/libs/services/*"
+      ],
+      "@ui": [
+        "./src/libs/ui"
+      ],
+      "@ui/*": [
+        "./src/libs/ui/*"
+      ],
+      "@types": [
+        "./src/libs/types"
+      ],
+      "@types/*": [
+        "./src/libs/types/*"
+      ],
+      "@api/*": [
+        "./src/app/api/*"
+      ],
+      "@mod-auth/*": [
+        "./src/modules/mod-auth/*"
+      ],
+      "@mod-admin/*": [
+        "./src/modules/mod-admin/*"
+      ],
+      "@mod-landing/*": [
+        "./src/modules/mod-landing/*"
+      ]
+    },
+    "target": "ES2017",
+    "types": [
+      "@testing-library/jest-dom",
+      "jest"
+    ]
+  },
+  "include": [
+    "**/*.ts",
+    "**/*.tsx",
+    "next-env.d.ts",
+    ".next/types/**/*.ts"
+  ],
+  "exclude": [
+    "node_modules"
+  ]
+}

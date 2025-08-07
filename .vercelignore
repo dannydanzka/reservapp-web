@@ -1,0 +1,48 @@
+# Vercel ignore patterns
+
+# Development files
+.env.local
+.env.development
+.env.test
+
+# Build artifacts
+.next/
+dist/
+out/
+build/
+
+# Dependencies
+node_modules/
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+logs/
+
+# Test files
+coverage/
+.nyc_output/
+__tests__/__snapshots__/
+
+# Documentation
+docs/
+*.md
+!README.md
+
+# Git
+.git/
+.gitignore
+
+# Package manager
+.pnp
+.pnp.js
+yarn-error.log
