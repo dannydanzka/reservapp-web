@@ -1,4 +1,4 @@
-import { RegisterPage } from '@/modules/mod-auth/presentation/components/RegisterPage';
+import { RegisterPage } from '@mod-auth/presentation/components/RegisterPage';
 
 /**
  * Registration page route.

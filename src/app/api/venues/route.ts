@@ -1,117 +1,148 @@
 import { NextRequest, NextResponse } from 'next/server';
+import jwt from 'jsonwebtoken';
 
-import { Prisma, VenueType } from '@prisma/client';
-import { VenueFilters, VenueRepository } from '@/libs/data/repositories/VenueRepository';
+import { PrismaClient } from '@prisma/client';
 
-const venueRepository = new VenueRepository();
+const prisma = new PrismaClient();
 
+/**
+ * Get venues
+ */
 export async function GET(request: NextRequest) {
   try {
+    // Get query parameters
     const { searchParams } = new URL(request.url);
+    const page = parseInt(searchParams.get('page') || '1');
+    const limit = parseInt(searchParams.get('limit') || '10');
+    const search = searchParams.get('search');
+    const category = searchParams.get('category');
 
-    const filters: VenueFilters = {};
-
-    if (searchParams.get('category')) {
-      filters.category = searchParams.get('category') as VenueType;
+    // Build where clause
+    const where: any = {};
+    if (search) {
+      where.OR = [
+        { name: { contains: search, mode: 'insensitive' } },
+        { description: { contains: search, mode: 'insensitive' } },
+      ];
+    }
+    if (category) {
+      where.category = category;
     }
 
-    if (searchParams.get('search')) {
-      filters.search = searchParams.get('search')!;
-    }
-
-    if (searchParams.get('city')) {
-      filters.city = searchParams.get('city')!;
-    }
-
-    if (searchParams.get('rating')) {
-      filters.rating = parseFloat(searchParams.get('rating')!);
-    }
-
-    if (searchParams.get('isActive')) {
-      filters.isActive = searchParams.get('isActive') === 'true';
-    }
-
-    if (searchParams.get('minPrice') || searchParams.get('maxPrice')) {
-      filters.priceRange = {
-        max: searchParams.get('maxPrice') ? parseFloat(searchParams.get('maxPrice')!) : 999999,
-        min: searchParams.get('minPrice') ? parseFloat(searchParams.get('minPrice')!) : 0,
-      };
-    }
-
-    const venues = await venueRepository.findAll(filters);
-
-    // Transform venues to ensure proper data types for JSON serialization
-    const transformedVenues = venues.map((venue) => ({
-      ...venue,
-      latitude: venue.latitude ? Number(venue.latitude) : undefined,
-      longitude: venue.longitude ? Number(venue.longitude) : undefined,
-      rating: venue.rating ? Number(venue.rating) : undefined,
-      services: venue.services.map((service) => ({
-        ...service,
-        price: Number(service.price),
-      })),
-    }));
+    // Get venues
+    const [venues, total] = await Promise.all([
+      prisma.venue.findMany({
+        include: {
+          services: {
+            select: {
+              duration: true,
+              id: true,
+              name: true,
+              price: true,
+            },
+          },
+        },
+        orderBy: { createdAt: 'desc' },
+        skip: (page - 1) * limit,
+        take: limit,
+        where,
+      }),
+      prisma.venue.count({ where }),
+    ]);
 
     return NextResponse.json({
-      data: transformedVenues,
-      message: 'Venues retrieved successfully',
+      data: venues,
+      pagination: {
+        limit,
+        page,
+        pages: Math.ceil(total / limit),
+        total,
+      },
       success: true,
-      timestamp: new Date().toISOString(),
     });
   } catch (error) {
-    console.error('Error fetching venues:', error);
+    console.error('Get venues error:', error);
     return NextResponse.json(
-      {
-        error: error instanceof Error ? error.message : 'Unknown error',
-        message: 'Error fetching venues',
-        success: false,
-        timestamp: new Date().toISOString(),
-      },
+      { message: 'Error interno del servidor', success: false },
       { status: 500 }
     );
+  } finally {
+    await prisma.$disconnect();
   }
 }
 
+/**
+ * Create venue (Admin only)
+ */
 export async function POST(request: NextRequest) {
   try {
+    // Get auth token
+    const authHeader = request.headers.get('authorization');
+    if (!authHeader?.startsWith('Bearer ')) {
+      return NextResponse.json(
+        { message: 'Token de autorización requerido', success: false },
+        { status: 401 }
+      );
+    }
+
+    const token = authHeader.substring(7);
+    const decoded = jwt.verify(token, process.env.JWT_SECRET || 'fallback-secret') as any;
+
+    // Check if user is admin
+    if (decoded.role !== 'ADMIN') {
+      return NextResponse.json(
+        { message: 'Acceso denegado. Se requiere rol de administrador', success: false },
+        { status: 403 }
+      );
+    }
+
     const body = await request.json();
+    const { address, category, city, description, email, name, phone } = body;
 
-    const venueData: Prisma.VenueCreateInput = {
-      address: body.address,
-      category: body.category,
-      city: body.city || '',
-      description: body.description,
-      email: body.email,
-      isActive: body.isActive ?? true,
-      latitude: body.latitude ? new Prisma.Decimal(body.latitude) : undefined,
-      longitude: body.longitude ? new Prisma.Decimal(body.longitude) : undefined,
-      name: body.name,
-      phone: body.phone,
-      rating: body.rating ? new Prisma.Decimal(body.rating) : undefined,
-      website: body.website,
-    };
+    // Validate required fields
+    if (!name || !category || !address || !city) {
+      return NextResponse.json(
+        { message: 'Nombre, categoría, dirección y ciudad son requeridos', success: false },
+        { status: 400 }
+      );
+    }
 
-    const venue = await venueRepository.create(venueData);
-
-    return NextResponse.json(
-      {
-        data: venue,
-        message: 'Venue created successfully',
-        success: true,
-        timestamp: new Date().toISOString(),
+    // Create venue
+    const venue = await prisma.venue.create({
+      data: {
+        address,
+        category,
+        city,
+        description,
+        email,
+        isActive: true,
+        name,
+        phone,
       },
-      { status: 201 }
-    );
+      include: {
+        services: {
+          select: {
+            duration: true,
+            id: true,
+            name: true,
+            price: true,
+          },
+        },
+      },
+    });
+
+    return NextResponse.json({
+      data: venue,
+      message: 'Venue creado exitosamente',
+      success: true,
+    });
   } catch (error) {
-    console.error('Error creating venue:', error);
+    console.error('Create venue error:', error);
     return NextResponse.json(
-      {
-        error: error instanceof Error ? error.message : 'Unknown error',
-        message: 'Error creating venue',
-        success: false,
-        timestamp: new Date().toISOString(),
-      },
+      { message: 'Error interno del servidor', success: false },
       { status: 500 }
     );
+  } finally {
+    await prisma.$disconnect();
   }
 }

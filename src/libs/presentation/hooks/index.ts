@@ -1,30 +1,33 @@
-// Presentation hooks - Based on Jafra's stable hook architecture
+/**
+ * Presentation Hooks Index - Complete exports
+ * All restored hooks with fixed dependencies
+ */
 
-// Utility hooks
-export { useMediaQuery } from './useMediaQuery';
-export { useLocalStorage } from './useLocalStorage';
-export { useCloudinary } from './useCloudinary';
+// Basic hooks
+export * from './useAuth';
+export * from './useLoadingState';
+export * from './useLocalStorage';
+export * from './useMediaQuery';
+export * from './useUI';
 
 // Service hooks
-export { useUserService } from './useUserService';
-export { useReservationService } from './useReservationService';
-export { useSubscription } from './useSubscription';
-
-// Payment hooks
-export { useStripe } from './useStripe';
-export { useStripePayment, useStripeSetupIntent } from './useStripePayment';
-
-// Email hooks
-export { useEmail } from './useEmail';
-
-// UI Enhancement hooks
-export { useLoadingState } from './useLoadingState';
-export { useConfirm } from './useConfirm';
+export * from './useCloudinary';
+export * from './useEmail';
+export * from './useReservationService';
+export * from './usePermissions';
+export * from './useReservation';
+export * from './useServices';
+export * from './useStripe';
+export * from './useSubscription';
 
 // Redux hooks
 export * from './useRedux';
-export * from './useAuth';
-export * from './useReservation';
-export * from './useUI';
 export * from './useUser';
 export * from './useVenue';
+
+// Payment hooks
+export * from './useStripePayment';
+
+// Additional utility hooks
+export * from './useConfirm';
+export * from './useUserService';

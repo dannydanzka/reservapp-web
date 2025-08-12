@@ -1,4 +1,4 @@
-import { ReservationsManagement } from '@/modules/mod-admin/presentation/components/ReservationsManagement';
+import { ReservationsManagementNew as ReservationsManagement } from '@mod-admin/presentation/components';
 
 /**
  * Reservations management page.

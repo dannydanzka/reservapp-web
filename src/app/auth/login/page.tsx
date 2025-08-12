@@ -1,4 +1,4 @@
-import { LoginPage } from '@/modules/mod-auth/presentation/components/LoginPage';
+import { LoginPage } from '@mod-auth/presentation/components/LoginPage';
 
 /**
  * Login page route.

@@ -60,11 +60,24 @@ export default [
       '**/lib/**',
       '**/coverage/**',
       '**/storybook-static/**',
+      '**/config/**',  // Ignore config directory
+      '__disabled__/**',  // Ignore disabled files
+      '__disabled__tests__/**',  // Ignore disabled test files
       'eslint.config.js',
       '.stylelintrc.js',
-      'scripts/eslint-rules/**',
+      'scripts/**/*.cjs',  // Ignore CommonJS scripts - avoid conflicts
+      'scripts/eslint-rules/**',  // Ignore ESLint custom rules - avoid parsing conflicts
       'jest.setup.js',
       'jest.config.cjs',
+      'playwright.config.ts',
+      'prisma/seed.ts',
+      'src/__tests__/__mocks__/**',  // Ignore mock files
+      'src/__tests__/examples/**',  // Ignore example test files
+      'src/__tests__/__disabled__/**',  // Ignore disabled test files
+      'src/__disabled__/**',  // Ignore disabled source files
+      'src/libs/services/__tests__/setup/**',  // Ignore service test setup files
+      '**/__tests__/**/*.mock.js',  // Ignore mock files
+      '**/__tests__/**/setup/**/*.js',  // Ignore test setup files
     ],
   },
   js.configs.recommended,
@@ -171,12 +184,13 @@ export default [
       '@typescript-eslint/consistent-type-definitions': ['warn', 'interface'],
       '@typescript-eslint/explicit-function-return-type': 'off',
       '@typescript-eslint/explicit-module-boundary-types': 'off',
-      // TypeScript preferences - reduce false positives
+      // TypeScript rules - pragmatic approach to reduce friction
       '@typescript-eslint/no-explicit-any': [
         'warn',
         {
           fixToUnknown: false,
           ignoreRestArgs: true,
+          // More permissive in certain contexts
         },
       ],
       // Unused variables - better handling of intentionally unused
@@ -193,9 +207,23 @@ export default [
       '@typescript-eslint/prefer-nullish-coalescing': 'off',
       '@typescript-eslint/prefer-optional-chain': 'warn',
       '@typescript-eslint/no-empty-object-type': 'warn',
-      'no-unused-vars': 'off',
-      'no-use-before-define': 'off',
+      // Disable base ESLint rules that are covered by TypeScript equivalents
+      'no-unused-vars': 'off', // Handled by @typescript-eslint/no-unused-vars
+      'no-use-before-define': 'off', // Handled by @typescript-eslint/no-use-before-define
+      'no-shadow': 'off', // Handled by @typescript-eslint/no-shadow
+      'no-undef': 'off', // TypeScript handles this better
+      'no-redeclare': 'off', // Handled by @typescript-eslint/no-redeclare
+      
+      // TypeScript-specific rules (replacing ESLint equivalents)
       '@typescript-eslint/no-use-before-define': 'warn',
+      '@typescript-eslint/no-shadow': 'warn', 
+      '@typescript-eslint/no-redeclare': 'warn',
+      
+      // Additional TypeScript rules for better code quality
+      '@typescript-eslint/no-non-null-assertion': 'warn',
+      '@typescript-eslint/prefer-as-const': 'warn',
+      '@typescript-eslint/prefer-readonly': 'warn',
+      '@typescript-eslint/no-unnecessary-type-assertion': 'warn',
       'consistent-return': 'warn',
       'custom/import-order': [
         'warn',
@@ -234,25 +262,36 @@ export default [
       eqeqeq: 'warn',
       'func-names': 'warn',
       'global-require': 'warn',
-      'import/default': 'warn',
-      'import/named': 'warn',
-      'import/namespace': 'warn',
-      'import/no-cycle': 'warn',
+      // Import rules optimized for TypeScript
+      'import/default': 'off', // TypeScript handles this
+      'import/named': 'off', // TypeScript handles this
+      'import/namespace': 'off', // TypeScript handles this
+      'import/no-cycle': 'warn', // Keep for circular dependencies
       'import/no-dynamic-require': 'warn',
       'import/no-extraneous-dependencies': 'warn',
       'import/no-mutable-exports': 'warn',
-      'import/no-named-as-default': 'warn',
+      'import/no-named-as-default': 'off', // Often false positives with TypeScript
       'import/no-namespace': 'off',
-      'import/no-unused-modules': 'off',
-      'import/order': 'off',
+      'import/no-unused-modules': 'off', // TypeScript compiler handles this
+      'import/order': 'off', // Using custom import-order rule instead
       'import/prefer-default-export': 'off',
       'import/no-default-export': 'off',
+      'import/no-unresolved': 'off', // TypeScript handles this better
       'jest/expect-expect': 'warn',
       'jest/no-commented-out-tests': 'warn',
       'jest/no-conditional-expect': 'warn',
       'jest/no-disabled-tests': 'warn',
       'jsx-a11y/anchor-is-valid': 'warn',
       'jsx-a11y/control-has-associated-label': 'warn',
+      'jsx-a11y/label-has-associated-control': 'warn',
+      'jsx-a11y/click-events-have-key-events': 'warn',
+      'jsx-a11y/no-static-element-interactions': 'warn',
+      'jsx-a11y/no-noninteractive-element-interactions': 'warn',
+      // Testing library rules
+      'testing-library/prefer-screen-queries': 'warn',
+      'testing-library/no-wait-for-multiple-assertions': 'warn',
+      'testing-library/no-wait-for-side-effects': 'warn',
+      'testing-library/no-node-access': 'warn',
       // Disable no-alert - allow for development and debugging
       'no-alert': 'off',
       'no-await-in-loop': 'warn',
@@ -293,6 +332,10 @@ export default [
           selector: 'ExportDefaultDeclaration',
         },
       ],
+      'no-useless-escape': 'warn',
+      'sort-keys-fix/sort-keys-fix': 'warn',
+      'sort-destructure-keys/sort-destructure-keys': 'warn',
+      'no-case-declarations': 'error',
       'import/no-duplicates': 'warn',
       'import/newline-after-import': 'warn',
       'import/max-dependencies': ['warn', { max: 15 }],
@@ -317,8 +360,6 @@ export default [
       }],
       'react/jsx-boolean-value': ['warn', 'never'],
       'no-return-assign': 'warn',
-      'no-shadow': 'warn',
-      '@typescript-eslint/no-shadow': 'warn',
       'no-unsafe-optional-chaining': 'warn',
       'no-useless-catch': 'warn',
       'prefer-destructuring': 'warn',
@@ -411,6 +452,38 @@ export default [
       'eol-last': 'warn',
       'no-multiple-empty-lines': 'warn',
       'no-mixed-spaces-and-tabs': 'warn',
+    },
+  },
+  // TypeScript-specific configuration for better optimization
+  {
+    files: ['**/*.ts', '**/*.tsx'],
+    rules: {
+      // TypeScript-only rules - more strict for TS files
+      '@typescript-eslint/prefer-readonly': 'warn',
+      '@typescript-eslint/prefer-readonly-parameter-types': 'off', // Too strict for most cases
+      '@typescript-eslint/explicit-member-accessibility': 'off',
+      '@typescript-eslint/member-ordering': 'off',
+      
+      // Disable rules that don't make sense in TypeScript context
+      'consistent-return': 'off', // TypeScript handles return type checking
+      'default-param-last': 'off', // TypeScript handles this better with optional params
+      
+      // Import rules for TypeScript - let TS compiler handle most of this
+      'import/extensions': 'off',
+      'import/no-useless-path-segments': 'warn',
+    },
+  },
+  // JavaScript-specific configuration (more lenient)
+  {
+    files: ['**/*.js', '**/*.jsx'],
+    rules: {
+      // Re-enable some ESLint rules for pure JS files
+      'no-undef': 'warn',
+      'no-unused-vars': 'warn',
+      'consistent-return': 'warn',
+      
+      // Import rules for JavaScript
+      'import/no-unresolved': 'warn',
     },
   },
   {
@@ -559,16 +632,27 @@ export default [
       'consistent-return': 'off', // Hooks may have conditional returns
     },
   },
-  // Test files - more permissive rules
+  // Test files - more permissive rules to reduce friction
   {
     files: ['**/*.{test,spec}.{js,jsx,ts,tsx}', '**/__tests__/**/*.{js,jsx,ts,tsx}'],
     rules: {
       'no-console': 'off',
       '@typescript-eslint/no-explicit-any': 'off',
+      '@typescript-eslint/no-unused-vars': 'off', // Common in test mocks
       'react/jsx-props-no-spreading': 'off',
       'no-alert': 'off',
       'import/no-extraneous-dependencies': 'off',
       'react/display-name': 'off',
+      
+      // Testing Library - more permissive to reduce friction
+      'testing-library/no-container': 'warn', // Allow container access when needed
+      'testing-library/no-node-access': 'warn', // Sometimes necessary
+      'testing-library/no-wait-for-side-effects': 'warn', // Common in integration tests
+      'testing-library/no-wait-for-multiple-assertions': 'warn', // Common in complex tests
+      
+      // Jest rules - more permissive
+      'jest/no-conditional-expect': 'warn',
+      'jest/expect-expect': 'off', // Allow helper functions without explicit expects
     },
   },
 ];

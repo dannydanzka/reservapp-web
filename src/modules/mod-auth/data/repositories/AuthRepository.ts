@@ -1,4 +1,4 @@
-import { authService } from '@/libs/services/api/authService';
+import { httpAuthService } from '@services/core/auth';
 
 import {
   IAuthRepository,
@@ -7,7 +7,7 @@ import {
   LoginSession,
   RegisterData,
   User,
-} from '../../domain/interfaces/auth.interfaces';
+} from '../../domain/auth/auth.interfaces';
 
 /**
  * Authentication repository implementation for client-side HTTP API calls.
@@ -23,14 +23,14 @@ export class AuthRepository implements IAuthRepository {
    * @returns {Promise<LoginSession>} Authentication session
    */
   async authenticate(credentials: LoginCredentials): Promise<LoginSession> {
-    // Use authService to make HTTP call to API
-    const response = await authService.login(credentials);
+    // Use httpAuthService to make HTTP call to API
+    const response = await httpAuthService.login(credentials);
 
     if (!response.success || !response.data) {
       throw new Error(response.message || 'Credenciales inválidas');
     }
 
-    return response.data;
+    return response.data as any;
   }
 
   /**
@@ -40,21 +40,21 @@ export class AuthRepository implements IAuthRepository {
    * @returns {Promise<LoginSession>} Authentication session
    */
   async register(data: RegisterData): Promise<LoginSession> {
-    // Use authService to make HTTP call to API
-    const response = await authService.register(data);
+    // Use httpAuthService to make HTTP call to API
+    const response = await httpAuthService.register(data);
 
     if (!response.success || !response.data) {
       throw new Error(response.message || 'Error en el registro');
     }
 
-    return response.data;
+    return response.data as any;
   }
 
   /**
    * Logs out user via HTTP API.
    */
   async logout(): Promise<void> {
-    const response = await authService.logout();
+    const response = await httpAuthService.logout();
 
     if (!response.success) {
       throw new Error(response.message || 'Error cerrando sesión');
@@ -67,13 +67,13 @@ export class AuthRepository implements IAuthRepository {
    * @returns {Promise<User>} User data
    */
   async validateToken(): Promise<User> {
-    const response = await authService.getProfile();
+    const response = await httpAuthService.getProfile();
 
     if (!response.success || !response.data) {
       throw new Error(response.message || 'Token inválido o expirado');
     }
 
-    return response.data;
+    return response.data as any;
   }
 
   /**

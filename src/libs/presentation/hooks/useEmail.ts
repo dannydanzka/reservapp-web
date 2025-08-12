@@ -1,7 +1,12 @@
 import { useCallback, useState } from 'react';
 
-import { handleApiRequest } from '@/libs/services/api/client/handleApiRequest';
-import { SendEmailParams } from '@/libs/services/email/resendService';
+import { handleApiRequest } from '@shared/utils/handleApiRequest';
+
+interface SendEmailParams {
+  to: string;
+  subject: string;
+  html: string;
+}
 
 interface UseEmailReturn {
   isLoading: boolean;
@@ -55,11 +60,12 @@ export const useEmail = (): UseEmailReturn => {
       setError(null);
 
       try {
-        const response = await handleApiRequest<EmailSendResult>({
-          body: params,
-          endpoint: '/emails/send',
+        const response = await handleApiRequest('/api/emails/send', {
+          body: JSON.stringify(params),
+          headers: {
+            'Content-Type': 'application/json',
+          },
           method: 'POST',
-          timeout: 30000,
         });
 
         return response?.data ?? null;
@@ -82,11 +88,12 @@ export const useEmail = (): UseEmailReturn => {
       setError(null);
 
       try {
-        const response = await handleApiRequest<EmailSendResult>({
-          body: { guestEmail, reservationId },
-          endpoint: '/emails/reservation-confirmation',
+        const response = await handleApiRequest('/api/emails/reservation-confirmation', {
+          body: JSON.stringify({ guestEmail, reservationId }),
+          headers: {
+            'Content-Type': 'application/json',
+          },
           method: 'POST',
-          timeout: 30000,
         });
 
         return response?.data ?? null;
@@ -110,11 +117,12 @@ export const useEmail = (): UseEmailReturn => {
       setError(null);
 
       try {
-        const response = await handleApiRequest<EmailSendResult>({
-          body: { guestEmail, reservationId },
-          endpoint: '/emails/reservation-cancellation',
+        const response = await handleApiRequest('/api/emails/reservation-cancellation', {
+          body: JSON.stringify({ guestEmail, reservationId }),
+          headers: {
+            'Content-Type': 'application/json',
+          },
           method: 'POST',
-          timeout: 30000,
         });
 
         return response?.data ?? null;
@@ -138,11 +146,12 @@ export const useEmail = (): UseEmailReturn => {
       setError(null);
 
       try {
-        const response = await handleApiRequest<EmailSendResult>({
-          body: { guestEmail, paymentId },
-          endpoint: '/emails/payment-confirmation',
+        const response = await handleApiRequest('/api/emails/payment-confirmation', {
+          body: JSON.stringify({ guestEmail, paymentId }),
+          headers: {
+            'Content-Type': 'application/json',
+          },
           method: 'POST',
-          timeout: 30000,
         });
 
         return response?.data ?? null;
@@ -166,11 +175,12 @@ export const useEmail = (): UseEmailReturn => {
       setError(null);
 
       try {
-        const response = await handleApiRequest<EmailSendResult>({
-          body: { guestEmail, reservationId },
-          endpoint: '/emails/checkin-reminder',
+        const response = await handleApiRequest('/api/emails/checkin-reminder', {
+          body: JSON.stringify({ guestEmail, reservationId }),
+          headers: {
+            'Content-Type': 'application/json',
+          },
           method: 'POST',
-          timeout: 30000,
         });
 
         return response?.data ?? null;

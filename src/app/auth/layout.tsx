@@ -1,4 +1,4 @@
-import { AuthLayout } from '@/libs/ui/layouts/AuthLayout';
+import { AuthLayout } from '@layouts/AuthLayout';
 
 interface AuthLayoutWrapperProps {
   children: React.ReactNode;

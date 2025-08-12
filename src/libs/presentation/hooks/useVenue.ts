@@ -24,7 +24,7 @@ import {
   updateVenueAsync,
   UpdateVenueData,
   VenueFilters,
-} from '@/libs/core/state/slices/venue.slice';
+} from '@infrastructure/state/slices/venue.slice';
 import {
   selectActiveVenues,
   selectAverageVenueRating,
@@ -34,9 +34,9 @@ import {
   selectNearbyVenues,
   selectPopularVenues,
   selectSelectedVenue,
-  selectTopVenuesByRating,
-  selectTopVenuesByReservations,
-  selectTopVenuesByRevenue,
+  // selectTopVenuesByRating, // Temporarily disabled
+  // selectTopVenuesByReservations, // Temporarily disabled
+  // selectTopVenuesByRevenue, // Temporarily disabled
   selectTotalVenues,
   selectVenueById,
   selectVenueError,
@@ -50,13 +50,13 @@ import {
   selectVenuesByCategory,
   selectVenuesByCity,
   selectVenuesByRating,
-  selectVenueStatsOverview,
+  // selectVenueStatsOverview, // Temporarily disabled
   selectVenuesWithCoordinates,
   selectVenuesWithMostServices,
   selectVenuesWithoutServices,
   selectVenuesWithServices,
-} from '@/libs/core/state/selectors/venue.selector';
-import { VenueCategory } from '@/libs/services/api/types/venue.types';
+} from '@infrastructure/state/selectors/venue.selector';
+import { VenueCategory } from '@services/api/types/venue.types';
 
 import { useAppDispatch, useAppSelector } from './useRedux';
 
@@ -98,10 +98,10 @@ export const useVenue = () => {
 
   // Statistics selectors
   const averageVenueRating = useAppSelector(selectAverageVenueRating);
-  const venueStatsOverview = useAppSelector(selectVenueStatsOverview);
-  const topVenuesByReservations = useAppSelector(selectTopVenuesByReservations);
-  const topVenuesByRevenue = useAppSelector(selectTopVenuesByRevenue);
-  const topVenuesByRating = useAppSelector(selectTopVenuesByRating);
+  // const venueStatsOverview = useAppSelector(selectVenueStatsOverview); // Temporarily disabled
+  // const topVenuesByReservations = useAppSelector(selectTopVenuesByReservations); // Temporarily disabled
+  // const topVenuesByRevenue = useAppSelector(selectTopVenuesByRevenue); // Temporarily disabled
+  // const topVenuesByRating = useAppSelector(selectTopVenuesByRating); // Temporarily disabled
 
   // Action dispatchers
   const fetchVenues = useCallback(
@@ -416,15 +416,15 @@ export const useVenue = () => {
     searchNearbyVenues,
     searchVenues,
     selectedVenue,
-    topVenuesByRating,
-    topVenuesByReservations,
-    topVenuesByRevenue,
+    // topVenuesByRating, // Temporarily disabled
+    // topVenuesByReservations, // Temporarily disabled
+    // topVenuesByRevenue, // Temporarily disabled
     totalVenues,
     updateFilters,
     updatePagination,
     updateVenue,
     validateVenueData,
-    venueStatsOverview,
+    // venueStatsOverview, // Temporarily disabled
     venues,
     venuesByCategory,
     venuesByCity,

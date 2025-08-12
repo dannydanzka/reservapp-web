@@ -1,11 +1,11 @@
 import { useCallback, useState } from 'react';
 
-import { handleApiRequest } from '@/libs/services/api/client/handleApiRequest';
-import { User, UserRole } from '@prisma/client';
+import { handleApiRequest } from '@shared/utils/handleApiRequest';
+import { User, UserRoleEnum } from '@prisma/client';
 
 interface UserFilters {
   email?: string;
-  role?: UserRole;
+  role?: UserRoleEnum;
   isActive?: boolean;
   search?: string;
 }
@@ -22,7 +22,7 @@ interface CreateUserData {
   firstName: string;
   lastName: string;
   phone?: string;
-  role?: UserRole;
+  role?: UserRoleEnum;
 }
 
 interface UpdateUserData {
@@ -30,7 +30,7 @@ interface UpdateUserData {
   firstName?: string;
   lastName?: string;
   phone?: string;
-  role?: UserRole;
+  role?: UserRoleEnum;
   isActive?: boolean;
 }
 
@@ -72,8 +72,7 @@ const useUserService = (): UseUserServiceReturn => {
         if (pagination.page) params.append('page', pagination.page.toString());
         if (pagination.limit) params.append('limit', pagination.limit.toString());
 
-        const response = await handleApiRequest({
-          endpoint: `/users?${params.toString()}`,
+        const response = await handleApiRequest(`/api/users?${params.toString()}`, {
           method: 'GET',
         });
 
@@ -101,8 +100,7 @@ const useUserService = (): UseUserServiceReturn => {
     try {
       const params = includeReservations ? '?includeReservations=true' : '';
 
-      const response = await handleApiRequest({
-        endpoint: `/users/${id}${params}`,
+      const response = await handleApiRequest(`/api/users/${id}${params}`, {
         method: 'GET',
       });
 
@@ -126,9 +124,9 @@ const useUserService = (): UseUserServiceReturn => {
     setError(null);
 
     try {
-      const response = await handleApiRequest({
-        body: userData,
-        endpoint: '/users',
+      const response = await handleApiRequest('/api/users', {
+        body: JSON.stringify(userData),
+        headers: { 'Content-Type': 'application/json' },
         method: 'POST',
       });
 
@@ -152,9 +150,9 @@ const useUserService = (): UseUserServiceReturn => {
     setError(null);
 
     try {
-      const response = await handleApiRequest({
-        body: userData,
-        endpoint: `/users/${id}`,
+      const response = await handleApiRequest(`/api/users/${id}`, {
+        body: JSON.stringify(userData),
+        headers: { 'Content-Type': 'application/json' },
         method: 'PUT',
       });
 
@@ -178,8 +176,7 @@ const useUserService = (): UseUserServiceReturn => {
     setError(null);
 
     try {
-      const response = await handleApiRequest({
-        endpoint: `/users/${id}`,
+      const response = await handleApiRequest(`/api/users/${id}`, {
         method: 'DELETE',
       });
 

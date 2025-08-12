@@ -2,10 +2,14 @@
 
 import { useCallback, useEffect, useState } from 'react';
 
-import { BusinessPlan, SubscriptionStatus } from '@/libs/types/api.types';
-import { handleRequest } from '@/libs/services/http';
-import { UpgradeUserData, UserSubscription } from '@/libs/services/api/types/user.types';
-import { useAuth } from '@/libs/ui/providers/AuthProvider';
+import {
+  BusinessPlan,
+  SubscriptionStatus,
+  UpgradeUserData,
+  UserSubscription,
+} from '@shared/types/api.types';
+import { handleRequest } from '@infrastructure/services/core/http';
+import { useAuth } from '@hooks/useAuth';
 
 interface UseSubscriptionReturn {
   subscription: UserSubscription | null;
@@ -29,18 +33,16 @@ interface UseSubscriptionReturn {
  * Handles free/premium/trial tiers and their limitations.
  */
 export const useSubscription = (): UseSubscriptionReturn => {
-  const { status: authStatus, token, user } = useAuth();
+  const { isAuthenticated, user } = useAuth();
   const [subscription, setSubscription] = useState<UserSubscription | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-
-  const isAuthenticated = authStatus === 'authenticated' && token;
 
   /**
    * Fetch user subscription status from API
    */
   const getSubscriptionStatus = useCallback(async (): Promise<void> => {
-    if (!isAuthenticated || !token) {
+    if (!isAuthenticated || !user) {
       setSubscription(null);
       return;
     }
@@ -51,9 +53,7 @@ export const useSubscription = (): UseSubscriptionReturn => {
 
       const response = await handleRequest({
         endpoint: '/api/users/subscription-status',
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
+        headers: {},
         method: 'GET',
       });
 
@@ -69,14 +69,14 @@ export const useSubscription = (): UseSubscriptionReturn => {
     } finally {
       setIsLoading(false);
     }
-  }, [isAuthenticated, token]);
+  }, [isAuthenticated]);
 
   /**
    * Upgrade user subscription (typically after payment)
    */
   const upgradeUser = useCallback(
     async (upgradeData: UpgradeUserData): Promise<boolean> => {
-      if (!isAuthenticated || !token) {
+      if (!isAuthenticated || !user) {
         setError('Authentication required for upgrade');
         return false;
       }
@@ -88,9 +88,7 @@ export const useSubscription = (): UseSubscriptionReturn => {
         const response = await handleRequest({
           body: upgradeData,
           endpoint: '/api/users/upgrade',
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
+          headers: {},
           method: 'POST',
         });
 
@@ -111,7 +109,7 @@ export const useSubscription = (): UseSubscriptionReturn => {
         setIsLoading(false);
       }
     },
-    [isAuthenticated, token, getSubscriptionStatus]
+    [isAuthenticated, getSubscriptionStatus]
   );
 
   // Load subscription status when user authenticates
@@ -125,17 +123,19 @@ export const useSubscription = (): UseSubscriptionReturn => {
   }, [isAuthenticated, getSubscriptionStatus]);
 
   // Calculate derived values
-  const isFreeTier = subscription?.subscriptionStatus === SubscriptionStatus.FREE;
-  const isPremiumTier = subscription?.subscriptionStatus === SubscriptionStatus.PREMIUM;
-  const isTrialTier = subscription?.subscriptionStatus === SubscriptionStatus.TRIAL;
+  const isFreeTier = subscription?.status === SubscriptionStatus.FREE;
+  const isPremiumTier = subscription?.status === SubscriptionStatus.PREMIUM;
+  const isTrialTier = subscription?.status === SubscriptionStatus.TRIAL;
 
-  const canMakeReservations = subscription?.canMakeReservations || false;
-  const maxFavorites = subscription?.maxFavorites || 3;
-  const planFeatures = subscription?.planFeatures || [];
+  const canMakeReservations =
+    subscription?.status === SubscriptionStatus.PREMIUM ||
+    subscription?.status === SubscriptionStatus.TRIAL;
+  const maxFavorites = isPremiumTier ? 100 : 3;
+  const planFeatures: string[] = [];
 
   // Check if subscriptions are expired
-  const isSubscriptionExpired = subscription?.subscriptionEndsAt
-    ? new Date(subscription.subscriptionEndsAt) < new Date()
+  const isSubscriptionExpired = subscription?.currentPeriodEnd
+    ? new Date(subscription.currentPeriodEnd) < new Date()
     : false;
 
   const isTrialExpired = subscription?.trialEndsAt
@@ -143,9 +143,9 @@ export const useSubscription = (): UseSubscriptionReturn => {
     : false;
 
   // Calculate days until expiration
-  const daysUntilExpiration = subscription?.subscriptionEndsAt
+  const daysUntilExpiration = subscription?.currentPeriodEnd
     ? Math.ceil(
-        (new Date(subscription.subscriptionEndsAt).getTime() - new Date().getTime()) /
+        (new Date(subscription.currentPeriodEnd).getTime() - new Date().getTime()) /
           (1000 * 60 * 60 * 24)
       )
     : subscription?.trialEndsAt

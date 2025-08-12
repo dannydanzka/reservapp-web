@@ -1,0 +1,25 @@
+{
+  "api": {
+    "baseUrl": "https://reservapp.com/api",
+    "timeout": 15000
+  },
+  "database": {
+    "url": "postgresql://prod-server:5432/reservapp_prod"
+  },
+  "features": {
+    "enableEmails": true,
+    "enableNotifications": true,
+    "enableAnalytics": true
+  },
+  "stripe": {
+    "publishableKey": "pk_live_production_key",
+    "secretKey": "sk_live_production_key"
+  },
+  "email": {
+    "fromEmail": "noreply@reservapp.com"
+  },
+  "external": {
+    "googlePlacesApiKey": "prod_google_places_api_key",
+    "googleMapsApiKey": "prod_google_maps_api_key"
+  }
+}

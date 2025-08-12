@@ -1,0 +1,1 @@
+export { adminPaymentService } from './adminPaymentService';

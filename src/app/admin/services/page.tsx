@@ -5,7 +5,7 @@
 
 import type { Metadata } from 'next';
 
-import { ServicesManagement } from '@/modules/mod-admin/presentation/components/ServicesManagement';
+import { ServicesManagement } from '@mod-admin/presentation/components';
 
 export const metadata: Metadata = {
   description: 'Gestiona y administra todos los servicios de la plataforma',

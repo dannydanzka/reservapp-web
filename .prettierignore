@@ -1,0 +1,64 @@
+# Prettier ignore patterns
+
+# Build outputs
+.next/
+dist/
+out/
+build/
+
+# Dependencies
+node_modules/
+jspm_packages/
+
+# Configuration files
+*.config.js
+*.config.cjs
+*.config.ts
+next.config.js
+next.config.ts
+
+# Generated files
+.next/types/**/*.ts
+next-env.d.ts
+
+# Test coverage
+coverage/
+
+# Cache directories
+.build-cache/
+.eslintcache
+
+# Package manager files
+package-lock.json
+yarn.lock
+.yarn/
+.pnp/
+.pnp.js
+
+# Environment files
+.env*
+
+# Vercel
+.vercel/
+
+# Storybook
+.storybook-out/
+storybook-static/
+
+# Prisma generated
+prisma/generated/
+
+# Logs
+*.log
+
+# Test results
+test-results/
+playwright-report/
+
+# IDE files (optional - can be formatted if needed)
+# .vscode/
+# .idea/
+
+# Markdown files that should maintain their formatting
+CHANGELOG.md
+LICENSE.md

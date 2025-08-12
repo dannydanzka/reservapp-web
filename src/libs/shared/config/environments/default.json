@@ -1,0 +1,52 @@
+{
+  "app": {
+    "name": "ReservApp",
+    "version": "1.0.0",
+    "description": "Comprehensive reservation management platform"
+  },
+  "api": {
+    "baseUrl": "http://localhost:3000/api",
+    "timeout": 30000,
+    "retries": 3
+  },
+  "database": {
+    "url": "postgresql://localhost:5432/reservapp"
+  },
+  "auth": {
+    "jwtSecret": "your-jwt-secret",
+    "jwtExpiration": "7d",
+    "bcryptRounds": 12
+  },
+  "stripe": {
+    "publishableKey": "pk_test_...",
+    "secretKey": "sk_test_...",
+    "webhookSecret": "whsec_...",
+    "currency": "MXN"
+  },
+  "email": {
+    "provider": "resend",
+    "fromEmail": "noreply@reservapp.com",
+    "fromName": "ReservApp"
+  },
+  "uploads": {
+    "provider": "cloudinary",
+    "maxFileSize": 10485760,
+    "allowedFormats": ["jpg", "jpeg", "png", "webp"]
+  },
+  "features": {
+    "enableEmails": true,
+    "enableNotifications": true,
+    "enableAnalytics": false,
+    "enableReviews": true,
+    "enablePayments": true
+  },
+  "ui": {
+    "itemsPerPage": 10,
+    "maxUploadSize": "10MB",
+    "supportedLanguages": ["es", "en"]
+  },
+  "external": {
+    "googlePlacesApiKey": "",
+    "googleMapsApiKey": ""
+  }
+}

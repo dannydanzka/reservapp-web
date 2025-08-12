@@ -1,5 +1,5 @@
-import { JWTService } from '@/libs/services/auth/jwtService';
-import { PrismaService } from '@/libs/services/database/prismaService';
+import { JWTService } from '@infrastructure/services/core/auth/jwtService';
+import { PrismaService } from '@infrastructure/services/core/database/prismaService';
 
 import {
   IAuthRepository,
@@ -9,7 +9,7 @@ import {
   RegisterData,
   User,
   UserRole,
-} from '../../domain/interfaces/auth.interfaces';
+} from '../../domain/auth/auth.interfaces';
 
 /**
  * Server-side authentication repository implementation with real JWT authentication.
@@ -17,7 +17,7 @@ import {
  * This should ONLY be used in API routes, never in client-side code.
  */
 export class ServerAuthRepository implements IAuthRepository {
-  private prismaService: PrismaService;
+  private readonly prismaService: PrismaService;
   private readonly loginAttempts: Map<string, LoginAttempt> = new Map();
 
   constructor() {

@@ -1,183 +1,159 @@
 import { NextRequest, NextResponse } from 'next/server';
+import jwt from 'jsonwebtoken';
 
-import {
-  reservationRepository,
-  ReservationStatus,
-} from '@libs/data/repositories/ReservationRepository';
-import { ServiceRepository } from '@libs/data/repositories/ServiceRepository';
+import { PrismaClient } from '@prisma/client';
 
-const serviceRepository = new ServiceRepository();
+const prisma = new PrismaClient();
 
-interface ApiResponse<T = unknown> {
-  success: boolean;
-  message: string;
-  data?: T;
-  error?: string;
-  timestamp: string;
-}
-
-function createResponse<T>(
-  success: boolean,
-  message: string,
-  data?: T,
-  error?: string
-): NextResponse<ApiResponse<T>> {
-  return NextResponse.json({
-    data,
-    error,
-    message,
-    success,
-    timestamp: new Date().toISOString(),
-  });
-}
-
+/**
+ * Get reservations
+ */
 export async function GET(request: NextRequest) {
   try {
-    const { searchParams } = new URL(request.url);
-
-    const filters = {
-      checkIn: searchParams.get('checkIn') ? new Date(searchParams.get('checkIn')!) : undefined,
-      checkOut: searchParams.get('checkOut') ? new Date(searchParams.get('checkOut')!) : undefined,
-      dateFrom: searchParams.get('dateFrom') ? new Date(searchParams.get('dateFrom')!) : undefined,
-      dateTo: searchParams.get('dateTo') ? new Date(searchParams.get('dateTo')!) : undefined,
-      search: searchParams.get('search') || undefined,
-      serviceId: searchParams.get('serviceId') || undefined,
-      status: (searchParams.get('status') as ReservationStatus) || undefined,
-      userId: searchParams.get('userId') || undefined,
-      venueId: searchParams.get('venueId') || undefined,
-    };
-
-    const pagination = {
-      limit: parseInt(searchParams.get('limit') || '10'),
-      page: parseInt(searchParams.get('page') || '1'),
-    };
-
-    const includeDetails = searchParams.get('includeDetails') === 'true';
-
-    let result;
-    if (includeDetails) {
-      result = await reservationRepository.findManyWithDetails(filters, pagination);
-    } else {
-      result = await reservationRepository.findMany(filters, pagination);
+    // Get auth token
+    const authHeader = request.headers.get('authorization');
+    if (!authHeader?.startsWith('Bearer ')) {
+      return NextResponse.json(
+        { message: 'Token de autorización requerido', success: false },
+        { status: 401 }
+      );
     }
 
-    const totalPages = Math.ceil(result.total / pagination.limit);
+    const token = authHeader.substring(7);
+    const decoded = jwt.verify(token, process.env.JWT_SECRET || 'fallback-secret') as any;
 
-    return createResponse(true, 'Reservations retrieved successfully', {
-      ...result,
-      limit: pagination.limit,
-      page: pagination.page,
-      totalPages,
+    // Get query parameters
+    const { searchParams } = new URL(request.url);
+    const page = parseInt(searchParams.get('page') || '1');
+    const limit = parseInt(searchParams.get('limit') || '10');
+    const status = searchParams.get('status');
+
+    // Build where clause
+    const where: any = {};
+    if (decoded.role !== 'ADMIN') {
+      where.userId = decoded.userId;
+    }
+    if (status) {
+      where.status = status;
+    }
+
+    // Get reservations
+    const [reservations, total] = await Promise.all([
+      prisma.reservation.findMany({
+        include: {
+          service: {
+            select: { id: true, name: true, price: true },
+          },
+          user: {
+            select: { email: true, firstName: true, id: true, lastName: true },
+          },
+          venue: {
+            select: { id: true, name: true },
+          },
+        },
+        orderBy: { createdAt: 'desc' },
+        skip: (page - 1) * limit,
+        take: limit,
+        where,
+      }),
+      prisma.reservation.count({ where }),
+    ]);
+
+    return NextResponse.json({
+      data: reservations,
+      pagination: {
+        limit,
+        page,
+        pages: Math.ceil(total / limit),
+        total,
+      },
+      success: true,
     });
   } catch (error) {
-    console.error('GET /api/reservations error:', error);
-    return createResponse(
-      false,
-      'Failed to retrieve reservations',
-      undefined,
-      error instanceof Error ? error.message : 'Unknown error'
+    console.error('Get reservations error:', error);
+    return NextResponse.json(
+      { message: 'Error interno del servidor', success: false },
+      { status: 500 }
     );
+  } finally {
+    await prisma.$disconnect();
   }
 }
 
+/**
+ * Create reservation
+ */
 export async function POST(request: NextRequest) {
   try {
+    // Get auth token
+    const authHeader = request.headers.get('authorization');
+    if (!authHeader?.startsWith('Bearer ')) {
+      return NextResponse.json(
+        { message: 'Token de autorización requerido', success: false },
+        { status: 401 }
+      );
+    }
+
+    const token = authHeader.substring(7);
+    const decoded = jwt.verify(token, process.env.JWT_SECRET || 'fallback-secret') as any;
+
     const body = await request.json();
-
-    const { checkIn, checkOut, guestCount, metadata, serviceId, specialRequests, userId } = body;
-
-    if (!userId || !serviceId || !checkIn || !checkOut || !guestCount) {
-      return createResponse(
-        false,
-        'Missing required fields',
-        undefined,
-        'userId, serviceId, checkIn, checkOut, and guestCount are required'
-      );
-    }
-
-    const checkInDate = new Date(checkIn);
-    const checkOutDate = new Date(checkOut);
-
-    if (checkInDate >= checkOutDate) {
-      return createResponse(
-        false,
-        'Invalid date range',
-        undefined,
-        'Check-in date must be before check-out date'
-      );
-    }
-
-    if (checkInDate < new Date()) {
-      return createResponse(
-        false,
-        'Invalid check-in date',
-        undefined,
-        'Check-in date cannot be in the past'
-      );
-    }
-
-    // Check service availability
-    const serviceAvailable = await serviceRepository.checkAvailability(
-      serviceId,
+    const {
       checkInDate,
       checkOutDate,
-      guestCount
-    );
-
-    if (!serviceAvailable) {
-      return createResponse(
-        false,
-        'Service not available',
-        undefined,
-        'The selected service is not available for the specified dates and capacity'
-      );
-    }
-
-    // Get service details to calculate total amount
-    const service = await serviceRepository.findById(serviceId);
-    if (!service) {
-      return createResponse(
-        false,
-        'Service not found',
-        undefined,
-        'The specified service does not exist'
-      );
-    }
-
-    // Calculate total amount based on service duration or nights
-    let totalAmount;
-    if (service.duration) {
-      // For timed services (spa, tours, etc.), price is per service
-      totalAmount = Number(service.price) * guestCount;
-    } else {
-      // For overnight services (accommodations), calculate by nights
-      const nights = Math.ceil(
-        (checkOutDate.getTime() - checkInDate.getTime()) / (1000 * 60 * 60 * 24)
-      );
-      totalAmount = Number(service.price) * nights;
-    }
-
-    const reservationData = {
-      checkIn: checkInDate,
-      checkOut: checkOutDate,
-      guestCount: parseInt(guestCount),
-      metadata,
+      guests = 1,
+      notes,
       serviceId,
-      specialRequests,
-      totalAmount,
-      userId,
-    };
+      totalAmount = 0,
+      venueId,
+    } = body;
 
-    const reservation = await reservationRepository.create(reservationData);
+    // Validate required fields
+    if (!venueId || !serviceId || !checkInDate || !checkOutDate) {
+      return NextResponse.json(
+        { message: 'Venue, servicio, fecha de entrada y salida son requeridos', success: false },
+        { status: 400 }
+      );
+    }
 
-    return createResponse(true, 'Reservation created successfully', reservation);
+    // Create reservation
+    const reservation = await prisma.reservation.create({
+      data: {
+        checkInDate: new Date(checkInDate),
+        checkOutDate: new Date(checkOutDate),
+        guests,
+        notes,
+        serviceId,
+        status: 'PENDING',
+        totalAmount,
+        userId: decoded.userId,
+        venueId,
+      },
+      include: {
+        service: {
+          select: { id: true, name: true, price: true },
+        },
+        user: {
+          select: { email: true, firstName: true, id: true, lastName: true },
+        },
+        venue: {
+          select: { id: true, name: true },
+        },
+      },
+    });
+
+    return NextResponse.json({
+      data: reservation,
+      message: 'Reserva creada exitosamente',
+      success: true,
+    });
   } catch (error) {
-    console.error('POST /api/reservations error:', error);
-    return createResponse(
-      false,
-      'Failed to create reservation',
-      undefined,
-      error instanceof Error ? error.message : 'Unknown error'
+    console.error('Create reservation error:', error);
+    return NextResponse.json(
+      { message: 'Error interno del servidor', success: false },
+      { status: 500 }
     );
+  } finally {
+    await prisma.$disconnect();
   }
 }

@@ -58,8 +58,17 @@ pids
 # Optional npm cache directory
 .npm
 
-# Optional eslint cache
-.eslintcache
+# Build cache directory
+.build-cache/
+
+# Optional eslint cache (moved to .build-cache)
+# .eslintcache
+
+# Optional stylelint cache (moved to .build-cache)
+# .stylelintcache
+
+# TypeScript incremental compilation cache (moved to .build-cache)
+# tsconfig.tsbuildinfo
 
 # Microbundle cache
 .rpt2_cache/

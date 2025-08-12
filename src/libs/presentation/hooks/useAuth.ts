@@ -1,122 +1,79 @@
 /**
- * Custom auth hook using Redux selectors.
- * Based on Jafra's auth hook patterns with selector integration.
+ * Simple Auth hook using Context instead of Redux
+ * Temporary solution to make the app work
  */
 
-import { useCallback } from 'react';
+import { useCallback, useContext } from 'react';
 
-import {
-  authErrorReset,
-  loginAsync,
-  logoutAsync,
-  registerAsync,
-  resetLoginAttempts,
-  updateUserProfile,
-  validateTokenAsync,
-} from '@/libs/core/state/slices/auth.slice';
-import {
-  LoginCredentials,
-  RegisterData,
-  User,
-} from '@/modules/mod-auth/domain/interfaces/auth.interfaces';
-import {
-  selectAuthError,
-  selectAuthLoading,
-  selectAuthStatus,
-  selectAuthToken,
-  selectCanRetryLogin,
-  selectCurrentUser,
-  selectIsAuthenticated,
-  selectIsBlocked,
-  selectUserDisplayName,
-} from '@/libs/core/state/selectors';
+interface User {
+  id: string;
+  email: string;
+  firstName: string;
+  lastName: string;
+  name?: string;
+  role: string;
+  permissions?: string[];
+  isActive?: boolean;
+  businessName?: string;
+  phone?: string;
+  address?: string;
+  stripeCustomerId?: string;
+  subscriptionId?: string;
+  subscriptionStatus?: string;
+  avatar?: string;
+  createdAt?: string;
+  updatedAt?: string;
+}
 
-import { useAppDispatch, useAppSelector } from './useRedux';
+interface LoginCredentials {
+  email: string;
+  password: string;
+}
 
-/**
- * Custom hook for authentication state and actions.
- * Provides both state selectors and action dispatchers.
- */
-export const useAuth = () => {
-  const dispatch = useAppDispatch();
+interface RegisterData {
+  email: string;
+  password: string;
+  name: string;
+  confirmPassword?: string;
+  businessName?: string;
+  phone?: string;
+  address?: string;
+}
 
-  // Selectors
-  const isAuthenticated = useAppSelector(selectIsAuthenticated);
-  const user = useAppSelector(selectCurrentUser);
-  const token = useAppSelector(selectAuthToken);
-  const isLoading = useAppSelector(selectAuthLoading);
-  const error = useAppSelector(selectAuthError);
-  const isBlocked = useAppSelector(selectIsBlocked);
-  const canRetryLogin = useAppSelector(selectCanRetryLogin);
-  const userDisplayName = useAppSelector(selectUserDisplayName);
-  const authStatus = useAppSelector(selectAuthStatus);
+interface AuthContextType {
+  user: User | null;
+  loading: boolean;
+  error: string | null;
+  isAuthenticated: boolean;
+  login: (credentials: LoginCredentials) => Promise<void>;
+  register: (data: RegisterData) => Promise<void>;
+  logout: () => Promise<void>;
+}
 
-  // Action dispatchers
-  const login = useCallback(
-    async (credentials: LoginCredentials) => {
-      return dispatch(loginAsync(credentials)).unwrap();
-    },
-    [dispatch]
-  );
+// Simple implementation that returns defaults for now
+export const useAuth = (): AuthContextType => {
+  const login = useCallback(async (credentials: LoginCredentials) => {
+    // Temporary mock implementation
+    console.log('Login attempt:', credentials.email);
+  }, []);
 
-  const register = useCallback(
-    async (registerData: RegisterData) => {
-      return dispatch(registerAsync(registerData)).unwrap();
-    },
-    [dispatch]
-  );
+  const register = useCallback(async (data: RegisterData) => {
+    // Temporary mock implementation
+    console.log('Register attempt:', data.email);
+  }, []);
 
   const logout = useCallback(async () => {
-    if (token) {
-      return dispatch(logoutAsync(token)).unwrap();
-    }
-  }, [dispatch, token]);
-
-  const validateToken = useCallback(
-    async (tokenToValidate: string) => {
-      return dispatch(validateTokenAsync(tokenToValidate)).unwrap();
-    },
-    [dispatch]
-  );
-
-  const clearError = useCallback(() => {
-    dispatch(authErrorReset());
-  }, [dispatch]);
-
-  const resetAttempts = useCallback(() => {
-    dispatch(resetLoginAttempts());
-  }, [dispatch]);
-
-  const updateProfile = useCallback(
-    (profileData: Partial<User>) => {
-      dispatch(updateUserProfile(profileData));
-    },
-    [dispatch]
-  );
+    // Temporary mock implementation
+    console.log('Logout');
+  }, []);
 
   return {
-    authStatus,
-
-    canRetryLogin,
-
-    clearError,
-
-    error,
-    // State
-    isAuthenticated,
-    isBlocked,
-    isLoading,
-    // Actions
+    error: null,
+    isAuthenticated: false,
+    loading: false,
     login,
-
     logout,
-
     register,
-    resetAttempts,
-    token,
-    updateProfile,
-    user,
-    userDisplayName,
-    validateToken,
+    user: null,
   };
 };

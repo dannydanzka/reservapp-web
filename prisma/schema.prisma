@@ -19,7 +19,7 @@ model User {
   lastName  String
   phone     String?
   isActive  Boolean  @default(true)
-  role      UserRole @default(USER)
+  role      UserRoleEnum @default(USER)
   stripeCustomerId String? @unique
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -27,15 +27,39 @@ model User {
   // Relations
   reservations Reservation[]
   payments     Payment[]
+  notifications Notification[]
+  userSettings UserSettings?
+  reviews      Review[]
+  receipts     Receipt[]     @relation("UserReceipts")
+  adminActions AdminAuditLog[] @relation("AdminActions")
+  userRoles    UserRoleAssignment[]    @relation("UserRoles")
+  grantedRoles UserRoleAssignment[]    @relation("GrantedRoles")
 
   @@map("users")
 }
 
-enum UserRole {
+// User Settings (notification preferences and other settings)
+model UserSettings {
+  id                    String   @id @default(cuid())
+  emailNotifications    Boolean  @default(true)  // Receive email notifications
+  pushNotifications     Boolean  @default(true)  // Receive push notifications  
+  marketingEmails       Boolean  @default(false) // Receive marketing/promotional emails
+  createdAt            DateTime @default(now())
+  updatedAt            DateTime @updatedAt
+
+  // Relations
+  user     User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId   String @unique
+
+  @@map("user_settings")
+}
+
+enum UserRoleEnum {
   USER
   EMPLOYEE
   MANAGER
   ADMIN
+  SUPER_ADMIN
 }
 
 // Venue Management
@@ -64,6 +88,8 @@ model Venue {
   // Relations
   services     Service[]
   reservations Reservation[]
+  reviews      Review[]
+  userRoles    UserRoleAssignment[]    @relation("VenueRoles")
 
   @@map("venues")
 }
@@ -102,6 +128,7 @@ model Service {
   venue        Venue         @relation(fields: [venueId], references: [id], onDelete: Cascade)
   venueId      String
   reservations Reservation[]
+  reviews      Review[]
 
   @@map("services")
 }
@@ -140,6 +167,7 @@ model Reservation {
   service   Service   @relation(fields: [serviceId], references: [id])
   serviceId String
   payments  Payment[]
+  reviews   Review[]
 
   @@map("reservations")
 }
@@ -147,8 +175,10 @@ model Reservation {
 enum ReservationStatus {
   PENDING
   CONFIRMED
+  IN_PROGRESS
   CHECKED_IN
   CHECKED_OUT
+  COMPLETED
   CANCELLED
   NO_SHOW
 }
@@ -172,6 +202,7 @@ model Payment {
   userId        String
   reservation   Reservation @relation(fields: [reservationId], references: [id])
   reservationId String
+  receipt       Receipt?
 
   @@map("payments")
 }
@@ -185,6 +216,33 @@ enum PaymentStatus {
   REFUNDED
 }
 
+// Notification Management
+model Notification {
+  id          String           @id @default(cuid())
+  type        NotificationType
+  title       String
+  message     String           @db.Text
+  isRead      Boolean          @default(false)
+  metadata    Json?            // Flexible data storage
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+
+  // Relations
+  user        User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId      String
+
+  @@map("notifications")
+}
+
+enum NotificationType {
+  RESERVATION_CONFIRMATION
+  RESERVATION_CANCELLATION
+  PAYMENT_CONFIRMATION
+  CHECK_IN_REMINDER
+  SYSTEM_ALERT
+  PROMOTION
+}
+
 // System Configuration
 model SystemConfig {
   id        String   @id @default(cuid())
@@ -195,4 +253,197 @@ model SystemConfig {
   updatedAt DateTime @updatedAt
 
   @@map("system_config")
+}
+
+// Review & Ratings Management
+model Review {
+  id          String      @id @default(cuid())
+  rating      Int         // Rating from 1-5 stars
+  title       String?     // Optional review title
+  comment     String?     @db.Text // Review text content
+  isVerified  Boolean     @default(false) // If review is from verified reservation
+  isVisible   Boolean     @default(true) // Admin can hide inappropriate reviews
+  helpfulVotes Int        @default(0) // Future: helpful votes count
+  reportCount Int         @default(0) // Future: report count for moderation
+  metadata    Json?       // Additional flexible data (photos, etc.)
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+
+  // Relations - A review can be for either a Venue OR a Service
+  user        User        @relation(fields: [userId], references: [id])
+  userId      String
+  venue       Venue?      @relation(fields: [venueId], references: [id], onDelete: Cascade)
+  venueId     String?
+  service     Service?    @relation(fields: [serviceId], references: [id], onDelete: Cascade)
+  serviceId   String?
+  
+  // Optional reservation link (for verified reviews)
+  reservation Reservation? @relation(fields: [reservationId], references: [id], onDelete: SetNull)
+  reservationId String?
+
+  // Note: Business logic ensures review is for either venue OR service, not both
+  @@index([venueId, isVisible])
+  @@index([serviceId, isVisible])
+  @@index([userId])
+  @@index([rating])
+  @@map("reviews")
+}
+
+// Admin Audit Log for tracking administrative actions
+model AdminAuditLog {
+  id              String              @id @default(cuid())
+  adminUserId     String
+  adminUserName   String
+  adminUserEmail  String
+  action          AdminActionType
+  resourceType    AdminResourceType
+  resourceId      String
+  oldValues       Json?               // Previous values before change
+  newValues       Json?               // New values after change
+  metadata        Json?               // Additional context data
+  ipAddress       String?
+  userAgent       String?             @db.Text
+  createdAt       DateTime            @default(now())
+
+  // Relations
+  adminUser       User                @relation("AdminActions", fields: [adminUserId], references: [id])
+
+  @@index([adminUserId])
+  @@index([action])
+  @@index([resourceType, resourceId])
+  @@index([createdAt])
+  @@map("admin_audit_logs")
+}
+
+enum AdminActionType {
+  PAYMENT_REFUND
+  PAYMENT_STATUS_UPDATE
+  PAYMENT_MANUAL_VERIFICATION
+  RESERVATION_STATUS_UPDATE
+  RESERVATION_CANCEL
+  RECEIPT_VERIFY
+  RECEIPT_REGENERATE
+  BULK_PAYMENT_UPDATE
+  BULK_PAYMENT_REFUND
+}
+
+enum AdminResourceType {
+  PAYMENT
+  RESERVATION
+  RECEIPT
+  INVOICE
+  USER
+}
+
+// Receipt Management for payments
+model Receipt {
+  id              String        @id @default(cuid())
+  receiptNumber   String        @unique @default(cuid())
+  type            ReceiptType   @default(PAYMENT)
+  status          ReceiptStatus @default(PENDING)
+  amount          Decimal       @db.Decimal(10, 2)
+  currency        String        @default("MXN")
+  issueDate       DateTime      @default(now())
+  dueDate         DateTime?     // For invoices
+  paidDate        DateTime?     // When payment was completed
+  taxAmount       Decimal?      @db.Decimal(10, 2)
+  subtotalAmount  Decimal       @db.Decimal(10, 2)
+  metadata        Json?         // Flexible data storage
+  pdfUrl          String?       // Generated PDF receipt URL
+  isVerified      Boolean       @default(false)
+  verifiedBy      String?       // Admin user ID who verified
+  verifiedAt      DateTime?
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  // Relations
+  payment         Payment       @relation(fields: [paymentId], references: [id])
+  paymentId       String        @unique
+  user            User          @relation("UserReceipts", fields: [userId], references: [id])
+  userId          String
+
+  @@map("receipts")
+}
+
+enum ReceiptType {
+  PAYMENT          // Payment receipt
+  INVOICE          // Invoice (for future payments)  
+  REFUND           // Refund receipt
+  CREDIT_NOTE      // Credit note
+}
+
+enum ReceiptStatus {
+  PENDING          // Receipt generated, pending verification
+  VERIFIED         // Receipt verified by admin
+  REJECTED         // Receipt rejected (needs regeneration)
+  REGENERATED      // Receipt was regenerated
+}
+
+// Advanced Role and Permission System
+model Role {
+  id              String        @id @default(cuid())
+  name            String        @unique
+  description     String?
+  isSystemRole    Boolean       @default(false) // Cannot be deleted
+  isActive        Boolean       @default(true)
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  // Relations
+  permissions     RolePermission[]
+  userRoles       UserRoleAssignment[]
+  
+  @@map("roles")
+}
+
+model Permission {
+  id              String        @id @default(cuid())
+  name            String        @unique
+  description     String?
+  module          String        // e.g., "payments", "reservations", "users"
+  action          String        // e.g., "read", "create", "update", "delete"
+  resource        String?       // specific resource if applicable
+  isSystemPerm    Boolean       @default(true) // Cannot be deleted
+  createdAt       DateTime      @default(now())
+
+  // Relations  
+  rolePermissions RolePermission[]
+
+  @@unique([module, action, resource])
+  @@map("permissions")
+}
+
+model RolePermission {
+  id            String      @id @default(cuid())
+  roleId        String
+  permissionId  String
+  createdAt     DateTime    @default(now())
+
+  // Relations
+  role          Role        @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  permission    Permission  @relation(fields: [permissionId], references: [id], onDelete: Cascade)
+
+  @@unique([roleId, permissionId])
+  @@map("role_permissions")
+}
+
+model UserRoleAssignment {
+  id            String      @id @default(cuid())
+  userId        String
+  roleId        String
+  venueId       String?     // For venue-specific roles
+  grantedBy     String?     // Admin who granted this role
+  grantedAt     DateTime    @default(now())
+  expiresAt     DateTime?   // Optional role expiration
+  isActive      Boolean     @default(true)
+  metadata      Json?       // Additional role context
+
+  // Relations
+  user          User        @relation("UserRoles", fields: [userId], references: [id], onDelete: Cascade)
+  role          Role        @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  venue         Venue?      @relation("VenueRoles", fields: [venueId], references: [id], onDelete: Cascade)
+  grantor       User?       @relation("GrantedRoles", fields: [grantedBy], references: [id], onDelete: SetNull)
+
+  @@unique([userId, roleId, venueId])
+  @@map("user_roles")
 }

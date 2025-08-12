@@ -1,122 +1,196 @@
 import { NextRequest, NextResponse } from 'next/server';
+import jwt from 'jsonwebtoken';
 
-import {
-  reservationRepository,
-  ReservationStatus,
-} from '@/libs/data/repositories/ReservationRepository';
+import { PrismaClient } from '@prisma/client';
 
-interface ApiResponse<T = unknown> {
-  success: boolean;
-  message: string;
-  data?: T;
-  error?: string;
-  timestamp: string;
-}
+const prisma = new PrismaClient();
 
-function createResponse<T>(
-  success: boolean,
-  message: string,
-  data?: T,
-  error?: string
-): NextResponse<ApiResponse<T>> {
-  return NextResponse.json({
-    data,
-    error,
-    message,
-    success,
-    timestamp: new Date().toISOString(),
-  });
-}
-
+/**
+ * Get reservation by ID
+ */
 export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
-  const { id } = await params;
-
   try {
-    const { searchParams } = new URL(request.url);
-    const includeDetails = searchParams.get('includeDetails') === 'true';
-
-    if (includeDetails) {
-      const reservation = await reservationRepository.findByIdWithDetails(id);
-      if (!reservation) {
-        return createResponse(
-          false,
-          'Reservation not found',
-          undefined,
-          'Reservation with the specified ID does not exist'
-        );
-      }
-      return createResponse(true, 'Reservation retrieved successfully', reservation);
-    } else {
-      const reservation = await reservationRepository.findById(id);
-      if (!reservation) {
-        return createResponse(
-          false,
-          'Reservation not found',
-          undefined,
-          'Reservation with the specified ID does not exist'
-        );
-      }
-      return createResponse(true, 'Reservation retrieved successfully', reservation);
+    // Get auth token
+    const authHeader = request.headers.get('authorization');
+    if (!authHeader?.startsWith('Bearer ')) {
+      return NextResponse.json(
+        { message: 'Token de autorización requerido', success: false },
+        { status: 401 }
+      );
     }
+
+    const token = authHeader.substring(7);
+    const decoded = jwt.verify(token, process.env.JWT_SECRET || 'fallback-secret') as any;
+
+    const { id } = await params;
+
+    // Build where clause (users can only see their own reservations, admins see all)
+    const where: any = { id };
+    if (decoded.role !== 'ADMIN') {
+      where.userId = decoded.userId;
+    }
+
+    const reservation = await prisma.reservation.findFirst({
+      include: {
+        service: {
+          select: { id: true, name: true, price: true },
+        },
+        user: {
+          select: { email: true, firstName: true, id: true, lastName: true },
+        },
+        venue: {
+          select: { id: true, name: true },
+        },
+      },
+      where,
+    });
+
+    if (!reservation) {
+      return NextResponse.json(
+        { message: 'Reserva no encontrada', success: false },
+        { status: 404 }
+      );
+    }
+
+    return NextResponse.json({
+      data: reservation,
+      success: true,
+    });
   } catch (error) {
-    console.error(`GET /api/reservations/${id} error:`, error);
-    return createResponse(
-      false,
-      'Failed to retrieve reservation',
-      undefined,
-      error instanceof Error ? error.message : 'Unknown error'
+    console.error('Get reservation error:', error);
+    return NextResponse.json(
+      { message: 'Error interno del servidor', success: false },
+      { status: 500 }
     );
+  } finally {
+    await prisma.$disconnect();
   }
 }
 
-export async function PUT(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
-  const { id } = await params;
-
+/**
+ * Update reservation
+ */
+export async function PATCH(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
+    // Get auth token
+    const authHeader = request.headers.get('authorization');
+    if (!authHeader?.startsWith('Bearer ')) {
+      return NextResponse.json(
+        { message: 'Token de autorización requerido', success: false },
+        { status: 401 }
+      );
+    }
+
+    const token = authHeader.substring(7);
+    const decoded = jwt.verify(token, process.env.JWT_SECRET || 'fallback-secret') as any;
+
+    const { id } = await params;
     const body = await request.json();
 
-    const { checkInDate, checkOutDate, guests, notes, status, totalAmount } = body;
+    // Build where clause (users can only update their own reservations, admins can update all)
+    const where: any = { id };
+    if (decoded.role !== 'ADMIN') {
+      where.userId = decoded.userId;
+    }
 
-    const updateData = {
-      checkInDate: checkInDate ? new Date(checkInDate) : undefined,
-      checkOutDate: checkOutDate ? new Date(checkOutDate) : undefined,
-      guests: guests ? parseInt(guests) : undefined,
-      notes,
-      status: status as ReservationStatus,
-      totalAmount: totalAmount ? parseFloat(totalAmount) : undefined,
-    };
+    // Check if reservation exists and user has permission
+    const existingReservation = await prisma.reservation.findFirst({ where });
+    if (!existingReservation) {
+      return NextResponse.json(
+        { message: 'Reserva no encontrada', success: false },
+        { status: 404 }
+      );
+    }
 
-    const reservation = await reservationRepository.update(id, updateData);
+    // Update reservation
+    const reservation = await prisma.reservation.update({
+      data: {
+        ...body,
+        updatedAt: new Date(),
+      },
+      include: {
+        service: {
+          select: { id: true, name: true, price: true },
+        },
+        user: {
+          select: { email: true, firstName: true, id: true, lastName: true },
+        },
+        venue: {
+          select: { id: true, name: true },
+        },
+      },
+      where: { id },
+    });
 
-    return createResponse(true, 'Reservation updated successfully', reservation);
+    return NextResponse.json({
+      data: reservation,
+      message: 'Reserva actualizada exitosamente',
+      success: true,
+    });
   } catch (error) {
-    console.error(`PUT /api/reservations/${id} error:`, error);
-    return createResponse(
-      false,
-      'Failed to update reservation',
-      undefined,
-      error instanceof Error ? error.message : 'Unknown error'
+    console.error('Update reservation error:', error);
+    return NextResponse.json(
+      { message: 'Error interno del servidor', success: false },
+      { status: 500 }
     );
+  } finally {
+    await prisma.$disconnect();
   }
 }
 
+/**
+ * Delete reservation
+ */
 export async function DELETE(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const { id } = await params;
-
   try {
-    await reservationRepository.delete(id);
+    // Get auth token
+    const authHeader = request.headers.get('authorization');
+    if (!authHeader?.startsWith('Bearer ')) {
+      return NextResponse.json(
+        { message: 'Token de autorización requerido', success: false },
+        { status: 401 }
+      );
+    }
 
-    return createResponse(true, 'Reservation deleted successfully');
+    const token = authHeader.substring(7);
+    const decoded = jwt.verify(token, process.env.JWT_SECRET || 'fallback-secret') as any;
+
+    const { id } = await params;
+
+    // Build where clause (users can only delete their own reservations, admins can delete all)
+    const where: any = { id };
+    if (decoded.role !== 'ADMIN') {
+      where.userId = decoded.userId;
+    }
+
+    // Check if reservation exists and user has permission
+    const existingReservation = await prisma.reservation.findFirst({ where });
+    if (!existingReservation) {
+      return NextResponse.json(
+        { message: 'Reserva no encontrada', success: false },
+        { status: 404 }
+      );
+    }
+
+    // Delete reservation
+    await prisma.reservation.delete({
+      where: { id },
+    });
+
+    return NextResponse.json({
+      message: 'Reserva eliminada exitosamente',
+      success: true,
+    });
   } catch (error) {
-    console.error(`DELETE /api/reservations/${id} error:`, error);
-    return createResponse(
-      false,
-      'Failed to delete reservation',
-      undefined,
-      error instanceof Error ? error.message : 'Unknown error'
+    console.error('Delete reservation error:', error);
+    return NextResponse.json(
+      { message: 'Error interno del servidor', success: false },
+      { status: 500 }
     );
+  } finally {
+    await prisma.$disconnect();
   }
 }
