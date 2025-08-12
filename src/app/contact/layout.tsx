@@ -1,4 +1,4 @@
-import { PublicLayout } from '@/libs/ui/layouts/PublicLayout';
+import { PublicLayout } from '@layouts/PublicLayout';
 
 interface ContactLayoutProps {
   children: React.ReactNode;

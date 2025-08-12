@@ -1,3 +1,3 @@
-import { BusinessPage } from '@/modules/mod-landing/presentation/components/BusinessPage';
+import { BusinessPage } from '@mod-landing/presentation/components/BusinessPage';
 
 export default BusinessPage;

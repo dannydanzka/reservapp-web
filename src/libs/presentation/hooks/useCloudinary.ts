@@ -1,6 +1,6 @@
 import { useCallback, useState } from 'react';
 
-import { handleApiRequest } from '@/libs/services/api/client/handleApiRequest';
+import { handleApiRequest } from '@shared/utils/handleApiRequest';
 
 export interface CloudinaryUploadResult {
   public_id: string;
@@ -85,10 +85,8 @@ const useCloudinary = (): UseCloudinaryReturn => {
 
         setUploadProgress(50);
 
-        const response = await handleApiRequest({
+        const response = await handleApiRequest('/api/upload/image', {
           body: formData,
-          endpoint: '/upload/image',
-          isFormData: true,
           method: 'POST',
         });
 
@@ -133,10 +131,8 @@ const useCloudinary = (): UseCloudinaryReturn => {
 
         setUploadProgress(30);
 
-        const response = await handleApiRequest({
+        const response = await handleApiRequest('/api/upload/images', {
           body: formData,
-          endpoint: '/upload/images',
-          isFormData: true,
           method: 'POST',
         });
 
@@ -164,8 +160,7 @@ const useCloudinary = (): UseCloudinaryReturn => {
     setError(null);
 
     try {
-      const response = await handleApiRequest({
-        endpoint: `/upload/image/${publicId}`,
+      const response = await handleApiRequest(`/api/upload/image/${publicId}`, {
         method: 'DELETE',
       });
 

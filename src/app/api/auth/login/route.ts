@@ -1,86 +1,88 @@
-import { NextRequest } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
+import bcrypt from 'bcryptjs';
+import jwt from 'jsonwebtoken';
 
-import { ApiResponse } from '@/libs/types/api.types';
-import {
-  LoginCredentials,
-  LoginSession,
-} from '@/modules/mod-auth/domain/interfaces/auth.interfaces';
-import { LoginUseCase } from '@/modules/mod-auth/domain/use-cases/LoginUseCase';
-import { ServerAuthRepository } from '@/modules/mod-auth/data/repositories/ServerAuthRepository';
-import { validateRequestBody, withErrorHandling } from '@/libs/services/api/utils/handleApiRequest';
+import { PrismaClient } from '@prisma/client';
 
-/**
- * @openapi
- * /auth/login:
- *   post:
- *     summary: Authenticate user and generate session token
- *     tags: [Authentication]
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             properties:
- *               email:
- *                 type: string
- *                 format: email
- *               password:
- *                 type: string
- *     responses:
- *       200:
- *         description: Successful login
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 success:
- *                   type: boolean
- *                 message:
- *                   type: string
- *                 data:
- *                   $ref: '#/components/schemas/LoginSession'
- *       400:
- *         description: Missing credentials
- *       401:
- *         description: Invalid credentials
- */
-const loginHandler = async (request: NextRequest): Promise<ApiResponse<LoginSession>> => {
-  const body: LoginCredentials = await request.json();
+const prisma = new PrismaClient();
 
-  // Validate request body
-  const validation = validateRequestBody<LoginCredentials>(body, ['email', 'password']);
-  if (!validation.isValid) {
-    return {
-      error: 'VALIDATION_ERROR',
-      message: validation.errors?.join(', ') ?? 'Validation failed',
-      success: false,
-      timestamp: new Date().toISOString(),
-    };
-  }
-
+export async function POST(request: NextRequest) {
   try {
-    // Execute login use case
-    const authRepository = new ServerAuthRepository();
-    const loginUseCase = new LoginUseCase(authRepository);
+    const body = await request.json();
 
-    const session = await loginUseCase.execute(body);
+    const { email, password } = body;
 
-    return {
-      data: session,
-      message: 'Login successful',
+    // Validate required fields
+    if (!email || !password) {
+      return NextResponse.json(
+        { message: 'Email y contraseña son requeridos', success: false },
+        { status: 400 }
+      );
+    }
+
+    // Find user by email
+    const user = await prisma.user.findUnique({
+      where: { email },
+    });
+
+    if (!user) {
+      return NextResponse.json(
+        { message: 'Credenciales inválidas', success: false },
+        { status: 401 }
+      );
+    }
+
+    // Verify password
+    const isValidPassword = await bcrypt.compare(password, user.password);
+
+    if (!isValidPassword) {
+      return NextResponse.json(
+        { message: 'Credenciales inválidas', success: false },
+        { status: 401 }
+      );
+    }
+
+    // Check if user is active
+    if (!user.isActive) {
+      return NextResponse.json(
+        { message: 'Cuenta desactivada. Contacta al soporte.', success: false },
+        { status: 401 }
+      );
+    }
+
+    // Generate JWT token
+    const token = jwt.sign(
+      {
+        email: user.email,
+        role: user.role,
+        userId: user.id,
+      },
+      process.env.JWT_SECRET || 'fallback-secret',
+      { expiresIn: '7d' }
+    );
+
+    // Return success with user data and token
+    return NextResponse.json({
+      data: {
+        token,
+        user: {
+          email: user.email,
+          id: user.id,
+          name: `${user.firstName} ${user.lastName}`,
+          phone: user.phone,
+          role: user.role,
+        },
+      },
+      message: 'Inicio de sesión exitoso',
       success: true,
-      timestamp: new Date().toISOString(),
-    };
+    });
   } catch (error) {
-    return {
-      error: 'LOGIN_ERROR',
-      message: error instanceof Error ? error.message : 'Login failed',
-      success: false,
-      timestamp: new Date().toISOString(),
-    };
+    console.error('Login error:', error);
+    return NextResponse.json(
+      { message: 'Error interno del servidor', success: false },
+      { status: 500 }
+    );
+  } finally {
+    await prisma.$disconnect();
   }
-};
-
-export const POST = withErrorHandling(loginHandler);
+}

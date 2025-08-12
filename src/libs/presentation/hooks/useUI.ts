@@ -24,7 +24,7 @@ import {
   setSidebarOpen,
   setTheme,
   toggleSidebar,
-} from '@/libs/core/state/slices/ui.slice';
+} from '@infrastructure/state/slices/ui.slice';
 import {
   selectActiveNotifications,
   selectBreadcrumbs,
@@ -43,7 +43,7 @@ import {
   selectSidebarActiveSection,
   selectTheme,
   selectUISettings,
-} from '@/libs/core/state/selectors';
+} from '@infrastructure/state/selectors';
 
 import { useAppDispatch, useAppSelector } from './useRedux';
 

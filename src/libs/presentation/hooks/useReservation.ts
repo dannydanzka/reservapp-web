@@ -23,7 +23,7 @@ import {
   setCurrentReservation,
   setSelectedDates,
   updateGuestInfo,
-} from '@/libs/core/state/slices/reservation.slice';
+} from '@infrastructure/state/slices/reservation.slice';
 import {
   selectActiveReservations,
   selectAdditionalGuests,
@@ -44,7 +44,7 @@ import {
   selectSelectedDates,
   selectTotalGuests,
   selectUpcomingReservations,
-} from '@/libs/core/state/selectors';
+} from '@infrastructure/state/selectors';
 
 import { useAppDispatch, useAppSelector } from './useRedux';
 

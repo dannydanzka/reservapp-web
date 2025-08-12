@@ -1,0 +1,24 @@
+{
+  "api": {
+    "baseUrl": "http://localhost:3001/api"
+  },
+  "database": {
+    "url": "postgresql://localhost:5432/reservapp_dev"
+  },
+  "features": {
+    "enableEmails": true,
+    "enableNotifications": true,
+    "enableAnalytics": true
+  },
+  "stripe": {
+    "publishableKey": "pk_test_development_key",
+    "secretKey": "sk_test_development_key"
+  },
+  "email": {
+    "fromEmail": "dev-noreply@reservapp.com"
+  },
+  "external": {
+    "googlePlacesApiKey": "dev_google_places_api_key",
+    "googleMapsApiKey": "dev_google_maps_api_key"
+  }
+}

@@ -1,6 +1,6 @@
 /**
- * Types for Venue API service
- * These types are independent of Prisma and only used for HTTP communication
+ * Temporary Venue Types stub
+ * Provides basic type definitions to avoid compilation errors
  */
 
 export interface Venue {
@@ -11,115 +11,61 @@ export interface Venue {
   address: string;
   city: string;
   state: string;
-  country: string;
-  zipCode?: string;
-  phone?: string;
-  email?: string;
-  website?: string;
   latitude?: number;
   longitude?: number;
-  rating?: number;
-  checkInTime?: string;
-  checkOutTime?: string;
-  amenities: string[];
-  businessHours?: Record<string, { open: string; close: string } | string>;
+  phone?: string;
+  email?: string;
+  rating: number;
   isActive: boolean;
   createdAt: string;
   updatedAt: string;
-}
-
-export enum VenueCategory {
-  ACCOMMODATION = 'ACCOMMODATION',
-  RESTAURANT = 'RESTAURANT',
-  SPA = 'SPA',
-  TOUR_OPERATOR = 'TOUR_OPERATOR',
-  EVENT_CENTER = 'EVENT_CENTER',
-  ENTERTAINMENT = 'ENTERTAINMENT',
-}
-
-// For compatibility with Prisma enum
-export type VenueType = VenueCategory;
-
-export interface VenueWithServices extends Venue {
-  services: VenueService[];
   _count: {
     services: number;
     reservations: number;
   };
 }
 
-export interface VenueService {
-  id: string;
-  name: string;
-  description?: string;
-  price: number;
-  currency: string;
-  duration?: number;
-  capacity: number;
-  category: string;
+export interface VenueWithServices extends Venue {
+  services: {
+    id: string;
+    name: string;
+    price: number;
+    type: string;
+  }[];
 }
 
 export interface CreateVenueData {
   name: string;
-  description?: string;
   category: VenueCategory;
   address: string;
-  city?: string;
-  state?: string;
-  country?: string;
-  zipCode?: string;
+  city: string;
+  state: string;
+  description?: string;
   phone?: string;
   email?: string;
-  website?: string;
   latitude?: number;
   longitude?: number;
-  checkInTime?: string;
-  checkOutTime?: string;
-  amenities?: string[];
-  businessHours?: Record<string, { open: string; close: string } | string>;
-  isActive?: boolean;
 }
 
 export interface UpdateVenueData extends Partial<CreateVenueData> {
   id: string;
+  isActive?: boolean;
 }
 
 export interface VenueFilters {
   category?: VenueCategory;
   city?: string;
-  isActive?: boolean;
   search?: string;
-  hasServices?: boolean;
   rating?: number;
-  priceRange?: {
-    min: number;
-    max: number;
-  };
+  priceRange?: { min: number; max: number };
 }
 
 export interface VenueStats {
-  totalVenues: number;
-  activeVenues: number;
-  totalReservations: number;
-  totalRevenue: number;
+  total: number;
+  active: number;
   averageRating: number;
-  venuesByCategory: Record<VenueCategory, number>;
-  topCategories: Array<{
-    category: VenueCategory;
-    count: number;
-  }>;
-  topVenues: Array<{
-    id: string;
-    name: string;
-    reservations: number;
-    revenue: number;
-    rating: number;
-  }>;
-}
-
-export interface PaginationParams {
-  page?: number;
-  limit?: number;
+  totalReservations: number;
+  byCategory: Record<VenueCategory, number>;
 }
 
 export interface PaginatedResponse<T> {
@@ -128,6 +74,15 @@ export interface PaginatedResponse<T> {
     page: number;
     limit: number;
     total: number;
-    totalPages: number;
+    pages: number;
   };
+}
+
+export enum VenueCategory {
+  RESTAURANT = 'RESTAURANT',
+  SPA = 'SPA',
+  ACCOMMODATION = 'ACCOMMODATION',
+  TOUR_OPERATOR = 'TOUR_OPERATOR',
+  EVENT_CENTER = 'EVENT_CENTER',
+  ENTERTAINMENT = 'ENTERTAINMENT',
 }

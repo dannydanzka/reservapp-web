@@ -1,32 +1,40 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
+
+import { PrismaClient } from '@prisma/client';
+
+const prisma = new PrismaClient();
 
 /**
- * Health check endpoint for monitoring and system status.
- *
- * @returns {NextResponse} Health status information
+ * Health check endpoint - verifies system status
  */
-export async function GET() {
-  const healthData = {
-    environment: process.env.NODE_ENV,
-    services: {
-      // TODO: Add real cache check
-      api: 'operational',
+export async function GET(request: NextRequest) {
+  try {
+    // Check database connection
+    await prisma.$queryRaw`SELECT 1`;
 
-      // TODO: Add real database check
-      cache: 'connected',
-      database: 'connected',
-    },
-    status: 'healthy',
-    timestamp: new Date().toISOString(),
-    uptime: process.uptime(),
-    version: '1.0.0',
-  };
-
-  return NextResponse.json(healthData, {
-    headers: {
-      'Cache-Control': 'no-cache',
-      'Content-Type': 'application/json',
-    },
-    status: 200,
-  });
+    return NextResponse.json({
+      services: {
+        api: 'operational',
+        database: 'connected',
+      },
+      status: 'healthy',
+      timestamp: new Date().toISOString(),
+    });
+  } catch (error) {
+    console.error('Health check failed:', error);
+    return NextResponse.json(
+      {
+        error: 'Database connection failed',
+        services: {
+          api: 'operational',
+          database: 'disconnected',
+        },
+        status: 'unhealthy',
+        timestamp: new Date().toISOString(),
+      },
+      { status: 503 }
+    );
+  } finally {
+    await prisma.$disconnect();
+  }
 }

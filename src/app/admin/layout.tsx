@@ -1,4 +1,4 @@
-import { AdminLayout } from '@/libs/ui/layouts/AdminLayout';
+import { AdminLayout } from '@layouts/AdminLayout';
 
 interface AdminLayoutWrapperProps {
   children: React.ReactNode;

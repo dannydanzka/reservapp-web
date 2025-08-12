@@ -1,6 +1,6 @@
 import { useCallback, useState } from 'react';
 
-import { handleApiRequest } from '@/libs/services/api/client/handleApiRequest';
+import { handleApiRequest } from '@shared/utils/handleApiRequest';
 import { Reservation, ReservationStatus } from '@prisma/client';
 
 interface ReservationFilters {
@@ -93,8 +93,7 @@ const useReservationService = (): UseReservationServiceReturn => {
         if (pagination.limit) params.append('limit', pagination.limit.toString());
         if (includeDetails) params.append('includeDetails', 'true');
 
-        const response = await handleApiRequest({
-          endpoint: `/reservations?${params.toString()}`,
+        const response = await handleApiRequest(`/api/reservations?${params.toString()}`, {
           method: 'GET',
         });
 
@@ -122,8 +121,7 @@ const useReservationService = (): UseReservationServiceReturn => {
     try {
       const params = includeDetails ? '?includeDetails=true' : '';
 
-      const response = await handleApiRequest({
-        endpoint: `/reservations/${id}${params}`,
+      const response = await handleApiRequest(`/api/reservations/${id}${params}`, {
         method: 'GET',
       });
 
@@ -147,9 +145,11 @@ const useReservationService = (): UseReservationServiceReturn => {
     setError(null);
 
     try {
-      const response = await handleApiRequest({
-        body: reservationData,
-        endpoint: '/reservations',
+      const response = await handleApiRequest('/api/reservations', {
+        body: JSON.stringify(reservationData),
+        headers: {
+          'Content-Type': 'application/json',
+        },
         method: 'POST',
       });
 
@@ -174,9 +174,11 @@ const useReservationService = (): UseReservationServiceReturn => {
       setError(null);
 
       try {
-        const response = await handleApiRequest({
-          body: reservationData,
-          endpoint: `/reservations/${id}`,
+        const response = await handleApiRequest(`/api/reservations/${id}`, {
+          body: JSON.stringify(reservationData),
+          headers: {
+            'Content-Type': 'application/json',
+          },
           method: 'PUT',
         });
 
@@ -202,8 +204,7 @@ const useReservationService = (): UseReservationServiceReturn => {
     setError(null);
 
     try {
-      const response = await handleApiRequest({
-        endpoint: `/reservations/${id}`,
+      const response = await handleApiRequest(`/api/reservations/${id}`, {
         method: 'DELETE',
       });
 
@@ -227,8 +228,7 @@ const useReservationService = (): UseReservationServiceReturn => {
     setError(null);
 
     try {
-      const response = await handleApiRequest({
-        endpoint: `/reservations/${id}/cancel`,
+      const response = await handleApiRequest(`/api/reservations/${id}/cancel`, {
         method: 'POST',
       });
 
@@ -252,8 +252,7 @@ const useReservationService = (): UseReservationServiceReturn => {
     setError(null);
 
     try {
-      const response = await handleApiRequest({
-        endpoint: `/reservations/${id}/checkin`,
+      const response = await handleApiRequest(`/api/reservations/${id}/checkin`, {
         method: 'POST',
       });
 
@@ -277,8 +276,7 @@ const useReservationService = (): UseReservationServiceReturn => {
     setError(null);
 
     try {
-      const response = await handleApiRequest({
-        endpoint: `/reservations/${id}/checkout`,
+      const response = await handleApiRequest(`/api/reservations/${id}/checkout`, {
         method: 'POST',
       });
 

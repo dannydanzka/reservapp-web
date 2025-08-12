@@ -5,7 +5,7 @@ import {
   PrismaClient,
   ReservationStatus,
   ServiceType,
-  UserRole,
+  UserRoleEnum,
   VenueType,
 } from '@prisma/client';
 
@@ -14,7 +14,8 @@ const prisma = new PrismaClient();
 async function main() {
   console.log('🌱 Starting comprehensive database seeding...');
 
-  // Clear existing data
+  // Clear existing data (order matters due to foreign key constraints)
+  await prisma.review.deleteMany();
   await prisma.payment.deleteMany();
   await prisma.reservation.deleteMany();
   await prisma.service.deleteMany();
@@ -37,7 +38,7 @@ async function main() {
         lastName: 'Sistema',
         password: hashedPassword,
         phone: '+52 33 1234 5678',
-        role: UserRole.ADMIN,
+        role: UserRoleEnum.ADMIN,
         stripeCustomerId: 'cus_admin123',
       },
     }),
@@ -48,7 +49,7 @@ async function main() {
         lastName: 'General',
         password: hashedPassword,
         phone: '+52 33 8765 4321',
-        role: UserRole.MANAGER,
+        role: UserRoleEnum.MANAGER,
         stripeCustomerId: 'cus_manager123',
       },
     }),
@@ -59,7 +60,7 @@ async function main() {
         lastName: 'Servicio',
         password: hashedPassword,
         phone: '+52 33 5555 1234',
-        role: UserRole.EMPLOYEE,
+        role: UserRoleEnum.EMPLOYEE,
       },
     }),
 
@@ -71,7 +72,7 @@ async function main() {
         lastName: 'Pérez González',
         password: hashedPassword,
         phone: '+52 33 1111 2222',
-        role: UserRole.USER,
+        role: UserRoleEnum.USER,
         stripeCustomerId: 'cus_juan123',
       },
     }),
@@ -82,7 +83,7 @@ async function main() {
         lastName: 'López Hernández',
         password: hashedPassword,
         phone: '+52 33 3333 4444',
-        role: UserRole.USER,
+        role: UserRoleEnum.USER,
         stripeCustomerId: 'cus_maria123',
       },
     }),
@@ -93,7 +94,7 @@ async function main() {
         lastName: 'Rodríguez Silva',
         password: hashedPassword,
         phone: '+52 33 5555 6666',
-        role: UserRole.USER,
+        role: UserRoleEnum.USER,
         stripeCustomerId: 'cus_carlos123',
       },
     }),
@@ -106,7 +107,7 @@ async function main() {
         lastName: 'Martínez Ruiz',
         password: hashedPassword,
         phone: '+52 33 7777 8888',
-        role: UserRole.USER,
+        role: UserRoleEnum.USER,
         stripeCustomerId: 'cus_ana123',
       },
     }),
@@ -117,7 +118,7 @@ async function main() {
         lastName: 'García Morales',
         password: hashedPassword,
         phone: '+52 33 9999 0000',
-        role: UserRole.USER,
+        role: UserRoleEnum.USER,
         stripeCustomerId: 'cus_roberto123',
       },
     }),
@@ -128,7 +129,7 @@ async function main() {
         lastName: 'Torres Jiménez',
         password: hashedPassword,
         phone: '+52 33 2222 3333',
-        role: UserRole.USER,
+        role: UserRoleEnum.USER,
         stripeCustomerId: 'cus_lucia123',
       },
     }),
@@ -139,7 +140,7 @@ async function main() {
         lastName: 'Sánchez Vega',
         password: hashedPassword,
         phone: '+52 33 4444 5555',
-        role: UserRole.USER,
+        role: UserRoleEnum.USER,
       },
     }),
   ]);
@@ -349,6 +350,20 @@ async function main() {
   });
 
   console.log('🏢 Created 10 diverse venues across various locations');
+
+  // Create venues array for reviews
+  const venues = [
+    casaSalazar,
+    moralesVenue,
+    restauranteSantoDomingo,
+    restaurantHueso,
+    spaVitania,
+    spaGrandFiesta,
+    toursCentrales,
+    toursTequila,
+    centroEventos,
+    teatroDegollado,
+  ];
 
   // Create comprehensive services with realistic pricing
 
@@ -1047,6 +1062,16 @@ async function main() {
   ]);
 
   console.log('🎯 Created 35+ diverse services with realistic pricing');
+
+  // Create services array for reviews
+  const services = [
+    ...casaSalazarServices,
+    ...moralesVenueServices,
+    ...restaurantServices,
+    ...spaServices,
+    ...tourServices,
+    ...eventServices,
+  ];
 
   // Create comprehensive reservations covering all scenarios
   const reservations = await Promise.all([
@@ -2093,6 +2118,289 @@ async function main() {
   });
 
   console.log('⚙️ Created comprehensive system configuration');
+
+  // Create realistic reviews for venues and services
+  const reviewsData = [
+    // Casa Salazar (luxury accommodation) - Reviews
+    {
+      comment:
+        'Casa Salazar superó todas mis expectativas. El servicio es impecable, las instalaciones de lujo y la atención personalizada es extraordinaria. Definitivamente regresaré para una ocasión especial.',
+      isVerified: true,
+      isVisible: true,
+      metadata: { roomType: 'Suite Premium', stayDuration: '3 nights' },
+
+      rating: 5,
+
+      // Casa Salazar
+      reservationId: reservations[0].id,
+
+      title: 'Experiencia inolvidable',
+
+      userId: users[3].id,
+      // María García
+      venueId: venues[0].id,
+    },
+    {
+      comment:
+        'Hotel hermoso con excelente ubicación. El personal muy amable y las habitaciones cómodas. Solo mejoraría el wifi que a veces era lento.',
+      isVerified: true,
+      isVisible: true,
+      // Casa Salazar
+      metadata: { highlight: 'breakfast', stayDuration: '2 nights' },
+
+      rating: 4,
+
+      title: 'Muy buena estadía',
+
+      userId: users[4].id,
+      // Carlos López
+      venueId: venues[0].id,
+    },
+    {
+      comment:
+        'Elegimos Casa Salazar para nuestra luna de miel y fue la decisión perfecta. Cada detalle estaba cuidado, desde la decoración hasta el servicio de habitación. ¡Altamente recomendado!',
+      isVerified: false,
+      isVisible: true,
+      // Casa Salazar
+      metadata: { occasion: 'honeymoon', specialRequest: 'romantic setup' },
+
+      rating: 5,
+
+      title: 'Perfecto para luna de miel',
+
+      userId: users[5].id,
+      // Ana Martínez
+      venueId: venues[0].id,
+    },
+
+    // Santo Domingo (restaurant) - Reviews
+    {
+      comment:
+        'Santo Domingo ofrece una experiencia culinaria única. Cada platillo es una obra de arte, los sabores son increíbles y el ambiente muy sofisticado. El chef realmente sabe lo que hace.',
+      isVerified: true,
+      isVisible: true,
+      metadata: { partySize: 4, specialDiet: 'vegetarian options' },
+
+      rating: 5,
+
+      // Santo Domingo
+      reservationId: reservations[2].id,
+
+      title: 'Cocina excepcional',
+
+      userId: users[6].id,
+      // Diego Rodríguez
+      venueId: venues[2].id,
+    },
+    {
+      comment:
+        'Celebramos nuestro aniversario aquí y fue espectacular. La comida deliciosa, el servicio atento y el ambiente muy romántico. Los precios son altos pero vale la pena.',
+      isVerified: true,
+      isVisible: true,
+      // Santo Domingo
+      metadata: { favoritedish: 'risotto', occasion: 'anniversary' },
+
+      rating: 4,
+
+      title: 'Excelente para celebraciones',
+
+      userId: users[7].id,
+      // Sofía Hernández
+      venueId: venues[2].id,
+    },
+    {
+      comment:
+        'La comida está rica y la presentación es muy buena, pero considero que los precios están muy elevados para la porción que sirven. El servicio es correcto.',
+      isVerified: false,
+      isVisible: true,
+      // Santo Domingo
+      metadata: { pricePoint: 'expensive', serviceRating: 4 },
+
+      rating: 3,
+
+      title: 'Bueno pero caro',
+
+      userId: users[8].id,
+      // Roberto Jiménez
+      venueId: venues[2].id,
+    },
+
+    // Vitania Spa - Reviews
+    {
+      comment:
+        'El masaje relajante en Vitania fue exactamente lo que necesitaba. Las instalaciones son hermosas, muy limpias y el personal altamente profesional. Me sentí renovada completamente.',
+      isVerified: true,
+      isVisible: true,
+      metadata: { duration: '90 minutes', treatment: 'Swedish massage' },
+      rating: 5,
+
+      reservationId: reservations[4].id,
+
+      // Patricia Morales
+      serviceId: services.find((s) => s.name.includes('Masaje'))?.id,
+
+      title: 'Relajación total',
+      userId: users[9].id,
+    },
+    {
+      comment:
+        'Excellent spa experience. Las terapistas saben lo que hacen y el ambiente es muy tranquilo. Solo sugeriría mejorar la música de relajación.',
+      isVerified: true,
+      isVisible: true,
+      metadata: { improvement: 'background music', therapist: 'Ana' },
+      rating: 4,
+
+      // María García
+      serviceId: services.find((s) => s.name.includes('Masaje'))?.id,
+
+      title: 'Muy recomendable',
+      userId: users[3].id,
+    },
+
+    // Tour Cultural - Reviews
+    {
+      comment:
+        'El tour cultural por Guadalajara fue fascinante. El guía muy conocedor de la historia local, visitamos lugares increíbles y aprendí mucho sobre la cultura tapatía. Totalmente recomendado.',
+      isVerified: true,
+      isVisible: true,
+      metadata: { groupSize: 12, highlights: ['Teatro Degollado', 'Centro Histórico'] },
+      rating: 5,
+
+      reservationId: reservations[5].id,
+
+      // Carlos López
+      serviceId: services.find((s) => s.name.includes('Tour Cultural'))?.id,
+
+      title: 'Tour increíble',
+      userId: users[4].id,
+    },
+    {
+      comment:
+        'Tour muy completo y educativo. El guía explicó muy bien la historia de cada lugar. Solo que el grupo era un poco grande y a veces costaba trabajo escuchar.',
+      isVerified: true,
+      isVisible: true,
+      metadata: { groupSize: 15, suggestion: 'smaller groups' },
+      rating: 4,
+
+      // Ana Martínez
+      serviceId: services.find((s) => s.name.includes('Tour Cultural'))?.id,
+
+      title: 'Muy educativo',
+      userId: users[5].id,
+    },
+
+    // Event Center Expo - Reviews
+    {
+      comment:
+        'Organizamos la conferencia anual de nuestra empresa en Expo y todo salió perfecto. Las instalaciones son modernas, el equipo técnico funciona bien y el staff muy profesional.',
+      isVerified: true,
+      isVisible: true,
+      metadata: { attendees: 150, eventType: 'corporate conference' },
+
+      rating: 4,
+
+      // Expo Guadalajara
+      reservationId: reservations[6].id,
+
+      title: 'Excelente para eventos',
+
+      userId: users[6].id,
+      // Diego Rodríguez
+      venueId: venues[8].id,
+    },
+
+    // Additional reviews for better distribution
+    {
+      comment:
+        'No puedo decir más que cosas positivas. Desde la reservación hasta el check-out, todo fue perfecto. El personal siempre dispuesto a ayudar y las instalaciones impecables.',
+      isVerified: false,
+      isVisible: true,
+      // Hotel Morales
+      metadata: { cleanliness: 5, serviceHighlight: 'concierge' },
+
+      rating: 5,
+
+      title: 'Servicio excepcional',
+
+      userId: users[7].id,
+      // Sofía Hernández
+      venueId: venues[1].id,
+    },
+    {
+      comment:
+        'La ubicación es buena pero las instalaciones necesitan mantenimiento. El aire acondicionado no funcionaba bien y el servicio fue lento. Esperaba más por el precio.',
+      isVerified: true,
+      isVisible: true,
+      // Hotel Morales
+      metadata: { issues: ['AC problems', 'slow service'], needsImprovement: true },
+
+      rating: 2,
+
+      title: 'Podría mejorar',
+
+      userId: users[8].id,
+      // Roberto Jiménez
+      venueId: venues[1].id,
+    },
+    {
+      comment:
+        'Hueso tiene un concepto muy interesante y la comida mexicana contemporánea está deliciosa. Ambiente único y creativo. Los cocteles también están muy buenos.',
+      isVerified: true,
+      isVisible: true,
+      // Hueso
+      metadata: { cuisine: 'contemporary Mexican', favoriteItem: 'cocktails' },
+
+      rating: 4,
+
+      title: 'Rica comida mexicana',
+
+      userId: users[9].id,
+      // Patricia Morales
+      venueId: venues[3].id,
+    },
+  ];
+
+  // Create reviews with error handling
+  const reviews = [];
+  for (const reviewData of reviewsData) {
+    try {
+      if (reviewData.userId && (reviewData.venueId || reviewData.serviceId)) {
+        const review = await prisma.review.create({
+          data: {
+            comment: reviewData.comment,
+            // Add some variation in creation dates (last 6 months)
+            createdAt: new Date(Date.now() - Math.random() * 180 * 24 * 60 * 60 * 1000),
+
+            isVerified: reviewData.isVerified,
+
+            isVisible: reviewData.isVisible,
+
+            metadata: reviewData.metadata || null,
+
+            rating: reviewData.rating,
+
+            reservationId: reviewData.reservationId || null,
+
+            serviceId: reviewData.serviceId || null,
+
+            title: reviewData.title,
+
+            userId: reviewData.userId,
+
+            venueId: reviewData.venueId || null,
+          },
+        });
+        reviews.push(review);
+      }
+    } catch (error) {
+      console.warn(
+        `⚠️ Skipped review creation:`,
+        error instanceof Error ? error.message : 'Unknown error'
+      );
+    }
+  }
+
+  console.log(`⭐ Created ${reviews.length} realistic reviews with ratings and comments`);
   console.log('🎉 Comprehensive database seeding completed successfully!');
 
   // Print detailed summary
@@ -2120,6 +2428,13 @@ async function main() {
   console.log(`   - ⏳ Processing: 2 ($35,850 MXN processing)`);
   console.log(`   - ❌ Failed: 2 ($15,000 MXN failed)`);
   console.log(`   - 🎯 Special: 2 (tips, upgrades)`);
+  console.log(`⭐ Reviews: ${reviews.length} authentic customer reviews`);
+  console.log(`   - ⭐⭐⭐⭐⭐ 5-star: ${reviews.filter((r) => r.rating === 5).length}`);
+  console.log(`   - ⭐⭐⭐⭐ 4-star: ${reviews.filter((r) => r.rating === 4).length}`);
+  console.log(`   - ⭐⭐⭐ 3-star: ${reviews.filter((r) => r.rating === 3).length}`);
+  console.log(`   - ⭐⭐ 2-star: ${reviews.filter((r) => r.rating === 2).length}`);
+  console.log(`   - ✅ Verified: ${reviews.filter((r) => r.isVerified).length} reviews`);
+  console.log(`   - 💬 With Comments: ${reviews.filter((r) => r.comment).length} reviews`);
   console.log(`⚙️ System Configuration: 7 comprehensive settings`);
   console.log(`\n🌮 GUADALAJARA FOCUS:`);
   console.log(`   - Real venues with GPS coordinates`);

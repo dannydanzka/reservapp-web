@@ -1,6 +1,6 @@
 import { useCallback, useState } from 'react';
 
-import { handleApiRequest } from '@/libs/services/api/client/handleApiRequest';
+import { handleApiRequest } from '@shared/utils/handleApiRequest';
 import { loadStripe, Stripe, StripeElements } from '@stripe/stripe-js';
 
 interface UseStripeReturn {
@@ -115,11 +115,12 @@ export const useStripe = (): UseStripeReturn => {
       setError(null);
 
       try {
-        const response = await handleApiRequest<CreatePaymentIntentResponse>({
-          body: data,
-          endpoint: '/payments/create-intent',
+        const response = await handleApiRequest('/api/payments/create-intent', {
+          body: JSON.stringify(data),
+          headers: {
+            'Content-Type': 'application/json',
+          },
           method: 'POST',
-          timeout: 30000,
         });
 
         return response?.data ?? null;
@@ -142,11 +143,12 @@ export const useStripe = (): UseStripeReturn => {
       setError(null);
 
       try {
-        const response = await handleApiRequest<ConfirmPaymentResponse>({
-          body: data,
-          endpoint: '/payments/confirm',
+        const response = await handleApiRequest('/api/payments/confirm', {
+          body: JSON.stringify(data),
+          headers: {
+            'Content-Type': 'application/json',
+          },
           method: 'POST',
-          timeout: 30000,
         });
 
         return response?.data ?? null;
@@ -169,11 +171,12 @@ export const useStripe = (): UseStripeReturn => {
       setError(null);
 
       try {
-        const response = await handleApiRequest<CreateCustomerResponse>({
-          body: data,
-          endpoint: '/payments/customers',
+        const response = await handleApiRequest('/api/payments/customers', {
+          body: JSON.stringify(data),
+          headers: {
+            'Content-Type': 'application/json',
+          },
           method: 'POST',
-          timeout: 30000,
         });
 
         return response?.data ?? null;
@@ -196,11 +199,12 @@ export const useStripe = (): UseStripeReturn => {
       setError(null);
 
       try {
-        const response = await handleApiRequest<CreateRefundResponse>({
-          body: data,
-          endpoint: '/payments/refund',
+        const response = await handleApiRequest('/api/payments/refund', {
+          body: JSON.stringify(data),
+          headers: {
+            'Content-Type': 'application/json',
+          },
           method: 'POST',
-          timeout: 30000,
         });
 
         return response?.data ?? null;

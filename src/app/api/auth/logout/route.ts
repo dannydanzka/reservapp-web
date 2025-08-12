@@ -1,37 +1,24 @@
 import { NextRequest, NextResponse } from 'next/server';
 
-import { ApiResponse } from '@/libs/types/api.types';
-
 /**
- * Logout endpoint for web and mobile applications.
- *
- * @param {NextRequest} request - The request object
- * @returns {Promise<NextResponse>} Logout response
+ * Logout endpoint - invalidates user session
  */
-export async function POST(_request: NextRequest) {
+export async function POST(request: NextRequest) {
   try {
-    // TODO: Implement token invalidation logic
-    // For now, we'll just clear the cookie
+    // Since we're using JWT tokens, logout is handled client-side
+    // by removing the token. Server-side logout could involve:
+    // - Token blacklisting (if implemented)
+    // - Session cleanup (if using sessions)
 
-    const successResponse: ApiResponse<null> = {
-      data: null,
-      message: 'Logout successful',
+    return NextResponse.json({
+      message: 'Sesión cerrada exitosamente',
       success: true,
-    };
-
-    return NextResponse.json(successResponse, {
-      headers: {
-        'Set-Cookie': 'auth_token=; HttpOnly; Secure; Path=/; Max-Age=0',
-      },
-      status: 200,
     });
-  } catch (_error) {
-    const errorResponse: ApiResponse<null> = {
-      error: 'LOGOUT_ERROR',
-      message: 'Logout failed',
-      success: false,
-    };
-
-    return NextResponse.json(errorResponse, { status: 500 });
+  } catch (error) {
+    console.error('Logout error:', error);
+    return NextResponse.json(
+      { message: 'Error interno del servidor', success: false },
+      { status: 500 }
+    );
   }
 }

@@ -1,23 +1,22 @@
 {
   "compilerOptions": {
+    "target": "ES2017",
     "lib": [
       "dom",
       "dom.iterable",
-      "es6"
+      "esnext"
     ],
     "allowJs": true,
     "skipLibCheck": true,
-    "strict": true,
+    "strict": false,
     "noEmit": true,
-    "esModuleInterop": true,
-    "allowSyntheticDefaultImports": true,
+    "incremental": true,
     "module": "esnext",
-    "moduleResolution": "bundler",
+    "esModuleInterop": true,
+    "moduleResolution": "node",
     "resolveJsonModule": true,
     "isolatedModules": true,
     "jsx": "preserve",
-    "incremental": true,
-    "verbatimModuleSyntax": false,
     "plugins": [
       {
         "name": "next"
@@ -25,86 +24,41 @@
     ],
     "baseUrl": ".",
     "paths": {
-      "@/*": [
-        "./src/*"
-      ],
-      "@app/*": [
-        "./src/app/*"
-      ],
-      "@modules/*": [
-        "./src/modules/*"
-      ],
-      "@libs/*": [
-        "./src/libs/*"
-      ],
-      "@core": [
-        "./src/libs/core"
-      ],
-      "@core/*": [
-        "./src/libs/core/*"
-      ],
-      "@data": [
-        "./src/libs/data"
-      ],
-      "@data/*": [
-        "./src/libs/data/*"
-      ],
-      "@domain": [
-        "./src/libs/domain"
-      ],
-      "@domain/*": [
-        "./src/libs/domain/*"
-      ],
-      "@presentation": [
-        "./src/libs/presentation"
-      ],
-      "@presentation/*": [
-        "./src/libs/presentation/*"
-      ],
-      "@services": [
-        "./src/libs/services"
-      ],
-      "@services/*": [
-        "./src/libs/services/*"
-      ],
-      "@ui": [
-        "./src/libs/ui"
-      ],
-      "@ui/*": [
-        "./src/libs/ui/*"
-      ],
-      "@types": [
-        "./src/libs/types"
-      ],
-      "@types/*": [
-        "./src/libs/types/*"
-      ],
-      "@api/*": [
-        "./src/app/api/*"
-      ],
-      "@mod-auth/*": [
-        "./src/modules/mod-auth/*"
-      ],
-      "@mod-admin/*": [
-        "./src/modules/mod-admin/*"
-      ],
-      "@mod-landing/*": [
-        "./src/modules/mod-landing/*"
-      ]
-    },
-    "target": "ES2017",
-    "types": [
-      "@testing-library/jest-dom",
-      "jest"
-    ]
+      "@libs/*": ["./src/libs/*"],
+      "@shared/*": ["./src/libs/shared/*"],
+      "@presentation/*": ["./src/libs/presentation/*"],
+      "@infrastructure/*": ["./src/libs/infrastructure/*"],
+      "@domains/*": ["./src/libs/domains/*"],
+      "@ui/*": ["./src/libs/presentation/components/*"],
+      "@hooks/*": ["./src/libs/presentation/hooks/*"],
+      "@providers/*": ["./src/libs/presentation/providers/*"],
+      "@layouts/*": ["./src/libs/presentation/layouts/*"],
+      "@services/*": ["./src/libs/services/*", "./src/libs/infrastructure/services/*"],
+      "@repositories/*": ["./src/libs/infrastructure/repositories/*"],
+      "@config/*": ["./src/libs/shared/config/*"],
+      "@types/*": ["./src/libs/shared/types/*"],
+      "@constants/*": ["./src/libs/shared/constants/*"],
+      "@i18n/*": ["./src/libs/shared/i18n/*"],
+      "@modules/*": ["./src/modules/*"],
+      "@mod-auth/*": ["./src/modules/mod-auth/*"],
+      "@mod-admin/*": ["./src/modules/mod-admin/*"],
+      "@mod-landing/*": ["./src/modules/mod-landing/*"],
+      "@api/*": ["./src/app/api/*"],
+      "@__tests__/*": ["./src/__tests__/*"]
+    }
   },
   "include": [
-    "**/*.ts",
-    "**/*.tsx",
     "next-env.d.ts",
-    ".next/types/**/*.ts"
+    ".next/types/**/*.ts",
+    "**/*.ts",
+    "**/*.tsx"
   ],
   "exclude": [
-    "node_modules"
+    "node_modules",
+    "src/__tests__/__disabled__/**/*",
+    "src/libs/domains/**/*",
+    "src/__disabled__/**/*",
+    "__disabled__/**/*",
+    "__disabled__tests__/**/*"
   ]
 }

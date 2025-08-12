@@ -1,3 +1,3 @@
-import { ServicesPage } from '@/modules/mod-landing/presentation/components/ServicesPage';
+import { ServicesPage } from '@mod-landing/presentation/components/ServicesPage';
 
 export default ServicesPage;

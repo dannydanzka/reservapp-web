@@ -1,4 +1,4 @@
-import { AdminDashboard } from '@/modules/mod-admin/presentation/components/AdminDashboard';
+import { AdminDashboard } from '@mod-admin/presentation/components/dashboard/AdminDashboard';
 
 /**
  * Admin dashboard page.

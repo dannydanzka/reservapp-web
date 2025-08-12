@@ -1,110 +1,182 @@
 import { NextRequest, NextResponse } from 'next/server';
+import jwt from 'jsonwebtoken';
 
-import { Prisma } from '@prisma/client';
-import { VenueRepository } from '@libs/data/repositories/VenueRepository';
+import { PrismaClient } from '@prisma/client';
 
-const venueRepository = new VenueRepository();
+const prisma = new PrismaClient();
 
+/**
+ * Get venue by ID
+ */
 export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const { id } = await params;
-    const venue = await venueRepository.findById(id);
+
+    const venue = await prisma.venue.findUnique({
+      include: {
+        services: {
+          select: {
+            description: true,
+            duration: true,
+            id: true,
+            isActive: true,
+            name: true,
+            price: true,
+          },
+          where: { isActive: true },
+        },
+      },
+      where: { id },
+    });
 
     if (!venue) {
-      return NextResponse.json(
-        {
-          error: 'The requested venue does not exist',
-          message: 'Venue not found',
-          success: false,
-          timestamp: new Date().toISOString(),
-        },
-        { status: 404 }
-      );
+      return NextResponse.json({ message: 'Venue no encontrado', success: false }, { status: 404 });
     }
 
     return NextResponse.json({
       data: venue,
-      message: 'Venue retrieved successfully',
       success: true,
-      timestamp: new Date().toISOString(),
     });
   } catch (error) {
-    console.error('Error fetching venue:', error);
+    console.error('Get venue error:', error);
     return NextResponse.json(
-      {
-        error: error instanceof Error ? error.message : 'Unknown error',
-        message: 'Error fetching venue',
-        success: false,
-        timestamp: new Date().toISOString(),
-      },
+      { message: 'Error interno del servidor', success: false },
       { status: 500 }
     );
+  } finally {
+    await prisma.$disconnect();
   }
 }
 
-export async function PUT(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+/**
+ * Update venue (Admin only)
+ */
+export async function PATCH(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
+    // Get auth token
+    const authHeader = request.headers.get('authorization');
+    if (!authHeader?.startsWith('Bearer ')) {
+      return NextResponse.json(
+        { message: 'Token de autorización requerido', success: false },
+        { status: 401 }
+      );
+    }
+
+    const token = authHeader.substring(7);
+    const decoded = jwt.verify(token, process.env.JWT_SECRET || 'fallback-secret') as any;
+
+    // Check if user is admin
+    if (decoded.role !== 'ADMIN') {
+      return NextResponse.json(
+        { message: 'Acceso denegado. Se requiere rol de administrador', success: false },
+        { status: 403 }
+      );
+    }
+
     const { id } = await params;
     const body = await request.json();
 
-    const updateData: Prisma.VenueUpdateInput = {};
+    // Check if venue exists
+    const existingVenue = await prisma.venue.findUnique({
+      where: { id },
+    });
 
-    if (body.name !== undefined) updateData.name = body.name;
-    if (body.description !== undefined) updateData.description = body.description;
-    if (body.address !== undefined) updateData.address = body.address;
-    if (body.phone !== undefined) updateData.phone = body.phone;
-    if (body.email !== undefined) updateData.email = body.email;
-    if (body.website !== undefined) updateData.website = body.website;
-    if (body.latitude !== undefined) updateData.latitude = new Prisma.Decimal(body.latitude);
-    if (body.longitude !== undefined) updateData.longitude = new Prisma.Decimal(body.longitude);
-    if (body.rating !== undefined) updateData.rating = new Prisma.Decimal(body.rating);
-    if (body.isActive !== undefined) updateData.isActive = body.isActive;
+    if (!existingVenue) {
+      return NextResponse.json({ message: 'Venue no encontrado', success: false }, { status: 404 });
+    }
 
-    const venue = await venueRepository.update(id, updateData);
+    // Update venue
+    const venue = await prisma.venue.update({
+      data: {
+        ...body,
+        updatedAt: new Date(),
+      },
+      include: {
+        services: {
+          select: {
+            description: true,
+            duration: true,
+            id: true,
+            isActive: true,
+            name: true,
+            price: true,
+          },
+        },
+      },
+      where: { id },
+    });
 
     return NextResponse.json({
       data: venue,
-      message: 'Venue updated successfully',
+      message: 'Venue actualizado exitosamente',
       success: true,
-      timestamp: new Date().toISOString(),
     });
   } catch (error) {
-    console.error('Error updating venue:', error);
+    console.error('Update venue error:', error);
     return NextResponse.json(
-      {
-        error: error instanceof Error ? error.message : 'Unknown error',
-        message: 'Error updating venue',
-        success: false,
-        timestamp: new Date().toISOString(),
-      },
+      { message: 'Error interno del servidor', success: false },
       { status: 500 }
     );
+  } finally {
+    await prisma.$disconnect();
   }
 }
 
+/**
+ * Delete venue (Admin only)
+ */
 export async function DELETE(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    // Get auth token
+    const authHeader = request.headers.get('authorization');
+    if (!authHeader?.startsWith('Bearer ')) {
+      return NextResponse.json(
+        { message: 'Token de autorización requerido', success: false },
+        { status: 401 }
+      );
+    }
+
+    const token = authHeader.substring(7);
+    const decoded = jwt.verify(token, process.env.JWT_SECRET || 'fallback-secret') as any;
+
+    // Check if user is admin
+    if (decoded.role !== 'ADMIN') {
+      return NextResponse.json(
+        { message: 'Acceso denegado. Se requiere rol de administrador', success: false },
+        { status: 403 }
+      );
+    }
+
     const { id } = await params;
-    await venueRepository.delete(id);
+
+    // Check if venue exists
+    const existingVenue = await prisma.venue.findUnique({
+      where: { id },
+    });
+
+    if (!existingVenue) {
+      return NextResponse.json({ message: 'Venue no encontrado', success: false }, { status: 404 });
+    }
+
+    // Delete venue (this will also delete related services due to cascade)
+    await prisma.venue.delete({
+      where: { id },
+    });
 
     return NextResponse.json({
-      message: 'Venue deleted successfully',
+      message: 'Venue eliminado exitosamente',
       success: true,
-      timestamp: new Date().toISOString(),
     });
   } catch (error) {
-    console.error('Error deleting venue:', error);
+    console.error('Delete venue error:', error);
     return NextResponse.json(
-      {
-        error: error instanceof Error ? error.message : 'Unknown error',
-        message: 'Error deleting venue',
-        success: false,
-        timestamp: new Date().toISOString(),
-      },
+      { message: 'Error interno del servidor', success: false },
       { status: 500 }
     );
+  } finally {
+    await prisma.$disconnect();
   }
 }

@@ -1,4 +1,4 @@
-import { UsersManagement } from '@/modules/mod-admin/presentation/components/UsersManagement';
+import { UsersManagement } from '@mod-admin/presentation/components';
 
 /**
  * Users management page.

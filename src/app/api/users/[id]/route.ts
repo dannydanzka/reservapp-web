@@ -1,128 +1,244 @@
 import { NextRequest, NextResponse } from 'next/server';
+import bcrypt from 'bcryptjs';
+import jwt from 'jsonwebtoken';
 
-import { AuthMiddleware } from '@/libs/services/auth/authMiddleware';
-import { userManagementUseCase } from '@/modules/mod-auth/domain/use-cases/UserManagementUseCase';
-import { UserRole } from '@prisma/client';
+import { PrismaClient } from '@prisma/client';
 
-interface ApiResponse<T = unknown> {
-  success: boolean;
-  message: string;
-  data?: T;
-  error?: string;
-  timestamp: string;
-}
+const prisma = new PrismaClient();
 
-function createResponse<T>(
-  success: boolean,
-  message: string,
-  data?: T,
-  error?: string
-): NextResponse<ApiResponse<T>> {
-  return NextResponse.json({
-    data,
-    error,
-    message,
-    success,
-    timestamp: new Date().toISOString(),
-  });
-}
-
-export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
-  return AuthMiddleware.withRole(['ADMIN', 'MANAGER'], async (req: NextRequest, _user) => {
-    const { id } = await params;
-
-    try {
-      const { searchParams } = new URL(req.url);
-      const includeReservations = searchParams.get('includeReservations') === 'true';
-
-      if (includeReservations) {
-        const userData = await userManagementUseCase.getUserWithReservations(id);
-        if (!userData) {
-          return createResponse(
-            false,
-            'User not found',
-            undefined,
-            'User with the specified ID does not exist'
-          );
-        }
-
-        return createResponse(true, 'User retrieved successfully', userData);
-      } else {
-        const userData = await userManagementUseCase.getUserById(id);
-        if (!userData) {
-          return createResponse(
-            false,
-            'User not found',
-            undefined,
-            'User with the specified ID does not exist'
-          );
-        }
-
-        return createResponse(true, 'User retrieved successfully', userData);
-      }
-    } catch (error) {
-      console.error(`GET /api/users/${id} error:`, error);
-      return createResponse(
-        false,
-        'Failed to retrieve user',
-        undefined,
-        error instanceof Error ? error.message : 'Unknown error'
+/**
+ * Get user by ID (Admin only)
+ */
+export async function GET(request: NextRequest, context: { params: Promise<{ id: string }> }) {
+  try {
+    // Get auth token
+    const authHeader = request.headers.get('authorization');
+    if (!authHeader?.startsWith('Bearer ')) {
+      return NextResponse.json(
+        { message: 'Token de autorización requerido', success: false },
+        { status: 401 }
       );
     }
-  })(request);
-}
 
-export async function PUT(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
-  return AuthMiddleware.withRole(['ADMIN'], async (req: NextRequest, _user) => {
-    const { id } = await params;
+    const token = authHeader.substring(7);
+    const decoded = jwt.verify(token, process.env.JWT_SECRET || 'fallback-secret') as any;
 
-    try {
-      const body = await req.json();
-
-      const { email, firstName, isActive, lastName, phone, role } = body;
-
-      const updateData = {
-        email,
-        firstName,
-        id,
-        isActive,
-        lastName,
-        phone,
-        role: role as UserRole,
-      };
-
-      const updatedUser = await userManagementUseCase.updateUser(updateData);
-      return createResponse(true, 'User updated successfully', updatedUser);
-    } catch (error) {
-      console.error(`PUT /api/users/${id} error:`, error);
-      return createResponse(
-        false,
-        'Failed to update user',
-        undefined,
-        error instanceof Error ? error.message : 'Unknown error'
+    // Check if user is admin
+    if (decoded.role !== 'ADMIN') {
+      return NextResponse.json(
+        { message: 'Acceso denegado. Se requiere rol de administrador', success: false },
+        { status: 403 }
       );
     }
-  })(request);
-}
 
-export async function DELETE(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
-  return AuthMiddleware.withRole(['ADMIN'], async (_req: NextRequest, _user) => {
-    const { id } = await params;
+    const params = await context.params;
+    const user = await prisma.user.findUnique({
+      select: {
+        createdAt: true,
+        email: true,
+        firstName: true,
+        id: true,
+        isActive: true,
+        lastName: true,
+        phone: true,
+        role: true,
+        stripeCustomerId: true,
+        updatedAt: true,
+      },
+      where: { id: params.id },
+    });
 
-    try {
-      await userManagementUseCase.deleteUser(id);
-      return createResponse(true, 'User deleted successfully');
-    } catch (error) {
-      console.error(`DELETE /api/users/${id} error:`, error);
-      return createResponse(
-        false,
-        'Failed to delete user',
-        undefined,
-        error instanceof Error ? error.message : 'Unknown error'
+    if (!user) {
+      return NextResponse.json(
+        { message: 'Usuario no encontrado', success: false },
+        { status: 404 }
       );
     }
-  })(request);
+
+    return NextResponse.json({
+      data: user,
+      success: true,
+    });
+  } catch (error) {
+    console.error('Get user error:', error);
+    return NextResponse.json(
+      { message: 'Error interno del servidor', success: false },
+      { status: 500 }
+    );
+  } finally {
+    await prisma.$disconnect();
+  }
+}
+
+/**
+ * Update user (Admin only)
+ */
+export async function PUT(request: NextRequest, context: { params: Promise<{ id: string }> }) {
+  try {
+    // Get auth token
+    const authHeader = request.headers.get('authorization');
+    if (!authHeader?.startsWith('Bearer ')) {
+      return NextResponse.json(
+        { message: 'Token de autorización requerido', success: false },
+        { status: 401 }
+      );
+    }
+
+    const token = authHeader.substring(7);
+    const decoded = jwt.verify(token, process.env.JWT_SECRET || 'fallback-secret') as any;
+
+    // Check if user is admin
+    if (decoded.role !== 'ADMIN') {
+      return NextResponse.json(
+        { message: 'Acceso denegado. Se requiere rol de administrador', success: false },
+        { status: 403 }
+      );
+    }
+
+    const params = await context.params;
+    const body = await request.json();
+    const { firstName, isActive, lastName, password, phone, role } = body;
+
+    // Check if user exists
+    const existingUser = await prisma.user.findUnique({
+      where: { id: params.id },
+    });
+
+    if (!existingUser) {
+      return NextResponse.json(
+        { message: 'Usuario no encontrado', success: false },
+        { status: 404 }
+      );
+    }
+
+    // Prepare update data
+    const updateData: any = {};
+    if (firstName) updateData.firstName = firstName;
+    if (lastName) updateData.lastName = lastName;
+    if (phone) updateData.phone = phone;
+    if (role) updateData.role = role;
+    if (isActive !== undefined) updateData.isActive = isActive;
+
+    // Handle password update
+    if (password) {
+      updateData.password = await bcrypt.hash(password, 12);
+    }
+
+    // Update user
+    const updatedUser = await prisma.user.update({
+      data: updateData,
+      select: {
+        email: true,
+        firstName: true,
+        id: true,
+        isActive: true,
+        lastName: true,
+        phone: true,
+        role: true,
+        updatedAt: true,
+      },
+      where: { id: params.id },
+    });
+
+    return NextResponse.json({
+      data: updatedUser,
+      message: 'Usuario actualizado exitosamente',
+      success: true,
+    });
+  } catch (error) {
+    console.error('Update user error:', error);
+    return NextResponse.json(
+      { message: 'Error interno del servidor', success: false },
+      { status: 500 }
+    );
+  } finally {
+    await prisma.$disconnect();
+  }
+}
+
+/**
+ * Delete user (soft delete - Admin only)
+ */
+export async function DELETE(request: NextRequest, context: { params: Promise<{ id: string }> }) {
+  try {
+    // Get auth token
+    const authHeader = request.headers.get('authorization');
+    if (!authHeader?.startsWith('Bearer ')) {
+      return NextResponse.json(
+        { message: 'Token de autorización requerido', success: false },
+        { status: 401 }
+      );
+    }
+
+    const token = authHeader.substring(7);
+    const decoded = jwt.verify(token, process.env.JWT_SECRET || 'fallback-secret') as any;
+
+    // Check if user is admin
+    if (decoded.role !== 'ADMIN') {
+      return NextResponse.json(
+        { message: 'Acceso denegado. Se requiere rol de administrador', success: false },
+        { status: 403 }
+      );
+    }
+
+    const params = await context.params;
+
+    // Check if user exists
+    const existingUser = await prisma.user.findUnique({
+      where: { id: params.id },
+    });
+
+    if (!existingUser) {
+      return NextResponse.json(
+        { message: 'Usuario no encontrado', success: false },
+        { status: 404 }
+      );
+    }
+
+    // Prevent deleting yourself
+    if (params.id === decoded.userId) {
+      return NextResponse.json(
+        { message: 'No puedes eliminar tu propia cuenta', success: false },
+        { status: 400 }
+      );
+    }
+
+    // Check if user has active reservations
+    const activeReservations = await prisma.reservation.count({
+      where: {
+        status: { in: ['PENDING', 'CONFIRMED'] },
+        userId: params.id,
+      },
+    });
+
+    if (activeReservations > 0) {
+      return NextResponse.json(
+        {
+          message: 'No se puede eliminar el usuario porque tiene reservas activas',
+          success: false,
+        },
+        { status: 400 }
+      );
+    }
+
+    // Soft delete by setting isActive to false
+    const deletedUser = await prisma.user.update({
+      data: { isActive: false },
+      where: { id: params.id },
+    });
+
+    return NextResponse.json({
+      data: deletedUser,
+      message: 'Usuario eliminado exitosamente',
+      success: true,
+    });
+  } catch (error) {
+    console.error('Delete user error:', error);
+    return NextResponse.json(
+      { message: 'Error interno del servidor', success: false },
+      { status: 500 }
+    );
+  } finally {
+    await prisma.$disconnect();
+  }
 }

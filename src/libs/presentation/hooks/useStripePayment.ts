@@ -82,7 +82,7 @@ export const useStripePayment = (): UseStripePaymentReturn => {
         const result = await stripe.confirmCardPayment(clientSecret, {
           payment_method: {
             billing_details: paymentMethodOptions.billingDetails || {},
-            card: cardElement!,
+            card: cardElement,
           },
           setup_future_usage: paymentMethodOptions.savePaymentMethod ? 'off_session' : undefined,
         });
@@ -99,7 +99,7 @@ export const useStripePayment = (): UseStripePaymentReturn => {
           setPaymentIntent(result.paymentIntent);
 
           // Check if payment requires additional action
-          if (result.paymentIntent.status === 'requires_action') {
+          if (result.paymentIntent?.status === 'requires_action') {
             return {
               paymentIntent: result.paymentIntent,
               requiresAction: true,
@@ -108,7 +108,7 @@ export const useStripePayment = (): UseStripePaymentReturn => {
           }
 
           // Payment succeeded
-          if (result.paymentIntent.status === 'succeeded') {
+          if (result.paymentIntent?.status === 'succeeded') {
             return {
               paymentIntent: result.paymentIntent,
               success: true,

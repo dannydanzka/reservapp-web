@@ -1,3 +1,3 @@
-import { LandingPage } from '@/modules/mod-landing/presentation/components/LandingPage';
+import { LandingPage } from '@mod-landing/presentation/components';
 
 export default LandingPage;

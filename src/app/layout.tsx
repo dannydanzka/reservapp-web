@@ -1,7 +1,7 @@
 import { Lato, Montserrat } from 'next/font/google';
 import type { Metadata, Viewport } from 'next';
 
-import { AppProviders } from '@/libs/ui/providers/AppProviders';
+import { AppProviders } from '@providers/AppProviders';
 
 // Configure Google Fonts with optimal loading
 const montserrat = Montserrat({
