@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import jwt from 'jsonwebtoken';
 
 import { PrismaClient } from '@prisma/client';
+import { ResendService } from '@libs/infrastructure/services/core/email/resendService';
 
 const prisma = new PrismaClient();
 
@@ -28,14 +29,17 @@ export async function GET(request: NextRequest) {
     const limit = parseInt(searchParams.get('limit') || '10');
     const status = searchParams.get('status');
 
-    // Build where clause
+    // Build where clause based on role
     const where: any = {};
-    if (decoded.role !== 'ADMIN') {
+    if (decoded.role !== 'ADMIN' && decoded.role !== 'SUPER_ADMIN') {
       where.userId = decoded.userId;
     }
     if (status) {
       where.status = status;
     }
+
+    // Build include clause based on user role
+    const includeOwner = decoded.role === 'SUPER_ADMIN';
 
     // Get reservations
     const [reservations, total] = await Promise.all([
@@ -48,7 +52,27 @@ export async function GET(request: NextRequest) {
             select: { email: true, firstName: true, id: true, lastName: true },
           },
           venue: {
-            select: { id: true, name: true },
+            select: {
+              id: true,
+              name: true,
+              // Include owner information for SUPER_ADMIN only
+              ...(includeOwner && {
+                owner: {
+                  select: {
+                    businessAccount: {
+                      select: {
+                        businessName: true,
+                        businessType: true,
+                      },
+                    },
+                    email: true,
+                    firstName: true,
+                    id: true,
+                    lastName: true,
+                  },
+                },
+              }),
+            },
           },
         },
         orderBy: { createdAt: 'desc' },
@@ -61,6 +85,9 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({
       data: reservations,
+      meta: {
+        includesOwnerInfo: includeOwner,
+      },
       pagination: {
         limit,
         page,
@@ -141,6 +168,37 @@ export async function POST(request: NextRequest) {
         },
       },
     });
+
+    // Enviar email de confirmación de reserva
+    try {
+      const fullName = `${reservation.user.firstName} ${reservation.user.lastName}`;
+
+      await ResendService.sendReservationConfirmation({
+        checkInDate: reservation.checkInDate.toLocaleDateString('es-MX'),
+        checkOutDate: reservation.checkOutDate.toLocaleDateString('es-MX'),
+        confirmationCode: reservation.id.substring(0, 8).toUpperCase(),
+        currency: 'mxn',
+        guestEmail: reservation.user.email,
+        guestName: fullName,
+
+        reservationId: reservation.id,
+
+        // Usando el ID como número
+        serviceName: reservation.service.name,
+
+        serviceNumber: reservation.service.id,
+
+        specialRequests: reservation.notes || undefined,
+        totalAmount: Number(reservation.totalAmount),
+        userId: reservation.userId,
+        venueName: reservation.venue.name,
+      });
+
+      console.log(`Email de confirmación enviado para reserva ${reservation.id}`);
+    } catch (emailError) {
+      console.error('Error enviando email de confirmación:', emailError);
+      // No fallar la reserva si el email falla
+    }
 
     return NextResponse.json({
       data: reservation,

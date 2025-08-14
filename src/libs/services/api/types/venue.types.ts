@@ -1,27 +1,46 @@
 /**
- * Temporary Venue Types stub
- * Provides basic type definitions to avoid compilation errors
+ * Venue types for admin management (not public)
  */
+
+export type VenueCategory =
+  | 'ACCOMMODATION'
+  | 'RESTAURANT'
+  | 'SPA'
+  | 'TOUR_OPERATOR'
+  | 'EVENT_CENTER'
+  | 'ENTERTAINMENT';
+
+export interface BusinessOwner {
+  id: string;
+  firstName: string;
+  lastName: string;
+  email: string;
+  businessAccount?: {
+    businessName: string;
+    businessType: string;
+  };
+}
 
 export interface Venue {
   id: string;
   name: string;
-  description?: string;
   category: VenueCategory;
+  description?: string;
   address: string;
-  city: string;
-  state: string;
-  latitude?: number;
-  longitude?: number;
+  city?: string;
   phone?: string;
   email?: string;
-  rating: number;
+  website?: string;
+  rating?: number;
+  latitude?: number;
+  longitude?: number;
   isActive: boolean;
   createdAt: string;
   updatedAt: string;
+  owner?: BusinessOwner; // Only included for SUPER_ADMIN users
   _count: {
-    services: number;
     reservations: number;
+    services: number;
   };
 }
 
@@ -29,60 +48,41 @@ export interface VenueWithServices extends Venue {
   services: {
     id: string;
     name: string;
+    category: string;
     price: number;
-    type: string;
+    isActive: boolean;
   }[];
 }
 
 export interface CreateVenueData {
   name: string;
   category: VenueCategory;
-  address: string;
-  city: string;
-  state: string;
   description?: string;
+  address: string;
+  city?: string;
   phone?: string;
   email?: string;
+  website?: string;
   latitude?: number;
   longitude?: number;
 }
 
 export interface UpdateVenueData extends Partial<CreateVenueData> {
-  id: string;
   isActive?: boolean;
-}
-
-export interface VenueFilters {
-  category?: VenueCategory;
-  city?: string;
-  search?: string;
-  rating?: number;
-  priceRange?: { min: number; max: number };
 }
 
 export interface VenueStats {
   total: number;
   active: number;
-  averageRating: number;
   totalReservations: number;
-  byCategory: Record<VenueCategory, number>;
+  totalRevenue?: number;
+  averageRating?: number;
 }
 
 export interface PaginatedResponse<T> {
   data: T[];
-  pagination: {
-    page: number;
-    limit: number;
-    total: number;
-    pages: number;
-  };
-}
-
-export enum VenueCategory {
-  RESTAURANT = 'RESTAURANT',
-  SPA = 'SPA',
-  ACCOMMODATION = 'ACCOMMODATION',
-  TOUR_OPERATOR = 'TOUR_OPERATOR',
-  EVENT_CENTER = 'EVENT_CENTER',
-  ENTERTAINMENT = 'ENTERTAINMENT',
+  total: number;
+  page: number;
+  limit: number;
+  totalPages: number;
 }

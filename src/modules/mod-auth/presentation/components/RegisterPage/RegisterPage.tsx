@@ -250,14 +250,14 @@ export const RegisterPage: React.FC<RegisterPageProps> = () => {
       }
 
       const registrationData: BusinessRegistrationData = {
-        address,
         businessName,
+        businessType: 'HOTEL', // Default business type
         email,
+        firstName: name.split(' ')[0] || name,
+        lastName: name.split(' ').slice(1).join(' ') || '',
         name,
         password,
-        paymentIntentId,
         phone,
-        subscriptionPlan: selectedPackage,
       };
 
       await register(

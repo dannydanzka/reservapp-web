@@ -115,7 +115,7 @@ export const TextFieldWrapper = styled.div<TextFieldStyledProps>`
   transition: all 0.15s ease;
 `;
 
-export const StyledInput = styled.input<TextFieldStyledProps>`
+export const StyledInput = styled.input<{ $hasStartIcon?: boolean; $hasEndIcon?: boolean }>`
   background: transparent;
   border: none;
   color: ${({ theme }) => theme.colors.secondary[900]};
@@ -123,11 +123,11 @@ export const StyledInput = styled.input<TextFieldStyledProps>`
   font-family: '"Lato"', sans-serif;
   font-size: inherit;
   outline: none;
-  padding: ${({ hasEndIcon, hasStartIcon, theme }) => {
+  padding: ${({ $hasEndIcon, $hasStartIcon, theme }) => {
     const vertical = theme.spacing[2];
     const horizontal = theme.spacing[3];
-    const leftPadding = hasStartIcon ? theme.spacing[10] : horizontal;
-    const rightPadding = hasEndIcon ? theme.spacing[10] : horizontal;
+    const leftPadding = $hasStartIcon ? theme.spacing[10] : horizontal;
+    const rightPadding = $hasEndIcon ? theme.spacing[10] : horizontal;
     return `${vertical} ${rightPadding} ${vertical} ${leftPadding}`;
   }};
 
@@ -146,7 +146,7 @@ export const StyledInput = styled.input<TextFieldStyledProps>`
   }
 `;
 
-export const StyledTextArea = styled.textarea<TextFieldStyledProps>`
+export const StyledTextArea = styled.textarea<{ $hasStartIcon?: boolean; $hasEndIcon?: boolean }>`
   background: transparent;
   border: none;
   color: ${({ theme }) => theme.colors.secondary[900]};
@@ -155,11 +155,11 @@ export const StyledTextArea = styled.textarea<TextFieldStyledProps>`
   font-size: inherit;
   min-height: 80px;
   outline: none;
-  padding: ${({ hasEndIcon, hasStartIcon, theme }) => {
+  padding: ${({ $hasEndIcon, $hasStartIcon, theme }) => {
     const vertical = theme.spacing[2];
     const horizontal = theme.spacing[3];
-    const leftPadding = hasStartIcon ? theme.spacing[10] : horizontal;
-    const rightPadding = hasEndIcon ? theme.spacing[10] : horizontal;
+    const leftPadding = $hasStartIcon ? theme.spacing[10] : horizontal;
+    const rightPadding = $hasEndIcon ? theme.spacing[10] : horizontal;
     return `${vertical} ${rightPadding} ${vertical} ${leftPadding}`;
   }};
   resize: vertical;

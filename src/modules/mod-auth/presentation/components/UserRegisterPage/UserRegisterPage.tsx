@@ -2,265 +2,375 @@
 
 import React, { useState } from 'react';
 
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 
-import { LoadingSpinner } from '@ui/LoadingSpinner';
-import { useAuth } from '@providers/AuthProvider';
-import { useToast } from '@providers/ToastProvider';
+import { Button } from '@ui/Button';
 import { useTranslation } from '@i18n/index';
 
-import { UserRegisterPageProps } from './UserRegisterPage.interfaces';
+import type {
+  RegisterApiRequest,
+  RegisterApiResponse,
+  UserRegisterFormData,
+  UserRegisterPageProps,
+} from './UserRegisterPage.interfaces';
 
 import {
-  AuthLink,
-  Button,
+  AppMessage,
+  BenefitItem,
+  BenefitsList,
   ErrorMessage,
   Form,
   FormContainer,
   FormGroup,
+  FormRow,
+  FormSection,
+  FormSubtitle,
+  FormTitle,
+  HeroSection,
+  HeroSubtitle,
+  HeroTitle,
   Input,
   Label,
+  LandingContainer,
   LinkContainer,
-  PasswordRequirements,
-  PlanDescription,
-  PlanInfo,
-  PlanPrice,
-  PlanTitle,
-  UserInfo,
-  UserInfoText,
-  UserInfoTitle,
+  LinkText,
+  MobileAppShowcase,
+  MobileScreenshotWrapper,
+  ModalButtons,
+  ModalContainer,
+  ModalOverlay,
+  ModalSubtitle,
+  ModalTitle,
+  ScreenshotImage,
+  StatsCard,
+  StatsGrid,
+  StatsNumber,
+  StatsSection,
+  StatsText,
+  StyledLink,
+  ValuePropContainer,
 } from './UserRegisterPage.styled';
 
-/**
- * Simple user registration page component for end users (not businesses).
- */
 export const UserRegisterPage: React.FC<UserRegisterPageProps> = () => {
-  const { t: _t } = useTranslation();
-  const [name, setName] = useState('');
-  const [email, setEmail] = useState('');
-  const [phone, setPhone] = useState('');
-  const [password, setPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
-  const [error, setError] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
-
-  const searchParams = useSearchParams();
-  const planType = searchParams.get('plan') || 'free'; // 'free' or 'premium'
-  const isPremium = planType === 'premium';
-
-  const { register } = useAuth();
-  const { showToast } = useToast();
+  const { t } = useTranslation();
   const router = useRouter();
 
-  const handleNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setName(e.target.value);
+  const [formData, setFormData] = useState<UserRegisterFormData>({
+    confirmPassword: '',
+    email: '',
+    firstName: '',
+    lastName: '',
+    password: '',
+    phone: '',
+  });
+
+  const [error, setError] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
   };
 
-  const handleEmailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setEmail(e.target.value);
-  };
-
-  const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setPhone(e.target.value);
-  };
-
-  const handlePasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setPassword(e.target.value);
-  };
-
-  const handleConfirmPasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setConfirmPassword(e.target.value);
-  };
-
-  const validateForm = (): boolean => {
-    if (!name.trim()) {
-      setError('El nombre completo es requerido');
-      return false;
+  const validateForm = (): string | null => {
+    if (!formData.firstName.trim()) {
+      return 'El nombre es requerido';
     }
 
-    if (!email.trim()) {
-      setError('El correo electrónico es requerido');
-      return false;
+    if (!formData.lastName.trim()) {
+      return 'El apellido es requerido';
     }
 
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(email)) {
-      setError('Ingresa un correo electrónico válido');
-      return false;
+    if (!formData.email.trim()) {
+      return 'El correo electrónico es requerido';
     }
 
-    if (!phone.trim()) {
-      setError('El número de teléfono es requerido');
-      return false;
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
+      return 'Por favor ingresa un correo electrónico válido';
     }
 
-    if (password.length < 8) {
-      setError('La contraseña debe tener al menos 8 caracteres');
-      return false;
+    if (!formData.password) {
+      return 'La contraseña es requerida';
     }
 
-    const hasUpperCase = /[A-Z]/.test(password);
-    const hasLowerCase = /[a-z]/.test(password);
-    const hasNumbers = /\d/.test(password);
-
-    if (!hasUpperCase || !hasLowerCase || !hasNumbers) {
-      setError('La contraseña debe incluir mayúsculas, minúsculas y números');
-      return false;
+    if (formData.password.length < 6) {
+      return 'La contraseña debe tener al menos 6 caracteres';
     }
 
-    if (password !== confirmPassword) {
-      setError('Las contraseñas no coinciden');
-      return false;
+    if (formData.password !== formData.confirmPassword) {
+      return 'Las contraseñas no coinciden';
     }
 
-    return true;
+    return null;
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
 
-    if (!validateForm()) {
+    const validationError = validateForm();
+    if (validationError) {
+      setError(validationError);
       return;
     }
 
     setIsLoading(true);
 
     try {
-      // Register the user with subscription status based on plan
-      const _userData = {
-        email,
-        name,
-        phone,
-        role: 'USER' as const,
-        subscriptionStatus: isPremium ? 'premium' : 'free',
+      const requestBody: RegisterApiRequest = {
+        email: formData.email.trim().toLowerCase(),
+        firstName: formData.firstName.trim(),
+        lastName: formData.lastName.trim(),
+        password: formData.password,
+        phone: formData.phone?.trim() || undefined,
       };
 
-      await register(email, password, name);
-
-      showToast({
-        title: isPremium
-          ? '¡Bienvenido! Tu cuenta premium ha sido creada exitosamente.'
-          : '¡Bienvenido! Tu cuenta gratuita ha sido creada exitosamente.',
-        variant: 'success',
+      const response = await fetch('/api/auth/register', {
+        body: JSON.stringify(requestBody),
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        method: 'POST',
       });
 
-      // Redirect to the landing page or user dashboard
-      router.push('/landing');
+      const data: RegisterApiResponse = await response.json();
+
+      if (data.success && data.data?.token) {
+        // Guardar token en localStorage
+        localStorage.setItem('token', data.data.token);
+
+        // Mostrar modal de éxito
+        setShowSuccessModal(true);
+      } else {
+        setError(data.message || 'Error al crear la cuenta. Inténtalo de nuevo.');
+      }
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Error al crear la cuenta';
-      setError(errorMessage);
-      showToast({ title: errorMessage, variant: 'error' });
+      console.error('Registration error:', err);
+      setError('Error de conexión. Por favor verifica tu internet e inténtalo de nuevo.');
     } finally {
       setIsLoading(false);
     }
   };
 
+  const handleLoginRedirect = () => {
+    router.push('/auth/login');
+  };
+
+  const handleBusinessRegister = () => {
+    router.push('/auth/register');
+  };
+
+  const handleModalClose = () => {
+    setShowSuccessModal(false);
+    router.push('/');
+  };
+
+  const handleModalOverlayClick = (e: React.MouseEvent) => {
+    if (e.target === e.currentTarget) {
+      handleModalClose();
+    }
+  };
+
   return (
-    <FormContainer>
-      <UserInfo>
-        <UserInfoTitle>👤 Registro de Usuario</UserInfoTitle>
-        <UserInfoText>
-          Crea tu cuenta de usuario para acceder a todos los servicios de ReservApp.
-        </UserInfoText>
-        <UserInfoText>Podrás realizar reservaciones desde nuestra aplicación móvil.</UserInfoText>
-      </UserInfo>
+    <LandingContainer>
+      {/* Hero Section */}
+      <HeroSection>
+        <ValuePropContainer>
+          <div>
+            <HeroTitle>{t('auth.userRegister.hero.title')}</HeroTitle>
+            <HeroSubtitle>
+              {t('auth.userRegister.hero.subtitle')}
+              <br />
+              <strong>{t('auth.userRegister.hero.free')}</strong>
+            </HeroSubtitle>
 
-      <PlanInfo $isPremium={isPremium}>
-        <PlanTitle>{isPremium ? '⭐ Plan Premium' : '🆓 Plan Gratuito'}</PlanTitle>
-        <PlanDescription>
-          {isPremium
-            ? 'Acceso completo a servicios premium, descuentos exclusivos y soporte prioritario.'
-            : 'Acceso a servicios básicos y reservaciones estándar.'}
-        </PlanDescription>
-        <PlanPrice $isPremium={isPremium}>{isPremium ? '$199 MXN/mes' : 'Gratis'}</PlanPrice>
-      </PlanInfo>
+            {/* Stats Section */}
+            <StatsSection>
+              <StatsGrid>
+                <StatsCard>
+                  <StatsNumber>{t('auth.userRegister.stats.venues.number')}</StatsNumber>
+                  <StatsText>{t('auth.userRegister.stats.venues.text')}</StatsText>
+                </StatsCard>
+                <StatsCard>
+                  <StatsNumber>{t('auth.userRegister.stats.experiences.number')}</StatsNumber>
+                  <StatsText>{t('auth.userRegister.stats.experiences.text')}</StatsText>
+                </StatsCard>
+                <StatsCard>
+                  <StatsNumber>{t('auth.userRegister.stats.savings.number')}</StatsNumber>
+                  <StatsText>{t('auth.userRegister.stats.savings.text')}</StatsText>
+                </StatsCard>
+              </StatsGrid>
+            </StatsSection>
+          </div>
 
-      <Form onSubmit={handleSubmit}>
-        <FormGroup>
-          <Label htmlFor='name'>Nombre Completo *</Label>
-          <Input
-            disabled={isLoading}
-            id='name'
-            placeholder='Tu nombre completo'
-            required
-            type='text'
-            value={name}
-            onChange={handleNameChange}
-          />
-        </FormGroup>
+          {/* Mobile App Showcase */}
+          <MobileAppShowcase>
+            <MobileScreenshotWrapper>
+              <ScreenshotImage
+                alt='ReservApp - Aplicación Móvil para Reservas Premium'
+                loading='eager'
+                src='/images/brand/mobile-mockup.png'
+              />
+            </MobileScreenshotWrapper>
+          </MobileAppShowcase>
+        </ValuePropContainer>
+      </HeroSection>
 
-        <FormGroup>
-          <Label htmlFor='email'>Correo Electrónico *</Label>
-          <Input
-            disabled={isLoading}
-            id='email'
-            placeholder='tu@email.com'
-            required
-            type='email'
-            value={email}
-            onChange={handleEmailChange}
-          />
-        </FormGroup>
+      {/* Form Section */}
+      <FormSection>
+        <FormContainer>
+          <FormTitle>{t('auth.userRegister.form.title')}</FormTitle>
+          <FormSubtitle>{t('auth.userRegister.form.subtitle')}</FormSubtitle>
 
-        <FormGroup>
-          <Label htmlFor='phone'>Teléfono *</Label>
-          <Input
-            disabled={isLoading}
-            id='phone'
-            placeholder='33-1234-5678'
-            required
-            type='tel'
-            value={phone}
-            onChange={handlePhoneChange}
-          />
-        </FormGroup>
+          <Form onSubmit={handleSubmit}>
+            <FormRow>
+              <FormGroup>
+                <Label htmlFor='firstName'>Nombre *</Label>
+                <Input
+                  disabled={isLoading}
+                  id='firstName'
+                  name='firstName'
+                  placeholder='Tu nombre'
+                  required
+                  type='text'
+                  value={formData.firstName}
+                  onChange={handleChange}
+                />
+              </FormGroup>
 
-        <FormGroup>
-          <Label htmlFor='password'>Contraseña *</Label>
-          <Input
-            disabled={isLoading}
-            id='password'
-            placeholder='Crea una contraseña segura'
-            required
-            type='password'
-            value={password}
-            onChange={handlePasswordChange}
-          />
-          <PasswordRequirements>
-            Debe incluir mayúsculas, minúsculas y números (mínimo 8 caracteres)
-          </PasswordRequirements>
-        </FormGroup>
+              <FormGroup>
+                <Label htmlFor='lastName'>Apellido *</Label>
+                <Input
+                  disabled={isLoading}
+                  id='lastName'
+                  name='lastName'
+                  placeholder='Tu apellido'
+                  required
+                  type='text'
+                  value={formData.lastName}
+                  onChange={handleChange}
+                />
+              </FormGroup>
+            </FormRow>
 
-        <FormGroup>
-          <Label htmlFor='confirmPassword'>Confirmar Contraseña *</Label>
-          <Input
-            disabled={isLoading}
-            id='confirmPassword'
-            placeholder='Confirma tu contraseña'
-            required
-            type='password'
-            value={confirmPassword}
-            onChange={handleConfirmPasswordChange}
-          />
-        </FormGroup>
+            <FormGroup>
+              <Label htmlFor='email'>{t('auth.userRegister.email')} *</Label>
+              <Input
+                disabled={isLoading}
+                id='email'
+                name='email'
+                placeholder={t('auth.userRegister.emailPlaceholder')}
+                required
+                type='email'
+                value={formData.email}
+                onChange={handleChange}
+              />
+            </FormGroup>
 
-        {error && <ErrorMessage>{error}</ErrorMessage>}
+            <FormGroup>
+              <Label htmlFor='phone'>{t('auth.userRegister.phone')}</Label>
+              <Input
+                disabled={isLoading}
+                id='phone'
+                name='phone'
+                placeholder={t('auth.userRegister.phonePlaceholder')}
+                type='tel'
+                value={formData.phone}
+                onChange={handleChange}
+              />
+            </FormGroup>
 
-        <Button $isLoading={isLoading} disabled={isLoading} type='submit'>
-          {isLoading && <LoadingSpinner color='#ffffff' size='small' />}
-          {isLoading ? 'Creando cuenta...' : `Crear Cuenta ${isPremium ? 'Premium' : 'Gratuita'}`}
-        </Button>
-      </Form>
+            <FormRow>
+              <FormGroup>
+                <Label htmlFor='password'>{t('auth.userRegister.password')} *</Label>
+                <Input
+                  disabled={isLoading}
+                  id='password'
+                  name='password'
+                  placeholder={t('auth.userRegister.passwordPlaceholder')}
+                  required
+                  type='password'
+                  value={formData.password}
+                  onChange={handleChange}
+                />
+              </FormGroup>
 
-      <LinkContainer>
-        <p>
-          ¿Ya tienes cuenta? <AuthLink href='/auth/login'>Iniciar sesión</AuthLink>
-        </p>
-        <p>
-          ¿Tienes un negocio? <AuthLink href='/auth/register'>Registro empresarial</AuthLink>
-        </p>
-      </LinkContainer>
-    </FormContainer>
+              <FormGroup>
+                <Label htmlFor='confirmPassword'>{t('auth.userRegister.confirmPassword')} *</Label>
+                <Input
+                  disabled={isLoading}
+                  id='confirmPassword'
+                  name='confirmPassword'
+                  placeholder={t('auth.userRegister.confirmPasswordPlaceholder')}
+                  required
+                  type='password'
+                  value={formData.confirmPassword}
+                  onChange={handleChange}
+                />
+              </FormGroup>
+            </FormRow>
+
+            {error && <ErrorMessage>{error}</ErrorMessage>}
+
+            <Button
+              disabled={isLoading}
+              fullWidth
+              loading={isLoading}
+              size='large'
+              style={{ marginTop: '1rem' }}
+              type='submit'
+            >
+              {isLoading
+                ? t('auth.userRegister.creatingAccount')
+                : t('auth.userRegister.createAccountButton')}
+            </Button>
+          </Form>
+
+          <LinkContainer>
+            <LinkText>
+              {t('auth.userRegister.alreadyHaveAccount')}{' '}
+              <StyledLink onClick={handleLoginRedirect}>
+                {t('auth.userRegister.loginLink')}
+              </StyledLink>
+            </LinkText>
+            <LinkText>
+              {t('auth.userRegister.haveBusinessAccount')}{' '}
+              <StyledLink onClick={handleBusinessRegister}>
+                {t('auth.userRegister.businessRegisterLink')}
+              </StyledLink>
+            </LinkText>
+          </LinkContainer>
+        </FormContainer>
+      </FormSection>
+
+      {/* Success Modal */}
+      {showSuccessModal && (
+        <ModalOverlay onClick={handleModalOverlayClick}>
+          <ModalContainer>
+            <ModalTitle>{t('auth.userRegister.success.title')}</ModalTitle>
+            <ModalSubtitle>{t('auth.userRegister.success.subtitle')}</ModalSubtitle>
+
+            <BenefitsList>
+              <BenefitItem>{t('auth.userRegister.success.benefits.0')}</BenefitItem>
+              <BenefitItem>{t('auth.userRegister.success.benefits.1')}</BenefitItem>
+              <BenefitItem>{t('auth.userRegister.success.benefits.2')}</BenefitItem>
+              <BenefitItem>{t('auth.userRegister.success.benefits.3')}</BenefitItem>
+            </BenefitsList>
+
+            <AppMessage>{t('auth.userRegister.success.appMessage')}</AppMessage>
+
+            <ModalButtons>
+              <Button size='large' variant='contained' onClick={handleModalClose}>
+                {t('auth.userRegister.success.closeButton')}
+              </Button>
+            </ModalButtons>
+          </ModalContainer>
+        </ModalOverlay>
+      )}
+    </LandingContainer>
   );
 };

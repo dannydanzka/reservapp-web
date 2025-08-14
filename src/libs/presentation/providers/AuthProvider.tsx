@@ -12,6 +12,9 @@ import {
 import { useLocalStorage } from '@hooks/index';
 
 interface AuthContextValue extends AuthState {
+  // Mapped properties for compatibility
+  isAuthenticated: boolean;
+  loading: boolean;
   login: (email: string, password: string) => Promise<void>;
   register: (
     email: string,
@@ -49,14 +52,39 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     checkExistingSession();
   }, []);
 
+  // Setup auth interceptor when component mounts
+  useEffect(() => {
+    // Import and setup interceptor
+    const setupInterceptor = async () => {
+      const { authInterceptor } = await import(
+        '@libs/infrastructure/services/core/http/authInterceptor'
+      );
+
+      authInterceptor.configure({
+        onTokenExpired: () => {
+          console.log('Token expired in AuthProvider context');
+          // The logout function will be called automatically
+          logout().catch(console.error);
+        },
+        onUnauthorized: () => {
+          console.log('Unauthorized in AuthProvider context');
+          logout().catch(console.error);
+        },
+      });
+    };
+
+    setupInterceptor().catch(console.error);
+  }, []);
+
   /**
-   * Checks for existing authentication session.
+   * Checks for existing authentication session with improved error handling.
    */
   const checkExistingSession = async () => {
     try {
       setAuthState((prev) => ({ ...prev, isLoading: true }));
 
       if (sessionToken) {
+        // Try to validate the existing token
         const user = await authRepository.validateToken();
         setAuthState({
           error: null,
@@ -74,17 +102,35 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           user: null,
         });
       }
-    } catch (error) {
-      // Clear invalid token
+    } catch (error: any) {
+      console.error('Session validation failed:', error);
+
+      // Clear invalid/expired token
       setSessionToken('');
 
+      // Check if it's a token expiration error
+      const isTokenExpired =
+        error.message?.includes('Token expirado') || error.message?.includes('TokenExpiredError');
+
+      // Set appropriate error message
+      const errorMessage = isTokenExpired
+        ? 'Tu sesión ha expirado. Por favor inicia sesión nuevamente.'
+        : null; // Don't show error for other validation failures
+
       setAuthState({
-        error: null,
+        error: errorMessage,
         isLoading: false,
         status: 'unauthenticated',
         token: null,
         user: null,
       });
+
+      // If token expired, redirect to login after a short delay
+      if (isTokenExpired && typeof window !== 'undefined') {
+        setTimeout(() => {
+          window.location.href = '/auth/login?error=session_expired';
+        }, 2000);
+      }
     }
   };
 
@@ -182,6 +228,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   const contextValue: AuthContextValue = {
     ...authState,
+    // Map AuthState properties to expected interface
+    isAuthenticated: authState.status === 'authenticated',
+    loading: authState.isLoading,
     login,
     logout,
     register,

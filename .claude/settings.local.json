@@ -71,7 +71,20 @@
       "Bash(./fix-imports.sh)",
       "Bash(NEXT_DEBUG_BUILD=1 yarn build)",
       "Bash(NODE_OPTIONS='--trace-warnings' yarn build)",
-      "Bash(cat:*)"
+      "Bash(cat:*)",
+      "Bash(python3:*)",
+      "Bash(timeout 60 yarn build)",
+      "Bash(yarn prisma migrate:*)",
+      "Bash(yarn db:reset:*)",
+      "Bash(yarn prisma:*)",
+      "Bash(npx prisma db push:*)",
+      "Bash(npx prisma db seed:*)",
+      "Bash(npx tsx:*)",
+      "WebFetch(domain:localhost)",
+      "Bash(npm run build:*)",
+      "Bash(git checkout:*)",
+      "Bash(yarn db:studio:*)",
+      "Bash(timeout 300 yarn db:seed)"
     ],
     "deny": []
   }

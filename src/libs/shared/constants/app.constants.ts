@@ -57,8 +57,6 @@ export const ROUTES = {
     BOOKING: '/booking',
     CONTACT: '/contact',
     PRIVACY: '/privacy',
-    SERVICES: '/services',
-    SERVICE_DETAIL: (id: string) => `/services/${id}`,
     TERMS: '/terms',
     VENUES: '/venues',
     VENUE_DETAIL: (id: string) => `/venues/${id}`,

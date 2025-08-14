@@ -53,6 +53,9 @@ export async function GET(request: NextRequest) {
       where.venueId = venueId;
     }
 
+    // Build include clause based on user role
+    const includeOwner = decoded.role === 'SUPER_ADMIN';
+
     // Get services
     const [services, total] = await Promise.all([
       prisma.service.findMany({
@@ -62,6 +65,23 @@ export async function GET(request: NextRequest) {
               category: true,
               id: true,
               name: true,
+              // Include owner information for SUPER_ADMIN only
+              ...(includeOwner && {
+                owner: {
+                  select: {
+                    businessAccount: {
+                      select: {
+                        businessName: true,
+                        businessType: true,
+                      },
+                    },
+                    email: true,
+                    firstName: true,
+                    id: true,
+                    lastName: true,
+                  },
+                },
+              }),
             },
           },
         },
@@ -75,6 +95,9 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({
       data: services,
+      meta: {
+        includesOwnerInfo: includeOwner,
+      },
       pagination: {
         limit,
         page,

@@ -16,6 +16,14 @@ export interface User {
   stripeCustomerId?: string;
   createdAt: string;
   updatedAt: string;
+  // Business account information (only included for SUPER_ADMIN users)
+  businessAccount?: {
+    businessName: string;
+    businessType: string;
+    isVerified: boolean;
+    contactEmail: string;
+    contactPhone: string;
+  };
 }
 
 export interface UserFilters {

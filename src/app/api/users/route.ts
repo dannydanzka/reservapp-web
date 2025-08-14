@@ -22,8 +22,8 @@ export async function GET(request: NextRequest) {
     const token = authHeader.substring(7);
     const decoded = jwt.verify(token, process.env.JWT_SECRET || 'fallback-secret') as any;
 
-    // Check if user is admin
-    if (decoded.role !== 'ADMIN') {
+    // Check if user is admin or super admin
+    if (decoded.role !== 'ADMIN' && decoded.role !== 'SUPER_ADMIN') {
       return NextResponse.json(
         { message: 'Acceso denegado. Se requiere rol de administrador', success: false },
         { status: 403 }
@@ -36,6 +36,7 @@ export async function GET(request: NextRequest) {
     const limit = parseInt(searchParams.get('limit') || '10');
     const search = searchParams.get('search');
     const role = searchParams.get('role');
+    const isActive = searchParams.get('isActive');
 
     // Build where clause
     const where: any = {};
@@ -49,6 +50,12 @@ export async function GET(request: NextRequest) {
     if (role) {
       where.role = role;
     }
+    if (isActive !== null && isActive !== undefined) {
+      where.isActive = isActive === 'true';
+    }
+
+    // Build select clause based on user role
+    const includeBusinessInfo = decoded.role === 'SUPER_ADMIN';
 
     // Get users
     const [users, total] = await Promise.all([
@@ -63,6 +70,19 @@ export async function GET(request: NextRequest) {
           lastName: true,
           phone: true,
           role: true,
+          updatedAt: true,
+          // Include business account information for SUPER_ADMIN only
+          ...(includeBusinessInfo && {
+            businessAccount: {
+              select: {
+                businessName: true,
+                businessType: true,
+                contactEmail: true,
+                contactPhone: true,
+                isVerified: true,
+              },
+            },
+          }),
         },
         skip: (page - 1) * limit,
         take: limit,
@@ -73,6 +93,9 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({
       data: users,
+      meta: {
+        includesBusinessInfo: includeBusinessInfo,
+      },
       pagination: {
         limit,
         page,

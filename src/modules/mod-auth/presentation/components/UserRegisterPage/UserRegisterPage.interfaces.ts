@@ -1,24 +1,35 @@
-export interface UserRegisterPageProps {}
-
-export interface UserRegisterPageState {
-  name: string;
+export interface UserRegisterFormData {
+  firstName: string;
+  lastName: string;
   email: string;
-  phone: string;
   password: string;
   confirmPassword: string;
-  error: string;
-  isLoading: boolean;
+  phone?: string;
 }
 
-export interface ButtonProps {
-  $isLoading?: boolean;
-  $variant?: 'primary' | 'secondary';
+export interface UserRegisterPageProps {
+  // Props específicas del componente (si las hay en el futuro)
 }
 
-export interface PlanInfoProps {
-  $isPremium: boolean;
+export interface RegisterApiRequest {
+  firstName: string;
+  lastName: string;
+  email: string;
+  password: string;
+  phone?: string;
 }
 
-export interface PlanPriceProps {
-  $isPremium: boolean;
+export interface RegisterApiResponse {
+  success: boolean;
+  message: string;
+  data?: {
+    token: string;
+    user: {
+      id: string;
+      firstName: string;
+      lastName: string;
+      email: string;
+      role: string;
+    };
+  };
 }

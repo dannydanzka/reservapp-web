@@ -4,6 +4,7 @@ import React, { useEffect, useState } from 'react';
 
 import { LoadingSpinner } from '@ui/LoadingSpinner';
 import { ReservationFilters } from '@services/core/api/reservationsApiService';
+import { usePermissions } from '@presentation/hooks/usePermissions';
 import { useReservations } from '@presentation/hooks/useReservations';
 import { useTranslation } from '@i18n/index';
 
@@ -19,6 +20,8 @@ import * as S from './ReservationsManagement.styled';
  */
 export const ReservationsManagement: React.FC<ReservationsManagementProps> = () => {
   const { t } = useTranslation();
+  const { hasRole } = usePermissions();
+  const isSuperAdmin = hasRole('SUPER_ADMIN');
 
   // Use HTTP API hook instead of direct service calls
   const {
@@ -214,14 +217,17 @@ export const ReservationsManagement: React.FC<ReservationsManagementProps> = () 
           <S.Table>
             <S.TableHead>
               <tr>
-                <S.TableHeader>ID</S.TableHeader>
-                <S.TableHeader>Cliente</S.TableHeader>
-                <S.TableHeader>Servicio</S.TableHeader>
-                <S.TableHeader>Venue</S.TableHeader>
-                <S.TableHeader>Check-in / Check-out</S.TableHeader>
-                <S.TableHeader>Estado</S.TableHeader>
-                <S.TableHeader>Total</S.TableHeader>
-                <S.TableHeader>Acciones</S.TableHeader>
+                <S.TableHeader>{t('admin.reservations.table.id')}</S.TableHeader>
+                <S.TableHeader>{t('admin.reservations.table.customer')}</S.TableHeader>
+                <S.TableHeader>{t('admin.reservations.table.service')}</S.TableHeader>
+                <S.TableHeader>{t('admin.reservations.table.venue')}</S.TableHeader>
+                {isSuperAdmin && (
+                  <S.TableHeader>{t('admin.reservations.table.businessOwner')}</S.TableHeader>
+                )}
+                <S.TableHeader>{t('admin.reservations.table.checkInOut')}</S.TableHeader>
+                <S.TableHeader>{t('admin.reservations.table.status')}</S.TableHeader>
+                <S.TableHeader>{t('admin.reservations.table.total')}</S.TableHeader>
+                <S.TableHeader>{t('admin.reservations.table.actions')}</S.TableHeader>
               </tr>
             </S.TableHead>
             <S.TableBody>
@@ -241,6 +247,24 @@ export const ReservationsManagement: React.FC<ReservationsManagementProps> = () 
                     <S.TableCell>
                       <div>{reservation.venue?.name}</div>
                     </S.TableCell>
+                    {isSuperAdmin && (
+                      <S.TableCell>
+                        {reservation.venue?.owner ? (
+                          <div>
+                            <strong>
+                              {reservation.venue.owner.firstName} {reservation.venue.owner.lastName}
+                            </strong>
+                            {reservation.venue.owner.businessAccount?.businessName && (
+                              <div style={{ color: '#6b7280', fontSize: '0.75rem' }}>
+                                {reservation.venue.owner.businessAccount.businessName}
+                              </div>
+                            )}
+                          </div>
+                        ) : (
+                          <span style={{ color: '#9ca3af' }}>Sin propietario</span>
+                        )}
+                      </S.TableCell>
+                    )}
                     <S.TableCell>
                       <div>{formatDate(reservation.checkInDate)}</div>
                       <div style={{ color: '#6b7280', fontSize: '0.75rem' }}>
@@ -298,7 +322,10 @@ export const ReservationsManagement: React.FC<ReservationsManagementProps> = () 
                 ))
               ) : (
                 <S.TableRow>
-                  <S.TableCell colSpan={8} style={{ padding: '40px', textAlign: 'center' }}>
+                  <S.TableCell
+                    colSpan={isSuperAdmin ? 9 : 8}
+                    style={{ padding: '40px', textAlign: 'center' }}
+                  >
                     {t('admin.reservations.table.noReservations')}
                   </S.TableCell>
                 </S.TableRow>

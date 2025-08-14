@@ -6,10 +6,8 @@
 
 // Export repositories
 export * from './repositories/AuditLogRepository';
-export * from './repositories/PermissionRepository';
 export * from './repositories/ReceiptRepository';
 export * from './repositories/ReviewRepository';
-export * from './repositories/RoleRepository';
 export * from './repositories/ServiceRepository';
 
 // Export services

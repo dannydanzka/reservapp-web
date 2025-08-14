@@ -10,3 +10,11 @@ export interface LoginPageState {
 export interface SubmitButtonProps {
   $isLoading: boolean;
 }
+
+export interface FormSectionProps {
+  children: React.ReactNode;
+}
+
+export interface LoginFormContainerProps {
+  children: React.ReactNode;
+}

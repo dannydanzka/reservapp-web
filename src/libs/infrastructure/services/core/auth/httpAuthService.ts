@@ -3,6 +3,8 @@
  * Makes HTTP requests to API endpoints instead of direct database access
  */
 
+import { authFetch } from '@libs/infrastructure/services/core/http/authInterceptor';
+
 // UserRole imported as string type for compatibility
 
 interface LoginCredentials {
@@ -99,10 +101,9 @@ export class HttpAuthService {
 
   static async logout(): Promise<ApiResponse<void>> {
     try {
-      const token = localStorage.getItem('auth_token');
-      const response = await fetch(`${this.BASE_URL}/auth/logout`, {
+      // Use authFetch for automatic token handling
+      const response = await authFetch(`${this.BASE_URL}/auth/logout`, {
         headers: {
-          Authorization: token ? `Bearer ${token}` : '',
           'Content-Type': 'application/json',
         },
         method: 'POST',
@@ -110,12 +111,16 @@ export class HttpAuthService {
 
       const data = await response.json();
 
-      // Clear local storage on logout
+      // Clear local storage on logout (authInterceptor also does this)
       localStorage.removeItem('auth_token');
       localStorage.removeItem('user_data');
 
       return data;
     } catch (error) {
+      // Even if logout fails, clear local storage
+      localStorage.removeItem('auth_token');
+      localStorage.removeItem('user_data');
+
       return {
         message: 'Error cerrando sesión',
         success: false,
@@ -133,9 +138,9 @@ export class HttpAuthService {
         };
       }
 
-      const response = await fetch(`${this.BASE_URL}/auth/profile`, {
+      // Use authFetch for automatic token handling
+      const response = await authFetch(`${this.BASE_URL}/auth/profile`, {
         headers: {
-          Authorization: `Bearer ${token}`,
           'Content-Type': 'application/json',
         },
         method: 'GET',
@@ -144,6 +149,7 @@ export class HttpAuthService {
       const data = await response.json();
       return data;
     } catch (error) {
+      console.error('Profile fetch error:', error);
       return {
         message: 'Error obteniendo perfil de usuario',
         success: false,

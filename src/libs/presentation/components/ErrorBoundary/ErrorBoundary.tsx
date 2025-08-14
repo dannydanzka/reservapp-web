@@ -2,6 +2,8 @@
 
 import React, { Component, ReactNode } from 'react';
 
+import { AppError, ErrorHandler } from '@libs/shared/utils/errorHandler';
+
 import { Button } from '../Button';
 
 import {
@@ -22,6 +24,7 @@ interface Props {
 interface State {
   hasError: boolean;
   error?: Error;
+  appError?: AppError;
 }
 
 class ErrorBoundary extends Component<Props, State> {
@@ -31,16 +34,27 @@ class ErrorBoundary extends Component<Props, State> {
   }
 
   static getDerivedStateFromError(error: Error): State {
-    return { error, hasError: true };
+    // Parse the error using our error handler
+    const appError = ErrorHandler.parseError(error);
+    return { appError, error, hasError: true };
   }
 
   componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
+    // Log error with context
+    const appError = ErrorHandler.parseError(error);
+    ErrorHandler.logError(appError, 'ErrorBoundary');
+
+    // Handle authentication errors
+    if (appError.isAuthError) {
+      ErrorHandler.handleAuthError(appError);
+    }
+
     console.error('ErrorBoundary caught an error:', error, errorInfo);
     this.props.onError?.(error, errorInfo);
   }
 
   handleRetry = () => {
-    this.setState({ error: undefined, hasError: false });
+    this.setState({ appError: undefined, error: undefined, hasError: false });
   };
 
   handleReload = () => {
@@ -53,13 +67,37 @@ class ErrorBoundary extends Component<Props, State> {
         return this.props.fallback;
       }
 
+      const { appError } = this.state;
+
+      // Special handling for auth errors
+      if (appError?.isAuthError) {
+        return (
+          <StyledErrorBoundary>
+            <StyledErrorContent>
+              <StyledErrorIcon>🔒</StyledErrorIcon>
+              <StyledErrorTitle>Sesión Expirada</StyledErrorTitle>
+              <StyledErrorMessage>{appError.message}</StyledErrorMessage>
+              <StyledErrorActions>
+                <Button variant='contained' onClick={() => (window.location.href = '/auth/login')}>
+                  Iniciar Sesión
+                </Button>
+                <Button variant='outlined' onClick={() => (window.location.href = '/')}>
+                  Ir al Inicio
+                </Button>
+              </StyledErrorActions>
+            </StyledErrorContent>
+          </StyledErrorBoundary>
+        );
+      }
+
       return (
         <StyledErrorBoundary>
           <StyledErrorContent>
             <StyledErrorIcon>⚠️</StyledErrorIcon>
             <StyledErrorTitle>Algo salió mal</StyledErrorTitle>
             <StyledErrorMessage>
-              Ha ocurrido un error inesperado. Por favor, intenta nuevamente.
+              {appError?.message ||
+                'Ha ocurrido un error inesperado. Por favor, intenta nuevamente.'}
             </StyledErrorMessage>
             {process.env.NODE_ENV === 'development' && this.state.error && (
               <details style={{ color: '#6b7280', fontSize: '0.875rem', marginTop: '1rem' }}>

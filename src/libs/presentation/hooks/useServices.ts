@@ -275,13 +275,13 @@ export function useServices(): UseServicesReturn {
 
     error,
 
-    goToNextPage,
-
     filters,
 
-    hasActiveFilters,
+    goToNextPage,
 
     goToPreviousPage,
+
+    hasActiveFilters,
     hasNextPage,
 
     hasPreviousPage,

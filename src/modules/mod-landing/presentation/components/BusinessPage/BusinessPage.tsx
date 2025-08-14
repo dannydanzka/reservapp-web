@@ -14,7 +14,17 @@ import {
   BenefitsGrid,
   BenefitsSection,
   BenefitTitle,
-  ContactFormSection,
+  ComparisonContainer,
+  ComparisonSection,
+  ComparisonTable,
+  ComparisonTableCell,
+  ComparisonTableHead,
+  ComparisonTableHeader,
+  ComparisonTableRow,
+  ExampleCard,
+  ExampleContainer,
+  ExampleGrid,
+  ExampleTitle,
   HeroButtons,
   HeroSection,
   HeroSubtitle,
@@ -53,86 +63,237 @@ export const BusinessPage: React.FC<BusinessPageProps> = () => {
         <SectionSubtitle>{t('business.benefits.subtitle')}</SectionSubtitle>
         <BenefitsGrid>
           <BenefitCard>
-            <BenefitIcon>📈</BenefitIcon>
-            <BenefitTitle>{t('business.benefits.increaseBookings.title')}</BenefitTitle>
+            <BenefitIcon>💰</BenefitIcon>
+            <BenefitTitle>{t('business.benefits.competitiveCommissions.title')}</BenefitTitle>
             <BenefitDescription>
-              {t('business.benefits.increaseBookings.description')}
+              {t('business.benefits.competitiveCommissions.description')}
             </BenefitDescription>
           </BenefitCard>
 
           <BenefitCard>
-            <BenefitIcon>⏰</BenefitIcon>
-            <BenefitTitle>{t('business.benefits.schedule247.title')}</BenefitTitle>
+            <BenefitIcon>⚡</BenefitIcon>
+            <BenefitTitle>{t('business.benefits.weeklyPayments.title')}</BenefitTitle>
             <BenefitDescription>
-              {t('business.benefits.schedule247.description')}
+              {t('business.benefits.weeklyPayments.description')}
             </BenefitDescription>
           </BenefitCard>
 
           <BenefitCard>
-            <BenefitIcon>💳</BenefitIcon>
-            <BenefitTitle>{t('business.benefits.securePayments.title')}</BenefitTitle>
+            <BenefitIcon>🏨</BenefitIcon>
+            <BenefitTitle>{t('business.benefits.integralEcosystem.title')}</BenefitTitle>
             <BenefitDescription>
-              {t('business.benefits.securePayments.description')}
+              {t('business.benefits.integralEcosystem.description')}
             </BenefitDescription>
           </BenefitCard>
 
           <BenefitCard>
             <BenefitIcon>📊</BenefitIcon>
-            <BenefitTitle>{t('business.benefits.analytics.title')}</BenefitTitle>
-            <BenefitDescription>{t('business.benefits.analytics.description')}</BenefitDescription>
-          </BenefitCard>
-
-          <BenefitCard>
-            <BenefitIcon>🔔</BenefitIcon>
-            <BenefitTitle>{t('business.benefits.notifications.title')}</BenefitTitle>
+            <BenefitTitle>{t('business.benefits.advancedPanel.title')}</BenefitTitle>
             <BenefitDescription>
-              {t('business.benefits.notifications.description')}
+              {t('business.benefits.advancedPanel.description')}
             </BenefitDescription>
           </BenefitCard>
 
           <BenefitCard>
-            <BenefitIcon>🌟</BenefitIcon>
-            <BenefitTitle>{t('business.benefits.reviews.title')}</BenefitTitle>
-            <BenefitDescription>{t('business.benefits.reviews.description')}</BenefitDescription>
+            <BenefitIcon>🎯</BenefitIcon>
+            <BenefitTitle>{t('business.benefits.productivityBonuses.title')}</BenefitTitle>
+            <BenefitDescription>
+              {t('business.benefits.productivityBonuses.description')}
+            </BenefitDescription>
+          </BenefitCard>
+
+          <BenefitCard>
+            <BenefitIcon>👥</BenefitIcon>
+            <BenefitTitle>{t('business.benefits.privateCommunity.title')}</BenefitTitle>
+            <BenefitDescription>
+              {t('business.benefits.privateCommunity.description')}
+            </BenefitDescription>
           </BenefitCard>
         </BenefitsGrid>
       </BenefitsSection>
 
+      <ComparisonSection>
+        <ComparisonContainer>
+          <SectionTitle>{t('business.comparison.title')}</SectionTitle>
+          <SectionSubtitle>{t('business.comparison.subtitle')}</SectionSubtitle>
+
+          <div style={{ overflowX: 'auto' }}>
+            <ComparisonTable>
+              <ComparisonTableHead>
+                <tr>
+                  <ComparisonTableHeader>
+                    {t('business.comparison.table.feature')}
+                  </ComparisonTableHeader>
+                  <ComparisonTableHeader>
+                    {t('business.comparison.table.reservapp')}
+                  </ComparisonTableHeader>
+                  <ComparisonTableHeader>
+                    {t('business.comparison.table.platformA')}
+                  </ComparisonTableHeader>
+                  <ComparisonTableHeader>
+                    {t('business.comparison.table.platformB')}
+                  </ComparisonTableHeader>
+                </tr>
+              </ComparisonTableHead>
+              <tbody>
+                <ComparisonTableRow>
+                  <ComparisonTableCell>
+                    {t('business.comparison.table.registration')}
+                  </ComparisonTableCell>
+                  <ComparisonTableCell $positive>
+                    ✅ {t('business.comparison.table.free')}
+                  </ComparisonTableCell>
+                  <ComparisonTableCell $positive>
+                    ✅ {t('business.comparison.table.free')}
+                  </ComparisonTableCell>
+                  <ComparisonTableCell $positive>
+                    ✅ {t('business.comparison.table.free')}
+                  </ComparisonTableCell>
+                </ComparisonTableRow>
+                <ComparisonTableRow $highlighted>
+                  <ComparisonTableCell>
+                    {t('business.comparison.table.commission')}
+                  </ComparisonTableCell>
+                  <ComparisonTableCell $positive>5%</ComparisonTableCell>
+                  <ComparisonTableCell $negative>15%</ComparisonTableCell>
+                  <ComparisonTableCell $negative>15-25%</ComparisonTableCell>
+                </ComparisonTableRow>
+                <ComparisonTableRow>
+                  <ComparisonTableCell>
+                    {t('business.comparison.table.commissionAfter')}
+                  </ComparisonTableCell>
+                  <ComparisonTableCell $positive>10-12%</ComparisonTableCell>
+                  <ComparisonTableCell $negative>15%</ComparisonTableCell>
+                  <ComparisonTableCell $negative>15-25%</ComparisonTableCell>
+                </ComparisonTableRow>
+                <ComparisonTableRow $highlighted>
+                  <ComparisonTableCell>
+                    {t('business.comparison.table.paymentFrequency')}
+                  </ComparisonTableCell>
+                  <ComparisonTableCell $positive>
+                    {t('business.comparison.table.weekly')}
+                  </ComparisonTableCell>
+                  <ComparisonTableCell $neutral>
+                    {t('business.comparison.table.oneToSevenDays')}
+                  </ComparisonTableCell>
+                  <ComparisonTableCell $negative>
+                    {t('business.comparison.table.upToThirtyDays')}
+                  </ComparisonTableCell>
+                </ComparisonTableRow>
+                <ComparisonTableRow>
+                  <ComparisonTableCell>
+                    {t('business.comparison.table.serviceTypes')}
+                  </ComparisonTableCell>
+                  <ComparisonTableCell $positive>
+                    {t('business.comparison.table.completeEcosystem')}
+                  </ComparisonTableCell>
+                  <ComparisonTableCell $neutral>
+                    {t('business.comparison.table.onlyAccommodation')}
+                  </ComparisonTableCell>
+                  <ComparisonTableCell $neutral>
+                    {t('business.comparison.table.onlyAccommodation')}
+                  </ComparisonTableCell>
+                </ComparisonTableRow>
+                <ComparisonTableRow $highlighted>
+                  <ComparisonTableCell>
+                    {t('business.comparison.table.adminPanel')}
+                  </ComparisonTableCell>
+                  <ComparisonTableCell $positive>
+                    {t('business.comparison.table.advanced')}
+                  </ComparisonTableCell>
+                  <ComparisonTableCell $neutral>
+                    {t('business.comparison.table.basic')}
+                  </ComparisonTableCell>
+                  <ComparisonTableCell $neutral>
+                    {t('business.comparison.table.basic')}
+                  </ComparisonTableCell>
+                </ComparisonTableRow>
+                <ComparisonTableRow>
+                  <ComparisonTableCell>
+                    {t('business.comparison.table.monthlySavings')}
+                  </ComparisonTableCell>
+                  <ComparisonTableCell $positive>
+                    {t('business.comparison.table.upToAmount')}
+                  </ComparisonTableCell>
+                  <ComparisonTableCell $negative>
+                    {t('business.comparison.table.none')}
+                  </ComparisonTableCell>
+                  <ComparisonTableCell $negative>
+                    {t('business.comparison.table.none')}
+                  </ComparisonTableCell>
+                </ComparisonTableRow>
+              </tbody>
+            </ComparisonTable>
+          </div>
+
+          <ExampleContainer>
+            <ExampleTitle>{t('business.comparison.example.title')}</ExampleTitle>
+            <ExampleGrid>
+              <ExampleCard $positive>
+                <h4>{t('business.comparison.example.withReservapp')}</h4>
+                <p className='amount'>{t('business.comparison.example.amountReservapp')}</p>
+                <p className='description'>
+                  {t('business.comparison.example.descriptionReservapp')}
+                </p>
+              </ExampleCard>
+              <ExampleCard>
+                <h4>{t('business.comparison.example.withTraditional')}</h4>
+                <p className='amount'>{t('business.comparison.example.amountTraditional')}</p>
+                <p className='description'>
+                  {t('business.comparison.example.descriptionTraditional')}
+                </p>
+              </ExampleCard>
+            </ExampleGrid>
+            <p style={{ color: '#6b7280', fontSize: '0.875rem', marginTop: '1rem' }}>
+              {t('business.comparison.disclaimer')}
+            </p>
+          </ExampleContainer>
+        </ComparisonContainer>
+      </ComparisonSection>
+
       <PricingSection>
-        <SectionTitle>Modelos de Precios para Negocios</SectionTitle>
-        <SectionSubtitle>
-          Suscripción fija + comisión por venta + escalamiento por tráfico realista
-        </SectionSubtitle>
+        <SectionTitle>{t('business.pricing.title')}</SectionTitle>
+        <SectionSubtitle>{t('business.pricing.subtitle')}</SectionSubtitle>
         <PricingGrid>
           <PricingCard>
-            <PlanName>Plan Inicial</PlanName>
-            <PlanPrice>$1,299</PlanPrice>
-            <PlanPeriod>suscripción mensual</PlanPeriod>
+            <PlanName>{t('business.pricing.firstYear.name')}</PlanName>
+            <PlanPrice>{t('business.pricing.firstYear.price')}</PlanPrice>
+            <PlanPeriod>{t('business.pricing.firstYear.period')}</PlanPeriod>
             <PlanFeatures>
-              <PlanFeature>Hospedaje de hasta 5 servicios</PlanFeature>
-              <PlanFeature>5% comisión por venta realizada</PlanFeature>
-              <PlanFeature>Hasta 500 visitas mensuales</PlanFeature>
-              <PlanFeature>$0.50 por visita adicional</PlanFeature>
-              <PlanFeature>Panel de administración unificado</PlanFeature>
-              <PlanFeature>Soporte por email</PlanFeature>
+              <PlanFeature>✅ {t('business.benefits.competitiveCommissions.title')}</PlanFeature>
+              <PlanFeature>
+                ✅ {t('business.pricing.firstYear.features.fivePercentCommission')}
+              </PlanFeature>
+              <PlanFeature>✅ {t('business.pricing.firstYear.features.allServices')}</PlanFeature>
+              <PlanFeature>
+                ✅ {t('business.pricing.firstYear.features.weeklyPayments')}
+              </PlanFeature>
+              <PlanFeature>✅ {t('business.benefits.advancedPanel.title')}</PlanFeature>
+              <PlanFeature>
+                ✅ {t('business.pricing.firstYear.features.dedicatedSupport')}
+              </PlanFeature>
             </PlanFeatures>
             <Button href='/auth/register' size='large' style={{ width: '100%' }} variant='outlined'>
-              Comenzar Ahora
+              {t('business.pricing.firstYear.button')}
             </Button>
           </PricingCard>
 
           <PricingCard $featured>
-            <PopularBadge>Más Popular</PopularBadge>
-            <PlanName>Plan Profesional</PlanName>
-            <PlanPrice>$2,499</PlanPrice>
-            <PlanPeriod>suscripción mensual</PlanPeriod>
+            <PopularBadge>{t('business.pricing.standard.badge')}</PopularBadge>
+            <PlanName>{t('business.pricing.standard.name')}</PlanName>
+            <PlanPrice>{t('business.pricing.standard.price')}</PlanPrice>
+            <PlanPeriod>{t('business.pricing.standard.period')}</PlanPeriod>
             <PlanFeatures>
-              <PlanFeature>Servicios ilimitados</PlanFeature>
-              <PlanFeature>4% comisión por venta realizada</PlanFeature>
-              <PlanFeature>Hasta 25,000 visitas mensuales</PlanFeature>
-              <PlanFeature>Reportes detallados</PlanFeature>
-              <PlanFeature>Soporte prioritario</PlanFeature>
-              <PlanFeature>Tráfico adicional a precio preferencial</PlanFeature>
+              <PlanFeature>✅ {t('business.pricing.standard.features.lowerThanBig')}</PlanFeature>
+              <PlanFeature>
+                ✅ {t('business.pricing.standard.features.lowerThanTraditional')}
+              </PlanFeature>
+              <PlanFeature>✅ {t('business.benefits.productivityBonuses.title')}</PlanFeature>
+              <PlanFeature>
+                ✅ {t('business.pricing.standard.features.volumeReduction')}
+              </PlanFeature>
+              <PlanFeature>✅ {t('business.benefits.privateCommunity.title')}</PlanFeature>
+              <PlanFeature>✅ {t('business.pricing.standard.features.advancedTools')}</PlanFeature>
             </PlanFeatures>
             <Button
               href='/auth/register'
@@ -140,41 +301,35 @@ export const BusinessPage: React.FC<BusinessPageProps> = () => {
               style={{ width: '100%' }}
               variant='contained'
             >
-              Empezar Ahora
+              {t('business.pricing.standard.button')}
             </Button>
           </PricingCard>
 
           <PricingCard>
-            <PlanName>Plan Enterprise</PlanName>
-            <PlanPrice>$4,999</PlanPrice>
-            <PlanPeriod>suscripción mensual</PlanPeriod>
+            <PlanName>{t('business.pricing.comparison.name')}</PlanName>
+            <PlanPrice>{t('business.pricing.comparison.price')}</PlanPrice>
+            <PlanPeriod>{t('business.pricing.comparison.period')}</PlanPeriod>
             <PlanFeatures>
-              <PlanFeature>Todo lo anterior</PlanFeature>
-              <PlanFeature>3% comisión por venta realizada</PlanFeature>
-              <PlanFeature>Hasta 100,000 visitas mensuales</PlanFeature>
-              <PlanFeature>Múltiples ubicaciones</PlanFeature>
-              <PlanFeature>Soporte 24/7</PlanFeature>
-              <PlanFeature>Tráfico adicional a precio preferencial</PlanFeature>
+              <PlanFeature>
+                ❌ {t('business.pricing.comparison.features.platformACommission')}
+              </PlanFeature>
+              <PlanFeature>
+                ❌ {t('business.pricing.comparison.features.platformBCommission')}
+              </PlanFeature>
+              <PlanFeature>❌ {t('business.pricing.comparison.features.slowPayments')}</PlanFeature>
+              <PlanFeature>
+                ❌ {t('business.pricing.comparison.features.limitedServices')}
+              </PlanFeature>
+              <PlanFeature>
+                ✅ {t('business.pricing.comparison.features.reservappSavings')}
+              </PlanFeature>
+              <PlanFeature>
+                ✅ {t('business.pricing.comparison.features.completeEcosystem')}
+              </PlanFeature>
             </PlanFeatures>
-            <Button href='/contact' size='large' style={{ width: '100%' }} variant='outlined'>
-              Contactar Ventas
-            </Button>
           </PricingCard>
         </PricingGrid>
       </PricingSection>
-
-      <ContactFormSection>
-        <SectionTitle>{t('business.cta.title')}</SectionTitle>
-        <div style={{ padding: '2rem', textAlign: 'center' }}>
-          <p style={{ color: '#6B7280', fontSize: '1.125rem', marginBottom: '2rem' }}>
-            ¿Listo para impulsar tu negocio? Regístrate ahora y comienza a gestionar tus
-            reservaciones de manera profesional.
-          </p>
-          <Button href='/auth/register' size='large' variant='contained'>
-            Registrar mi Negocio
-          </Button>
-        </div>
-      </ContactFormSection>
     </PageContainer>
   );
 };

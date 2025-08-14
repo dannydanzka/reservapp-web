@@ -113,10 +113,18 @@ export enum SubscriptionStatus {
 
 export interface BusinessRegistrationData extends RegisterData {
   businessName: string;
+  businessType:
+    | 'HOTEL'
+    | 'RESTAURANT'
+    | 'SPA'
+    | 'TOUR_AGENCY'
+    | 'EVENT_CENTER'
+    | 'ENTERTAINMENT'
+    | 'OTHER';
+  businessGiros?: string[]; // Optional multiple business categories
   phone: string;
-  address: string;
-  subscriptionPlan: string;
-  paymentIntentId?: string;
+  firstName: string;
+  lastName: string;
 }
 
 export interface SubscriptionData {

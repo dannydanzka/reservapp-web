@@ -2,79 +2,113 @@
 
 import React from 'react';
 
+import { Calendar, DollarSign, MapPin, Plus, Star, Store } from 'lucide-react';
+import { useRouter } from 'next/navigation';
+
+import { useAdminStats } from '@libs/presentation/hooks/useAdminStats';
 import { useTranslation } from '@i18n/index';
 
 import { AdminDashboardProps } from './AdminDashboard.interfaces';
+import { ReservationsChart, RevenueChart } from '../charts';
+import type { ReservationsChartData, RevenueChartData } from '../charts';
+import { ReservationsTable, VenuesTable } from '../tables';
 
 import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-  ContentGrid,
+  ChartsGrid,
   DashboardContainer,
-  EmptyStateText,
+  ErrorContainer,
+  ErrorMessage,
   Header,
+  LoadingContainer,
   StatCard,
   StatLabel,
   StatsGrid,
   StatValue,
   Subtitle,
+  TablesGrid,
   Title,
 } from './AdminDashboard.styled';
 
 /**
  * Admin dashboard component with overview stats and recent activity.
- * Simplified version to avoid complex service dependencies.
+ * Now with real data from the API, styled components and i18n.
  */
 export const AdminDashboard: React.FC<AdminDashboardProps> = () => {
   const { t } = useTranslation();
+  const router = useRouter();
+  const { error, loading, stats } = useAdminStats();
+
+  const formatCurrency = (amount: number) => {
+    return new Intl.NumberFormat('es-MX', {
+      currency: 'MXN',
+      style: 'currency',
+    }).format(amount);
+  };
+
+  // Use real data from API or fallback to empty arrays
+  const revenueData = stats?.revenueChartData || [];
+  const reservationsData = stats?.reservationsChartData || [];
+
+  if (loading) {
+    return (
+      <LoadingContainer>
+        <Header>
+          <Title>{t('admin.dashboard.title')}</Title>
+          <Subtitle>{t('common.loading')}</Subtitle>
+        </Header>
+      </LoadingContainer>
+    );
+  }
+
+  if (error) {
+    return (
+      <ErrorContainer>
+        <Header>
+          <Title>{t('admin.dashboard.title')}</Title>
+          <ErrorMessage>{error}</ErrorMessage>
+        </Header>
+      </ErrorContainer>
+    );
+  }
 
   return (
     <DashboardContainer>
       <Header>
-        <Title>Panel de Administración</Title>
-        <Subtitle>Bienvenido al sistema de gestión de reservas</Subtitle>
+        <Title>{t('admin.dashboard.title')}</Title>
+        <Subtitle>{t('admin.dashboard.subtitle')}</Subtitle>
       </Header>
 
+      {/* Stats Cards */}
       <StatsGrid>
         <StatCard>
-          <StatValue>0</StatValue>
-          <StatLabel>Total de Reservas</StatLabel>
+          <StatValue>{stats?.totalReservations || 0}</StatValue>
+          <StatLabel>{t('admin.dashboard.stats.totalReservations')}</StatLabel>
         </StatCard>
         <StatCard>
-          <StatValue>0</StatValue>
-          <StatLabel>Venues Activos</StatLabel>
+          <StatValue>{stats?.activeVenues || 0}</StatValue>
+          <StatLabel>{t('admin.dashboard.stats.activeVenues')}</StatLabel>
         </StatCard>
         <StatCard>
-          <StatValue>$0</StatValue>
-          <StatLabel>Ingresos del Mes</StatLabel>
+          <StatValue>{formatCurrency(stats?.monthlyRevenue || 0)}</StatValue>
+          <StatLabel>{t('admin.dashboard.stats.monthlyRevenue')}</StatLabel>
         </StatCard>
         <StatCard>
-          <StatValue>0</StatValue>
-          <StatLabel>Usuarios Registrados</StatLabel>
+          <StatValue>{stats?.totalUsers || 0}</StatValue>
+          <StatLabel>{t('admin.dashboard.stats.registeredUsers')}</StatLabel>
         </StatCard>
       </StatsGrid>
 
-      <ContentGrid>
-        <Card>
-          <CardHeader>
-            <CardTitle>Reservas Recientes</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <EmptyStateText>No hay reservas recientes para mostrar</EmptyStateText>
-          </CardContent>
-        </Card>
+      {/* Charts Section */}
+      <ChartsGrid>
+        <RevenueChart data={revenueData} height={300} loading={loading} />
+        <ReservationsChart data={reservationsData} height={300} loading={loading} />
+      </ChartsGrid>
 
-        <Card>
-          <CardHeader>
-            <CardTitle>Venues Populares</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <EmptyStateText>No hay datos de venues disponibles</EmptyStateText>
-          </CardContent>
-        </Card>
-      </ContentGrid>
+      {/* Tables Section */}
+      <TablesGrid>
+        <ReservationsTable data={stats?.recentReservations || []} loading={loading} maxRows={5} />
+        <VenuesTable data={stats?.popularVenues || []} loading={loading} maxRows={5} />
+      </TablesGrid>
     </DashboardContainer>
   );
 };

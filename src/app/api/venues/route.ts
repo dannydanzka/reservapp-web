@@ -6,10 +6,22 @@ import { PrismaClient } from '@prisma/client';
 const prisma = new PrismaClient();
 
 /**
- * Get venues
+ * Get venues (Admin only)
  */
 export async function GET(request: NextRequest) {
   try {
+    // Get auth token
+    const authHeader = request.headers.get('authorization');
+    if (!authHeader?.startsWith('Bearer ')) {
+      return NextResponse.json(
+        { message: 'Token de autorización requerido', success: false },
+        { status: 401 }
+      );
+    }
+
+    const token = authHeader.substring(7);
+    const decoded = jwt.verify(token, process.env.JWT_SECRET || 'fallback-secret') as any;
+
     // Get query parameters
     const { searchParams } = new URL(request.url);
     const page = parseInt(searchParams.get('page') || '1');
@@ -29,18 +41,36 @@ export async function GET(request: NextRequest) {
       where.category = category;
     }
 
+    // Build include clause based on user role
+    const includeOwner = decoded.role === 'SUPER_ADMIN';
+
     // Get venues
     const [venues, total] = await Promise.all([
       prisma.venue.findMany({
         include: {
-          services: {
+          _count: {
             select: {
-              duration: true,
-              id: true,
-              name: true,
-              price: true,
+              reservations: true,
+              services: true,
             },
           },
+          // Include owner information for SUPER_ADMIN only
+          ...(includeOwner && {
+            owner: {
+              select: {
+                businessAccount: {
+                  select: {
+                    businessName: true,
+                    businessType: true,
+                  },
+                },
+                email: true,
+                firstName: true,
+                id: true,
+                lastName: true,
+              },
+            },
+          }),
         },
         orderBy: { createdAt: 'desc' },
         skip: (page - 1) * limit,
@@ -52,6 +82,9 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({
       data: venues,
+      meta: {
+        includesOwnerInfo: includeOwner,
+      },
       pagination: {
         limit,
         page,

@@ -5,6 +5,17 @@
 
 import { handleRequest } from '../http/handleRequest';
 
+interface BusinessOwner {
+  id: string;
+  firstName: string;
+  lastName: string;
+  email: string;
+  businessAccount?: {
+    businessName: string;
+    businessType: string;
+  };
+}
+
 export interface Service {
   id: string;
   name: string;
@@ -26,6 +37,7 @@ export interface Service {
     category: string;
     address?: string;
     city?: string;
+    owner?: BusinessOwner; // Only included for SUPER_ADMIN users
   };
 }
 

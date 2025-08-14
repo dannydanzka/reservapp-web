@@ -1,26 +1,26 @@
 import { styled } from 'styled-components';
 
 export const PageContainer = styled.div`
+  margin-bottom: 3rem;
   min-height: 100vh;
-  padding: 2rem 0;
 `;
 
 export const PageHeader = styled.div`
-  background: linear-gradient(
-    135deg,
-    ${({ theme }) => theme.colors.primary[500]} 0%,
-    ${({ theme }) => theme.colors.secondary[500]} 100%
-  );
-  color: white;
+  background: ${({ theme }) => theme.colors.primary[50]};
+  border-bottom: 1px solid ${({ theme }) => theme.colors.primary[100]};
+  color: ${({ theme }) => theme.colors.primary[900]};
   margin-bottom: 3rem;
   padding: 4rem 2rem;
+  position: relative;
   text-align: center;
 `;
 
 export const PageTitle = styled.h1`
+  color: ${({ theme }) => theme.colors.primary[900]};
   font-size: 3rem;
   font-weight: 800;
   margin-bottom: 1rem;
+  text-shadow: 0 1px 3px rgb(0 0 0 / 0.1);
 
   @media (width <= 768px) {
     font-size: 2rem;
@@ -28,10 +28,10 @@ export const PageTitle = styled.h1`
 `;
 
 export const PageSubtitle = styled.p`
+  color: ${({ theme }) => theme.colors.primary[700]};
   font-size: 1.25rem;
   margin: 0 auto;
   max-width: 600px;
-  opacity: 0.9;
 `;
 
 export const ContactContainer = styled.div`

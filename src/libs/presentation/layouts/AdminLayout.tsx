@@ -1,13 +1,13 @@
 'use client';
 
-import React from 'react';
+import React, { useEffect } from 'react';
 
 import { Building, Calendar, CreditCard, FileText, LayoutDashboard, Users } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import styled from 'styled-components';
 
 import { AdminHeader, AdminSidebar, LoadingSpinner } from '../components';
-import { useAuth } from '../hooks/useAuth';
+import { useAuth } from '../providers/AuthProvider';
 
 interface AdminLayoutProps {
   children: React.ReactNode;
@@ -67,6 +67,22 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
   const { isAuthenticated, loading, logout, user } = useAuth();
   const router = useRouter();
 
+  // Handle redirects in useEffect to avoid state updates during render
+  useEffect(() => {
+    if (!loading) {
+      if (!isAuthenticated) {
+        router.push('/auth/login');
+        return;
+      }
+
+      // Check if user has admin privileges (ADMIN, MANAGER, or SUPER_ADMIN)
+      if (user && !['ADMIN', 'MANAGER', 'SUPER_ADMIN'].includes(user.role)) {
+        router.push('/auth/login');
+        return;
+      }
+    }
+  }, [isAuthenticated, loading, user, router]);
+
   // Show loading while checking authentication
   if (loading) {
     return (
@@ -76,16 +92,13 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
     );
   }
 
-  // Redirect to login if not authenticated
-  if (!isAuthenticated) {
-    router.push('/auth/login');
-    return null;
-  }
-
-  // Check if user has admin privileges
-  if (user && user.role !== 'ADMIN') {
-    router.push('/auth/login'); // or unauthorized page
-    return null;
+  // Show loading while redirecting
+  if (!isAuthenticated || (user && !['ADMIN', 'MANAGER', 'SUPER_ADMIN'].includes(user.role))) {
+    return (
+      <LoadingContainer>
+        <LoadingSpinner size='large' />
+      </LoadingContainer>
+    );
   }
 
   const handleLogout = async () => {

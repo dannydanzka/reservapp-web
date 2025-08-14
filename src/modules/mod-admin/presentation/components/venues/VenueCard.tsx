@@ -5,6 +5,8 @@ import React from 'react';
 import styled from 'styled-components';
 
 import { Button } from '@ui/Button';
+import { usePermissions } from '@presentation/hooks/usePermissions';
+import { useTranslation } from '@i18n/index';
 import { VenueType } from '@prisma/client';
 
 const Card = styled.div`
@@ -254,6 +256,16 @@ interface VenueCardProps {
     };
     createdAt: string;
     updatedAt: string;
+    owner?: {
+      id: string;
+      firstName: string;
+      lastName: string;
+      email: string;
+      businessAccount?: {
+        businessName: string;
+        businessType: string;
+      };
+    };
   };
   onEdit?: (venueId: string) => void;
   onToggleStatus?: (venueId: string) => void;
@@ -268,6 +280,10 @@ export const VenueCard: React.FC<VenueCardProps> = ({
   onViewDetails,
   venue,
 }) => {
+  const { hasRole } = usePermissions();
+  const { t } = useTranslation();
+  const isSuperAdmin = hasRole('SUPER_ADMIN');
+
   const getCategoryDisplayName = (category: VenueType): string => {
     switch (category) {
       case VenueType.ACCOMMODATION:
@@ -346,6 +362,25 @@ export const VenueCard: React.FC<VenueCardProps> = ({
           <DetailLabel>Reservaciones:</DetailLabel>
           <DetailValue>{venue._count.reservations}</DetailValue>
         </DetailRow>
+
+        {/* Show business owner information for SUPER_ADMIN */}
+        {isSuperAdmin && venue.owner && (
+          <DetailRow>
+            <DetailLabel>{t('admin.venues.table.businessOwner')}:</DetailLabel>
+            <DetailValue>
+              <div>
+                <strong>
+                  {venue.owner.firstName} {venue.owner.lastName}
+                </strong>
+                {venue.owner.businessAccount?.businessName && (
+                  <div style={{ color: '#6b7280', fontSize: '0.75rem' }}>
+                    {venue.owner.businessAccount.businessName}
+                  </div>
+                )}
+              </div>
+            </DetailValue>
+          </DetailRow>
+        )}
 
         {venue.phone && (
           <DetailRow>

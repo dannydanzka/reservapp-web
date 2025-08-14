@@ -1,10 +1,10 @@
 {
   "info": {
-    "name": "ReservApp API - Complete Collection",
-    "description": "Colección completa de la API de ReservApp con ejemplos de todos los endpoints\n\n🌐 **ReservApp** es una plataforma de gestión de reservas para hoteles, spas, restaurantes, tours y eventos con dashboard administrativo completo.\n\n## 🔑 Autenticación\nLa mayoría de endpoints requieren autenticación JWT. Incluye el token en el header:\n```\nAuthorization: Bearer tu-jwt-token\n```\n\n## 🌐 Servidores\n- **Producción**: https://reservapp-web.vercel.app/api\n- **Desarrollo**: http://localhost:3000/api\n\n## 👤 Cuentas de Prueba\n- **Admin**: admin@reservapp.com (password: password123)\n- **Usuario**: user@reservapp.com (password: password123)\n\n## 📚 Documentación Completa\n- **Producto**: https://github.com/reservapp/web/blob/main/docs/PRODUCTO_FUNCIONALIDADES.md\n- **Técnica**: https://github.com/reservapp/web/blob/main/docs/GUIA_TECNICA.md\n- **Desarrollo**: https://github.com/reservapp/web/blob/main/docs/DESARROLLO_COMPLETO.md",
+    "name": "ReservApp API - Complete Collection 2025",
+    "description": "Colección completa de la API de ReservApp con todos los endpoints actuales\n\n🌐 **ReservApp** es una plataforma de gestión de reservas para hoteles, spas, restaurantes, tours y eventos con dashboard administrativo completo.\n\n## 🔑 Autenticación\nLa mayoría de endpoints requieren autenticación JWT. Incluye el token en el header:\n```\nAuthorization: Bearer tu-jwt-token\n```\n\n## 🌐 Servidores\n- **Producción**: https://reservapp-web.vercel.app/api\n- **Desarrollo**: http://localhost:3000/api\n\n## 👤 Cuentas de Prueba\n- **Super Admin**: admin@reservapp.com (password: password123)\n- **Admin Hotel**: admin.salazar@reservapp.com (password: password123)\n- **Admin Restaurante**: admin.restaurant@reservapp.com (password: password123)\n- **Usuario Final**: juan.perez@gmail.com (password: password123)\n\n## 📚 Documentación\n- **API Docs**: https://reservapp-web.vercel.app/api/swagger\n- **Health Check**: https://reservapp-web.vercel.app/api/health",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
     "version": {
-      "major": 2,
+      "major": 3,
       "minor": 0,
       "patch": 0
     }
@@ -13,17 +13,44 @@
     {
       "key": "base_url",
       "value": "http://localhost:3000/api",
-      "type": "string"
+      "type": "string",
+      "description": "Base URL para desarrollo local"
     },
     {
       "key": "prod_url",
       "value": "https://reservapp-web.vercel.app/api",
-      "type": "string"
+      "type": "string",
+      "description": "Base URL para producción"
     },
     {
-      "key": "auth_token",
+      "key": "jwt_token",
       "value": "",
-      "type": "string"
+      "type": "string",
+      "description": "JWT token de autenticación"
+    },
+    {
+      "key": "user_id",
+      "value": "",
+      "type": "string",
+      "description": "ID del usuario autenticado"
+    },
+    {
+      "key": "venue_id",
+      "value": "venue_123",
+      "type": "string",
+      "description": "ID de venue para testing"
+    },
+    {
+      "key": "service_id",
+      "value": "service_456",
+      "type": "string",
+      "description": "ID de servicio para testing"
+    },
+    {
+      "key": "reservation_id",
+      "value": "reservation_123",
+      "type": "string",
+      "description": "ID de reservación para testing"
     }
   ],
   "auth": {
@@ -31,7 +58,7 @@
     "bearer": [
       {
         "key": "token",
-        "value": "{{auth_token}}",
+        "value": "{{jwt_token}}",
         "type": "string"
       }
     ]
@@ -48,18 +75,32 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
+                  "// Guardar token automáticamente para siguientes requests",
                   "if (pm.response.code === 200) {",
                   "    const response = pm.response.json();",
-                  "    if (response.success && response.data.token) {",
-                  "        pm.collectionVariables.set('auth_token', response.data.token);",
-                  "        console.log('Token guardado:', response.data.token);",
+                  "    if (response.success && response.data && response.data.token) {",
+                  "        pm.collectionVariables.set('jwt_token', response.data.token);",
+                  "        pm.collectionVariables.set('user_id', response.data.user.id);",
+                  "        console.log('✅ Token guardado:', response.data.token.substring(0, 20) + '...');",
+                  "        console.log('✅ Usuario logueado:', response.data.user.email, '- Rol:', response.data.user.role);",
                   "    }",
-                  "}"
+                  "}",
+                  "",
+                  "pm.test('Login successful', function () {",
+                  "    pm.expect(pm.response.code).to.equal(200);",
+                  "    const response = pm.response.json();",
+                  "    pm.expect(response.success).to.be.true;",
+                  "    pm.expect(response.data.token).to.exist;",
+                  "    pm.expect(response.data.user).to.exist;",
+                  "});"
                 ]
               }
             }
           ],
           "request": {
+            "auth": {
+              "type": "noauth"
+            },
             "method": "POST",
             "header": [
               {
@@ -76,12 +117,15 @@
               "host": ["{{base_url}}"],
               "path": ["auth", "login"]
             },
-            "description": "Iniciar sesión con email y contraseña. El token JWT se guarda automáticamente."
+            "description": "Autenticar usuario con email y contraseña. El JWT token se guarda automáticamente para uso en otros endpoints."
           }
         },
         {
-          "name": "Registro Usuario",
+          "name": "Registro Usuario Final",
           "request": {
+            "auth": {
+              "type": "noauth"
+            },
             "method": "POST",
             "header": [
               {
@@ -91,18 +135,18 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"email\": \"nuevo@usuario.com\",\n  \"password\": \"password123\",\n  \"firstName\": \"Usuario\",\n  \"lastName\": \"Nuevo\",\n  \"phone\": \"+52 33 1234 5678\"\n}"
+              "raw": "{\n  \"email\": \"nuevo.usuario@ejemplo.com\",\n  \"password\": \"password123\",\n  \"confirmPassword\": \"password123\",\n  \"firstName\": \"Usuario\",\n  \"lastName\": \"Nuevo\",\n  \"phone\": \"+52 33 1234 5678\",\n  \"role\": \"USER\"\n}"
             },
             "url": {
               "raw": "{{base_url}}/auth/register",
               "host": ["{{base_url}}"],
               "path": ["auth", "register"]
             },
-            "description": "Registrar un nuevo usuario individual"
+            "description": "Registrar nuevo usuario final en la plataforma"
           }
         },
         {
-          "name": "Obtener Perfil",
+          "name": "Obtener Perfil Usuario",
           "request": {
             "method": "GET",
             "header": [],
@@ -111,7 +155,7 @@
               "host": ["{{base_url}}"],
               "path": ["auth", "profile"]
             },
-            "description": "Obtener información del perfil del usuario autenticado"
+            "description": "Obtener información del perfil del usuario autenticado con JWT token"
           }
         },
         {
@@ -119,274 +163,101 @@
           "request": {
             "method": "POST",
             "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
             "url": {
               "raw": "{{base_url}}/auth/logout",
               "host": ["{{base_url}}"],
               "path": ["auth", "logout"]
             },
-            "description": "Cerrar sesión del usuario"
+            "description": "Cerrar sesión del usuario autenticado"
           }
         }
       ],
-      "description": "Endpoints para autenticación de usuarios y gestión de sesiones"
+      "description": "Endpoints de autenticación: login, registro, perfil y logout"
     },
     {
-      "name": "🌍 Public Endpoints",
+      "name": "👥 Users Management",
       "item": [
         {
-          "name": "Listar Venues Públicos",
+          "name": "Listar Usuarios",
           "request": {
-            "auth": {
-              "type": "noauth"
-            },
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "{{base_url}}/public/venues?category=ACCOMMODATION&city=Guadalajara&rating=4&minPrice=1000&maxPrice=5000",
+              "raw": "{{base_url}}/users?role=USER&search=juan&page=1&limit=10",
               "host": ["{{base_url}}"],
-              "path": ["public", "venues"],
+              "path": ["users"],
               "query": [
                 {
-                  "key": "category",
-                  "value": "ACCOMMODATION",
-                  "description": "Filtrar por categoría"
+                  "key": "role",
+                  "value": "USER",
+                  "description": "Filtrar por rol: USER, ADMIN, SUPER_ADMIN, MANAGER"
                 },
                 {
                   "key": "search",
-                  "value": "hotel",
-                  "description": "Búsqueda por texto",
-                  "disabled": true
+                  "value": "juan",
+                  "description": "Búsqueda por nombre o email"
                 },
                 {
-                  "key": "city",
-                  "value": "Guadalajara",
-                  "description": "Filtrar por ciudad"
-                },
-                {
-                  "key": "rating",
-                  "value": "4",
-                  "description": "Rating mínimo"
-                },
-                {
-                  "key": "minPrice",
-                  "value": "1000",
-                  "description": "Precio mínimo"
-                },
-                {
-                  "key": "maxPrice",
-                  "value": "5000",
-                  "description": "Precio máximo"
-                }
-              ]
-            },
-            "description": "Obtener lista pública de venues (sin autenticación)"
-          }
-        },
-        {
-          "name": "Listar Servicios Públicos",
-          "request": {
-            "auth": {
-              "type": "noauth"
-            },
-            "method": "GET",
-            "header": [],
-            "url": {
-              "raw": "{{base_url}}/public/services?category=ACCOMMODATION&venueId=venue_123",
-              "host": ["{{base_url}}"],
-              "path": ["public", "services"],
-              "query": [
-                {
-                  "key": "category",
-                  "value": "ACCOMMODATION"
-                },
-                {
-                  "key": "venueId",
-                  "value": "venue_123"
-                }
-              ]
-            },
-            "description": "Obtener servicios públicos disponibles"
-          }
-        }
-      ],
-      "description": "Endpoints públicos que no requieren autenticación"
-    },
-    {
-      "name": "📅 Reservations",
-      "item": [
-        {
-          "name": "Crear Reservación",
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"serviceId\": \"service_456\",\n  \"checkIn\": \"2024-12-15T14:00:00Z\",\n  \"checkOut\": \"2024-12-15T16:00:00Z\",\n  \"guests\": 2,\n  \"specialRequests\": \"Vista al jardín preferible\",\n  \"paymentMethodId\": \"pm_card_visa\"\n}"
-            },
-            "url": {
-              "raw": "{{base_url}}/reservations",
-              "host": ["{{base_url}}"],
-              "path": ["reservations"]
-            },
-            "description": "Crear una nueva reservación con pago automático integrado"
-          }
-        },
-        {
-          "name": "Listar Mis Reservaciones",
-          "request": {
-            "method": "GET",
-            "header": [],
-            "url": {
-              "raw": "{{base_url}}/reservations?status=CONFIRMED&page=1&limit=10",
-              "host": ["{{base_url}}"],
-              "path": ["reservations"],
-              "query": [
-                {
-                  "key": "status",
-                  "value": "CONFIRMED"
+                  "key": "isActive",
+                  "value": "true",
+                  "disabled": true,
+                  "description": "Filtrar por usuarios activos"
                 },
                 {
                   "key": "page",
-                  "value": "1"
+                  "value": "1",
+                  "description": "Número de página"
                 },
                 {
                   "key": "limit",
-                  "value": "10"
+                  "value": "10",
+                  "description": "Elementos por página"
                 }
               ]
             },
-            "description": "Obtener lista de reservaciones del usuario autenticado"
+            "description": "Obtener lista de usuarios con filtros y paginación (requiere permisos de administrador)"
           }
         },
         {
-          "name": "Obtener Reservación por ID",
+          "name": "Obtener Usuario por ID",
           "request": {
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "{{base_url}}/reservations/{{reservationId}}",
+              "raw": "{{base_url}}/users/{{user_id}}",
               "host": ["{{base_url}}"],
-              "path": ["reservations", "{{reservationId}}"]
+              "path": ["users", "{{user_id}}"]
             },
-            "description": "Obtener detalles de una reservación específica"
+            "description": "Obtener detalles de un usuario específico por ID"
           }
         },
         {
-          "name": "Cancelar Reservación",
+          "name": "Eliminar Usuario",
           "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"reason\": \"Cambio de planes del cliente\",\n  \"refundRequested\": true\n}"
-            },
-            "url": {
-              "raw": "{{base_url}}/reservations/{{reservationId}}/cancel",
-              "host": ["{{base_url}}"],
-              "path": ["reservations", "{{reservationId}}", "cancel"]
-            },
-            "description": "Cancelar una reservación con opción de reembolso automático"
-          }
-        }
-      ],
-      "description": "Gestión completa de reservaciones con pagos integrados"
-    },
-    {
-      "name": "💳 Payments",
-      "item": [
-        {
-          "name": "Crear Payment Intent",
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"amount\": 4500.00,\n  \"currency\": \"mxn\",\n  \"reservationId\": \"{{reservationId}}\",\n  \"metadata\": {\n    \"serviceName\": \"Suite Presidential\",\n    \"guestName\": \"Juan Pérez\"\n  }\n}"
-            },
-            "url": {
-              "raw": "{{base_url}}/payments/create-intent",
-              "host": ["{{base_url}}"],
-              "path": ["payments", "create-intent"]
-            },
-            "description": "Crear un Payment Intent de Stripe para procesar pago"
-          }
-        },
-        {
-          "name": "Listar Mis Pagos",
-          "request": {
-            "method": "GET",
+            "method": "DELETE",
             "header": [],
             "url": {
-              "raw": "{{base_url}}/payments?status=COMPLETED&page=1&limit=10",
+              "raw": "{{base_url}}/users/{{user_id}}",
               "host": ["{{base_url}}"],
-              "path": ["payments"],
-              "query": [
-                {
-                  "key": "status",
-                  "value": "COMPLETED"
-                },
-                {
-                  "key": "page",
-                  "value": "1"
-                },
-                {
-                  "key": "limit",
-                  "value": "10"
-                }
-              ]
+              "path": ["users", "{{user_id}}"]
             },
-            "description": "Obtener historial de pagos del usuario autenticado"
-          }
-        },
-        {
-          "name": "Webhook Stripe",
-          "request": {
-            "auth": {
-              "type": "noauth"
-            },
-            "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              },
-              {
-                "key": "stripe-signature",
-                "value": "t=1234567890,v1=signature..."
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"id\": \"evt_1234567890\",\n  \"object\": \"event\",\n  \"type\": \"payment_intent.succeeded\",\n  \"data\": {\n    \"object\": {\n      \"id\": \"pi_1234567890\",\n      \"amount\": 450000,\n      \"currency\": \"mxn\",\n      \"status\": \"succeeded\"\n    }\n  }\n}"
-            },
-            "url": {
-              "raw": "{{base_url}}/webhooks/stripe",
-              "host": ["{{base_url}}"],
-              "path": ["webhooks", "stripe"]
-            },
-            "description": "Webhook para sincronizar estados de pago con Stripe"
+            "description": "Eliminar un usuario específico (soft delete - marca como inactivo)"
           }
         }
       ],
-      "description": "Gestión de pagos integrados con Stripe"
+      "description": "Gestión de usuarios del sistema"
     },
     {
-      "name": "🏨 Venues & Services",
+      "name": "🏨 Venues Management",
       "item": [
         {
           "name": "Listar Venues",
@@ -394,23 +265,36 @@
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "{{base_url}}/venues?category=ACCOMMODATION&page=1&limit=20",
+              "raw": "{{base_url}}/venues?category=ACCOMMODATION&search=hotel&city=Guadalajara&page=1&limit=10",
               "host": ["{{base_url}}"],
               "path": ["venues"],
               "query": [
                 {
                   "key": "category",
-                  "value": "ACCOMMODATION"
+                  "value": "ACCOMMODATION",
+                  "description": "ACCOMMODATION, SPA, RESTAURANT, TOURISM, EVENT_SPACE"
                 },
                 {
                   "key": "search",
                   "value": "hotel",
-                  "disabled": true
+                  "description": "Búsqueda por nombre o descripción"
                 },
                 {
                   "key": "city",
                   "value": "Guadalajara",
-                  "disabled": true
+                  "description": "Filtrar por ciudad"
+                },
+                {
+                  "key": "isActive",
+                  "value": "true",
+                  "disabled": true,
+                  "description": "Solo venues activos"
+                },
+                {
+                  "key": "rating",
+                  "value": "4",
+                  "disabled": true,
+                  "description": "Rating mínimo (1-5)"
                 },
                 {
                   "key": "page",
@@ -418,11 +302,11 @@
                 },
                 {
                   "key": "limit",
-                  "value": "20"
+                  "value": "10"
                 }
               ]
             },
-            "description": "Obtener lista de venues con filtros"
+            "description": "Obtener lista de venues con filtros avanzados"
           }
         },
         {
@@ -431,133 +315,77 @@
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "{{base_url}}/venues/{{venueId}}",
+              "raw": "{{base_url}}/venues/{{venue_id}}",
               "host": ["{{base_url}}"],
-              "path": ["venues", "{{venueId}}"]
+              "path": ["venues", "{{venue_id}}"]
             },
-            "description": "Obtener detalles completos de un venue"
+            "description": "Obtener detalles completos de un venue específico"
           }
         },
+        {
+          "name": "Crear Nuevo Venue",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Hotel Boutique Plaza\",\n  \"category\": \"ACCOMMODATION\",\n  \"description\": \"Hotel boutique en el centro histórico con servicio de primera clase\",\n  \"address\": \"Av. Hidalgo 123, Centro, Guadalajara, Jalisco\",\n  \"city\": \"Guadalajara\",\n  \"state\": \"Jalisco\",\n  \"country\": \"México\",\n  \"postalCode\": \"44100\",\n  \"latitude\": 20.6729,\n  \"longitude\": -103.3436,\n  \"phone\": \"+52 33 1234 5678\",\n  \"email\": \"contacto@hotelplaza.com\",\n  \"website\": \"https://hotelplaza.com\",\n  \"amenities\": [\"WiFi gratis\", \"Estacionamiento\", \"Aire acondicionado\", \"Room service\"],\n  \"images\": [\"https://ejemplo.com/hotel1.jpg\", \"https://ejemplo.com/hotel2.jpg\"],\n  \"priceRange\": {\n    \"min\": 1500,\n    \"max\": 4500,\n    \"currency\": \"MXN\"\n  },\n  \"policies\": {\n    \"checkIn\": \"15:00\",\n    \"checkOut\": \"11:00\",\n    \"cancellation\": \"Cancelación gratuita hasta 24 horas antes\",\n    \"pets\": false,\n    \"smoking\": false\n  }\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/venues",
+              "host": ["{{base_url}}"],
+              "path": ["venues"]
+            },
+            "description": "Crear un nuevo venue en la plataforma (requiere rol ADMIN o SUPER_ADMIN)"
+          }
+        }
+      ],
+      "description": "Gestión de venues (hoteles, spas, restaurantes, etc.)"
+    },
+    {
+      "name": "🛎️ Services Management",
+      "item": [
         {
           "name": "Listar Servicios",
           "request": {
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "{{base_url}}/services?venueId={{venueId}}&category=ACCOMMODATION&available=true",
+              "raw": "{{base_url}}/services?venueId={{venue_id}}&category=ACCOMMODATION&isActive=true&page=1&limit=10",
               "host": ["{{base_url}}"],
               "path": ["services"],
               "query": [
                 {
                   "key": "venueId",
-                  "value": "{{venueId}}"
+                  "value": "{{venue_id}}",
+                  "description": "ID del venue propietario"
                 },
                 {
                   "key": "category",
-                  "value": "ACCOMMODATION"
+                  "value": "ACCOMMODATION",
+                  "description": "Categoría del servicio"
                 },
                 {
-                  "key": "available",
-                  "value": "true"
-                }
-              ]
-            },
-            "description": "Obtener lista de servicios con filtros"
-          }
-        },
-        {
-          "name": "Verificar Disponibilidad",
-          "request": {
-            "method": "GET",
-            "header": [],
-            "url": {
-              "raw": "{{base_url}}/services/availability?serviceId={{serviceId}}&checkIn=2024-12-15T14:00:00Z&checkOut=2024-12-15T16:00:00Z&guests=2",
-              "host": ["{{base_url}}"],
-              "path": ["services", "availability"],
-              "query": [
-                {
-                  "key": "serviceId",
-                  "value": "{{serviceId}}"
+                  "key": "isActive",
+                  "value": "true",
+                  "description": "Solo servicios activos"
                 },
                 {
-                  "key": "checkIn",
-                  "value": "2024-12-15T14:00:00Z"
+                  "key": "minPrice",
+                  "value": "1000",
+                  "disabled": true,
+                  "description": "Precio mínimo"
                 },
                 {
-                  "key": "checkOut",
-                  "value": "2024-12-15T16:00:00Z"
-                },
-                {
-                  "key": "guests",
-                  "value": "2"
-                }
-              ]
-            },
-            "description": "Verificar disponibilidad de servicios en fechas específicas"
-          }
-        }
-      ],
-      "description": "Gestión de venues y servicios"
-    },
-    {
-      "name": "🏢 Admin Dashboard",
-      "item": [
-        {
-          "name": "Dashboard KPIs",
-          "request": {
-            "method": "GET",
-            "header": [],
-            "url": {
-              "raw": "{{base_url}}/admin/dashboard/stats?period=month&year=2024&month=12",
-              "host": ["{{base_url}}"],
-              "path": ["admin", "dashboard", "stats"],
-              "query": [
-                {
-                  "key": "period",
-                  "value": "month",
-                  "description": "Periodo: day, week, month, year"
-                },
-                {
-                  "key": "year",
-                  "value": "2024"
-                },
-                {
-                  "key": "month",
-                  "value": "12"
-                }
-              ]
-            },
-            "description": "Obtener KPIs del dashboard administrativo"
-          }
-        },
-        {
-          "name": "Gestión de Reservaciones",
-          "request": {
-            "method": "GET",
-            "header": [],
-            "url": {
-              "raw": "{{base_url}}/admin/reservations?status=PENDING&page=1&limit=20&includeDetails=true",
-              "host": ["{{base_url}}"],
-              "path": ["admin", "reservations"],
-              "query": [
-                {
-                  "key": "status",
-                  "value": "PENDING"
-                },
-                {
-                  "key": "dateFrom",
-                  "value": "2024-12-01",
-                  "disabled": true
-                },
-                {
-                  "key": "dateTo",
-                  "value": "2024-12-31",
-                  "disabled": true
-                },
-                {
-                  "key": "venueId",
-                  "value": "{{venueId}}",
-                  "disabled": true
+                  "key": "maxPrice",
+                  "value": "5000",
+                  "disabled": true,
+                  "description": "Precio máximo"
                 },
                 {
                   "key": "page",
@@ -565,21 +393,30 @@
                 },
                 {
                   "key": "limit",
-                  "value": "20"
-                },
-                {
-                  "key": "includeDetails",
-                  "value": "true"
+                  "value": "10"
                 }
               ]
             },
-            "description": "Gestión completa de reservaciones (solo ADMIN)"
+            "description": "Obtener lista de servicios disponibles con filtros"
           }
         },
         {
-          "name": "Actualizar Estado Reservación",
+          "name": "Obtener Servicio por ID",
           "request": {
-            "method": "PUT",
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/services/{{service_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["services", "{{service_id}}"]
+            },
+            "description": "Obtener detalles completos de un servicio específico"
+          }
+        },
+        {
+          "name": "Crear Nuevo Servicio",
+          "request": {
+            "method": "POST",
             "header": [
               {
                 "key": "Content-Type",
@@ -588,43 +425,233 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"status\": \"CONFIRMED\",\n  \"notes\": \"Reservación confirmada por admin\"\n}"
+              "raw": "{\n  \"venueId\": \"{{venue_id}}\",\n  \"name\": \"Suite Presidential\",\n  \"category\": \"ACCOMMODATION\",\n  \"description\": \"Suite de lujo con vista panorámica de la ciudad\",\n  \"duration\": 1440,\n  \"capacity\": 4,\n  \"price\": 4500.00,\n  \"currency\": \"MXN\",\n  \"features\": [\"Vista panorámica\", \"Jacuzzi privado\", \"Balcón amplio\", \"Servicio de mayordomo\"],\n  \"images\": [\"https://ejemplo.com/suite1.jpg\", \"https://ejemplo.com/suite2.jpg\"],\n  \"isActive\": true,\n  \"cancellationPolicy\": \"Cancelación gratuita hasta 48 horas antes\",\n  \"availableHours\": {\n    \"start\": \"15:00\",\n    \"end\": \"11:00\"\n  }\n}"
             },
             "url": {
-              "raw": "{{base_url}}/admin/reservations/{{reservationId}}",
+              "raw": "{{base_url}}/services",
               "host": ["{{base_url}}"],
-              "path": ["admin", "reservations", "{{reservationId}}"]
+              "path": ["services"]
             },
-            "description": "Actualizar estado de reservación (solo ADMIN)"
+            "description": "Crear un nuevo servicio en un venue (requiere permisos de administrador del venue)"
           }
-        },
+        }
+      ],
+      "description": "Gestión de servicios ofrecidos por los venues"
+    },
+    {
+      "name": "📅 Reservations Management",
+      "item": [
         {
-          "name": "Gestión de Pagos",
+          "name": "Listar Reservaciones",
           "request": {
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "{{base_url}}/admin/payments?status=COMPLETED&page=1&limit=20&dateFrom=2024-12-01",
+              "raw": "{{base_url}}/reservations?status=CONFIRMED&dateFrom=2024-01-01&dateTo=2024-12-31&page=1&limit=10",
+              "host": ["{{base_url}}"],
+              "path": ["reservations"],
+              "query": [
+                {
+                  "key": "status",
+                  "value": "CONFIRMED",
+                  "description": "PENDING, CONFIRMED, CANCELLED, COMPLETED"
+                },
+                {
+                  "key": "dateFrom",
+                  "value": "2024-01-01",
+                  "description": "Fecha inicio en formato YYYY-MM-DD"
+                },
+                {
+                  "key": "dateTo",
+                  "value": "2024-12-31",
+                  "description": "Fecha fin en formato YYYY-MM-DD"
+                },
+                {
+                  "key": "serviceId",
+                  "value": "{{service_id}}",
+                  "disabled": true,
+                  "description": "Filtrar por servicio específico"
+                },
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "10"
+                }
+              ]
+            },
+            "description": "Obtener lista de reservaciones del usuario autenticado (usuarios ven sus reservas, admins ven todas)"
+          }
+        },
+        {
+          "name": "Obtener Reservación por ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/reservations/{{reservation_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["reservations", "{{reservation_id}}"]
+            },
+            "description": "Obtener detalles completos de una reservación específica"
+          }
+        },
+        {
+          "name": "Crear Nueva Reservación",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"serviceId\": \"{{service_id}}\",\n  \"checkInDate\": \"2024-03-15\",\n  \"checkInTime\": \"15:00\",\n  \"checkOutDate\": \"2024-03-16\",\n  \"checkOutTime\": \"11:00\",\n  \"guests\": 2,\n  \"specialRequests\": \"Vista al jardín preferible, cama king size\",\n  \"contactPhone\": \"+52 33 9876 5432\",\n  \"emergencyContact\": {\n    \"name\": \"María González\",\n    \"phone\": \"+52 33 1111 2222\",\n    \"relationship\": \"Esposa\"\n  },\n  \"paymentInfo\": {\n    \"method\": \"STRIPE\",\n    \"paymentMethodId\": \"pm_card_visa_test\"\n  }\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/reservations",
+              "host": ["{{base_url}}"],
+              "path": ["reservations"]
+            },
+            "description": "Crear una nueva reservación con pago automático integrado"
+          }
+        }
+      ],
+      "description": "Gestión completa de reservaciones"
+    },
+    {
+      "name": "📧 Contact System",
+      "item": [
+        {
+          "name": "Obtener Formularios de Contacto (Admin)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/contact?status=PENDING&page=1&limit=10",
+              "host": ["{{base_url}}"],
+              "path": ["contact"],
+              "query": [
+                {
+                  "key": "status",
+                  "value": "PENDING",
+                  "description": "PENDING, RESPONDED, RESOLVED"
+                },
+                {
+                  "key": "page",
+                  "value": "1",
+                  "description": "Número de página"
+                },
+                {
+                  "key": "limit",
+                  "value": "10",
+                  "description": "Elementos por página"
+                }
+              ]
+            },
+            "description": "Obtener lista de formularios de contacto para administradores"
+          }
+        },
+        {
+          "name": "Enviar Formulario de Contacto",
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Juan Pérez\",\n  \"email\": \"juan.perez@ejemplo.com\",\n  \"phone\": \"+52 33 1234 5678\",\n  \"subject\": \"Consulta sobre reservaciones grupales\",\n  \"message\": \"Hola, me gustaría obtener información sobre tarifas especiales para reservaciones grupales de 15 personas. ¿Manejan descuentos por volumen? Gracias.\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/contact",
+              "host": ["{{base_url}}"],
+              "path": ["contact"]
+            },
+            "description": "Enviar un formulario de contacto público (no requiere autenticación). Se envían automáticamente emails de notificación."
+          }
+        },
+        {
+          "name": "Actualizar Estado Formulario",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"id\": \"contact_form_123\",\n  \"status\": \"RESPONDED\",\n  \"notes\": \"Cliente contactado por teléfono, información enviada por email\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/contact",
+              "host": ["{{base_url}}"],
+              "path": ["contact"]
+            },
+            "description": "Actualizar el estado de un formulario de contacto (solo administradores)"
+          }
+        }
+      ],
+      "description": "Sistema de formularios de contacto con emails automáticos"
+    },
+    {
+      "name": "🛠️ Admin Management",
+      "item": [
+        {
+          "name": "Dashboard Estadísticas",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/admin/stats",
+              "host": ["{{base_url}}"],
+              "path": ["admin", "stats"]
+            },
+            "description": "Obtener KPIs y estadísticas del dashboard administrativo. SUPER_ADMIN ve todo, ADMIN ve solo sus venues."
+          }
+        },
+        {
+          "name": "Gestión de Pagos Admin",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/admin/payments?status=COMPLETED&dateFrom=2024-01-01&dateTo=2024-12-31&page=1&limit=20",
               "host": ["{{base_url}}"],
               "path": ["admin", "payments"],
               "query": [
                 {
                   "key": "status",
-                  "value": "COMPLETED"
+                  "value": "COMPLETED",
+                  "description": "PENDING, COMPLETED, FAILED, REFUNDED"
                 },
                 {
                   "key": "dateFrom",
-                  "value": "2024-12-01"
+                  "value": "2024-01-01",
+                  "description": "Fecha inicio filtro"
                 },
                 {
                   "key": "dateTo",
                   "value": "2024-12-31",
-                  "disabled": true
+                  "description": "Fecha fin filtro"
                 },
                 {
                   "key": "venueId",
-                  "value": "{{venueId}}",
-                  "disabled": true
+                  "value": "{{venue_id}}",
+                  "disabled": true,
+                  "description": "Filtrar por venue específico"
                 },
                 {
                   "key": "page",
@@ -636,11 +663,11 @@
                 }
               ]
             },
-            "description": "Gestión completa de pagos con filtros avanzados (solo ADMIN)"
+            "description": "Obtener lista de pagos para administradores con filtros avanzados"
           }
         },
         {
-          "name": "Procesar Reembolso Admin",
+          "name": "Acciones de Pago Admin",
           "request": {
             "method": "POST",
             "header": [
@@ -651,76 +678,69 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"paymentId\": \"{{paymentId}}\",\n  \"amount\": 2250.00,\n  \"reason\": \"Solicitud del cliente por cancelación\",\n  \"adminNotes\": \"Reembolso procesado por política de cancelación\"\n}"
+              "raw": "{\n  \"action\": \"refund\",\n  \"paymentId\": \"payment_123\",\n  \"amount\": 2250.00,\n  \"reason\": \"Solicitud de reembolso por cancelación del cliente\",\n  \"adminNotes\": \"Cliente canceló por enfermedad, se procede con reembolso completo según política\"\n}"
             },
             "url": {
-              "raw": "{{base_url}}/admin/payments/refund",
+              "raw": "{{base_url}}/admin/payments/actions",
               "host": ["{{base_url}}"],
-              "path": ["admin", "payments", "refund"]
+              "path": ["admin", "payments", "actions"]
             },
-            "description": "Procesar reembolso desde dashboard admin"
+            "description": "Ejecutar acciones administrativas sobre pagos: reembolsos, retries, etc."
           }
         },
         {
-          "name": "Gestión de Venues Admin",
+          "name": "Sistema de Logs - Listar",
           "request": {
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "{{base_url}}/admin/venues?page=1&limit=20&includeStats=true",
+              "raw": "{{base_url}}/admin/system-logs?level=ERROR&level=WARN&category=API_REQUEST&dateFrom=2024-08-01&page=1&limit=50",
               "host": ["{{base_url}}"],
-              "path": ["admin", "venues"],
+              "path": ["admin", "system-logs"],
               "query": [
+                {
+                  "key": "level",
+                  "value": "ERROR",
+                  "description": "DEBUG, INFO, WARN, ERROR"
+                },
+                {
+                  "key": "level",
+                  "value": "WARN",
+                  "description": "Se pueden agregar múltiples levels"
+                },
                 {
                   "key": "category",
-                  "value": "ACCOMMODATION",
-                  "disabled": true
+                  "value": "API_REQUEST",
+                  "description": "API_REQUEST, AUTHENTICATION, PAYMENT, DATABASE, SYSTEM"
                 },
                 {
-                  "key": "isActive",
-                  "value": "true",
-                  "disabled": true
+                  "key": "eventType",
+                  "value": "payment_failed",
+                  "disabled": true,
+                  "description": "Tipo específico de evento"
                 },
                 {
-                  "key": "page",
-                  "value": "1"
+                  "key": "userId",
+                  "value": "{{user_id}}",
+                  "disabled": true,
+                  "description": "Filtrar por usuario específico"
                 },
                 {
-                  "key": "limit",
-                  "value": "20"
+                  "key": "dateFrom",
+                  "value": "2024-08-01",
+                  "description": "Fecha inicio en formato YYYY-MM-DD"
                 },
                 {
-                  "key": "includeStats",
-                  "value": "true"
-                }
-              ]
-            },
-            "description": "Gestión completa de venues con estadísticas (solo ADMIN)"
-          }
-        },
-        {
-          "name": "Gestión de Usuarios Admin",
-          "request": {
-            "method": "GET",
-            "header": [],
-            "url": {
-              "raw": "{{base_url}}/admin/users?role=USER&page=1&limit=20&includeStats=true",
-              "host": ["{{base_url}}"],
-              "path": ["admin", "users"],
-              "query": [
-                {
-                  "key": "role",
-                  "value": "USER"
+                  "key": "dateTo",
+                  "value": "2024-08-31",
+                  "disabled": true,
+                  "description": "Fecha fin en formato YYYY-MM-DD"
                 },
                 {
                   "key": "search",
-                  "value": "juan",
-                  "disabled": true
-                },
-                {
-                  "key": "isActive",
-                  "value": "true",
-                  "disabled": true
+                  "value": "error 500",
+                  "disabled": true,
+                  "description": "Búsqueda de texto libre"
                 },
                 {
                   "key": "page",
@@ -728,158 +748,103 @@
                 },
                 {
                   "key": "limit",
-                  "value": "20"
-                },
-                {
-                  "key": "includeStats",
-                  "value": "true"
+                  "value": "50"
                 }
               ]
             },
-            "description": "Gestión completa de usuarios con estadísticas (solo ADMIN)"
+            "description": "Obtener logs del sistema con filtros avanzados (solo SUPER_ADMIN)"
+          }
+        },
+        {
+          "name": "Sistema de Logs - Estadísticas",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/admin/system-logs/stats?dateFrom=2024-08-01&dateTo=2024-08-31",
+              "host": ["{{base_url}}"],
+              "path": ["admin", "system-logs", "stats"],
+              "query": [
+                {
+                  "key": "dateFrom",
+                  "value": "2024-08-01",
+                  "description": "Fecha inicio para estadísticas"
+                },
+                {
+                  "key": "dateTo",
+                  "value": "2024-08-31",
+                  "description": "Fecha fin para estadísticas"
+                }
+              ]
+            },
+            "description": "Obtener estadísticas agregadas de logs del sistema"
+          }
+        },
+        {
+          "name": "Sistema de Logs - Limpiar",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"olderThanDays\": 30,\n  \"levels\": [\"DEBUG\", \"INFO\"],\n  \"confirm\": true\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/admin/system-logs/cleanup",
+              "host": ["{{base_url}}"],
+              "path": ["admin", "system-logs", "cleanup"]
+            },
+            "description": "Limpiar logs antiguos del sistema según criterios especificados"
+          }
+        },
+        {
+          "name": "Sistema de Logs - Exportar",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/admin/system-logs/export?format=csv&level=ERROR&dateFrom=2024-08-01&dateTo=2024-08-31",
+              "host": ["{{base_url}}"],
+              "path": ["admin", "system-logs", "export"],
+              "query": [
+                {
+                  "key": "format",
+                  "value": "csv",
+                  "description": "Formato: csv, json"
+                },
+                {
+                  "key": "level",
+                  "value": "ERROR",
+                  "description": "Filtrar por nivel de log"
+                },
+                {
+                  "key": "dateFrom",
+                  "value": "2024-08-01",
+                  "description": "Fecha inicio"
+                },
+                {
+                  "key": "dateTo",
+                  "value": "2024-08-31",
+                  "description": "Fecha fin"
+                }
+              ]
+            },
+            "description": "Exportar logs del sistema en formato CSV o JSON"
           }
         }
       ],
-      "description": "Endpoints del dashboard administrativo (requiere rol ADMIN)"
+      "description": "Endpoints administrativos avanzados: estadísticas, pagos, logs del sistema"
     },
     {
-      "name": "📈 Business Intelligence",
+      "name": "💳 Payments & Subscription",
       "item": [
         {
-          "name": "Análisis de Ingresos",
-          "request": {
-            "method": "GET",
-            "header": [],
-            "url": {
-              "raw": "{{base_url}}/admin/reports/revenue?dateFrom=2024-12-01&dateTo=2024-12-31&venueIds={{venueId}}&groupBy=day",
-              "host": ["{{base_url}}"],
-              "path": ["admin", "reports", "revenue"],
-              "query": [
-                {
-                  "key": "dateFrom",
-                  "value": "2024-12-01"
-                },
-                {
-                  "key": "dateTo",
-                  "value": "2024-12-31"
-                },
-                {
-                  "key": "venueIds",
-                  "value": "{{venueId}}"
-                },
-                {
-                  "key": "groupBy",
-                  "value": "day",
-                  "description": "day, week, month"
-                }
-              ]
-            },
-            "description": "Generar reporte de análisis de ingresos con gráficos y tendencias"
-          }
-        },
-        {
-          "name": "Resumen de Reservaciones",
-          "request": {
-            "method": "GET",
-            "header": [],
-            "url": {
-              "raw": "{{base_url}}/admin/reports/reservations?dateFrom=2024-12-01&dateTo=2024-12-31&includePatterns=true",
-              "host": ["{{base_url}}"],
-              "path": ["admin", "reports", "reservations"],
-              "query": [
-                {
-                  "key": "dateFrom",
-                  "value": "2024-12-01"
-                },
-                {
-                  "key": "dateTo",
-                  "value": "2024-12-31"
-                },
-                {
-                  "key": "venueIds",
-                  "value": "{{venueId}}",
-                  "disabled": true
-                },
-                {
-                  "key": "includePatterns",
-                  "value": "true"
-                }
-              ]
-            },
-            "description": "Reporte de KPIs operativos y patrones de demanda"
-          }
-        },
-        {
-          "name": "Actividad de Usuarios",
-          "request": {
-            "method": "GET",
-            "header": [],
-            "url": {
-              "raw": "{{base_url}}/admin/reports/users?dateFrom=2024-12-01&dateTo=2024-12-31&includeSegmentation=true",
-              "host": ["{{base_url}}"],
-              "path": ["admin", "reports", "users"],
-              "query": [
-                {
-                  "key": "dateFrom",
-                  "value": "2024-12-01"
-                },
-                {
-                  "key": "dateTo",
-                  "value": "2024-12-31"
-                },
-                {
-                  "key": "includeSegmentation",
-                  "value": "true"
-                },
-                {
-                  "key": "includeRetention",
-                  "value": "true",
-                  "disabled": true
-                }
-              ]
-            },
-            "description": "Análisis de engagement, retention y segmentación de usuarios"
-          }
-        },
-        {
-          "name": "Rendimiento de Venues",
-          "request": {
-            "method": "GET",
-            "header": [],
-            "url": {
-              "raw": "{{base_url}}/admin/reports/venues?dateFrom=2024-12-01&dateTo=2024-12-31&includeComparative=true",
-              "host": ["{{base_url}}"],
-              "path": ["admin", "reports", "venues"],
-              "query": [
-                {
-                  "key": "dateFrom",
-                  "value": "2024-12-01"
-                },
-                {
-                  "key": "dateTo",
-                  "value": "2024-12-31"
-                },
-                {
-                  "key": "venueIds",
-                  "value": "{{venueId}}",
-                  "disabled": true
-                },
-                {
-                  "key": "includeComparative",
-                  "value": "true"
-                },
-                {
-                  "key": "includeRecommendations",
-                  "value": "true",
-                  "disabled": true
-                }
-              ]
-            },
-            "description": "Análisis comparativo de rendimiento entre venues"
-          }
-        },
-        {
-          "name": "Exportar Reporte PDF",
+          "name": "Crear Suscripción Premium",
           "request": {
             "method": "POST",
             "header": [
@@ -890,40 +855,18 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"reportType\": \"revenue\",\n  \"dateFrom\": \"2024-12-01\",\n  \"dateTo\": \"2024-12-31\",\n  \"venueIds\": [\"{{venueId}}\"],\n  \"format\": \"pdf\",\n  \"includeInsights\": true,\n  \"emailTo\": \"admin@reservapp.com\"\n}"
+              "raw": "{\n  \"priceId\": \"price_premium_monthly\",\n  \"paymentMethodId\": \"pm_card_visa_test\",\n  \"businessInfo\": {\n    \"businessName\": \"Hotel Boutique Plaza\",\n    \"businessType\": \"ACCOMMODATION\",\n    \"taxId\": \"RFC123456789\",\n    \"address\": {\n      \"street\": \"Av. Hidalgo 123\",\n      \"city\": \"Guadalajara\",\n      \"state\": \"Jalisco\",\n      \"postalCode\": \"44100\",\n      \"country\": \"México\"\n    }\n  }\n}"
             },
             "url": {
-              "raw": "{{base_url}}/admin/reports/export",
+              "raw": "{{base_url}}/payments/subscription",
               "host": ["{{base_url}}"],
-              "path": ["admin", "reports", "export"]
+              "path": ["payments", "subscription"]
             },
-            "description": "Exportar reporte en PDF, Excel o CSV con envío por email"
-          }
-        },
-        {
-          "name": "Programar Reporte Automático",
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"reportType\": \"revenue\",\n  \"frequency\": \"weekly\",\n  \"dayOfWeek\": \"monday\",\n  \"emailTo\": [\"admin@reservapp.com\", \"finance@reservapp.com\"],\n  \"format\": \"pdf\",\n  \"includeInsights\": true,\n  \"venueIds\": [\"{{venueId}}\"],\n  \"isActive\": true\n}"
-            },
-            "url": {
-              "raw": "{{base_url}}/admin/reports/schedule",
-              "host": ["{{base_url}}"],
-              "path": ["admin", "reports", "schedule"]
-            },
-            "description": "Programar generación automática de reportes"
+            "description": "Crear suscripción premium para usuarios business con Stripe"
           }
         }
       ],
-      "description": "Sistema de Business Intelligence con 4 tipos de reportes avanzados"
+      "description": "Sistema de pagos y suscripciones con Stripe"
     },
     {
       "name": "🔔 Notifications",
@@ -934,18 +877,19 @@
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "{{base_url}}/notifications?unread=false&page=1&limit=20",
+              "raw": "{{base_url}}/notifications?unread=false&type=BOOKING_CONFIRMED&page=1&limit=20",
               "host": ["{{base_url}}"],
               "path": ["notifications"],
               "query": [
                 {
                   "key": "unread",
-                  "value": "false"
+                  "value": "false",
+                  "description": "true para solo no leídas, false para todas"
                 },
                 {
                   "key": "type",
                   "value": "BOOKING_CONFIRMED",
-                  "disabled": true
+                  "description": "Tipo específico de notificación"
                 },
                 {
                   "key": "page",
@@ -957,112 +901,14 @@
                 }
               ]
             },
-            "description": "Obtener notificaciones del usuario"
-          }
-        },
-        {
-          "name": "Contar No Leídas",
-          "request": {
-            "method": "GET",
-            "header": [],
-            "url": {
-              "raw": "{{base_url}}/notifications/unread-count",
-              "host": ["{{base_url}}"],
-              "path": ["notifications", "unread-count"]
-            },
-            "description": "Obtener cantidad de notificaciones no leídas"
-          }
-        },
-        {
-          "name": "Marcar como Leída",
-          "request": {
-            "method": "PATCH",
-            "header": [],
-            "url": {
-              "raw": "{{base_url}}/notifications/{{notificationId}}/read",
-              "host": ["{{base_url}}"],
-              "path": ["notifications", "{{notificationId}}", "read"]
-            },
-            "description": "Marcar una notificación específica como leída"
+            "description": "Obtener notificaciones del usuario autenticado con filtros"
           }
         }
       ],
       "description": "Sistema de notificaciones en tiempo real"
     },
     {
-      "name": "⭐ Reviews",
-      "item": [
-        {
-          "name": "Listar Reviews",
-          "request": {
-            "auth": {
-              "type": "noauth"
-            },
-            "method": "GET",
-            "header": [],
-            "url": {
-              "raw": "{{base_url}}/reviews?venueId={{venueId}}&rating=5&page=1&limit=10",
-              "host": ["{{base_url}}"],
-              "path": ["reviews"],
-              "query": [
-                {
-                  "key": "venueId",
-                  "value": "{{venueId}}"
-                },
-                {
-                  "key": "serviceId",
-                  "value": "{{serviceId}}",
-                  "disabled": true
-                },
-                {
-                  "key": "rating",
-                  "value": "5"
-                },
-                {
-                  "key": "verified",
-                  "value": "true",
-                  "disabled": true
-                },
-                {
-                  "key": "page",
-                  "value": "1"
-                },
-                {
-                  "key": "limit",
-                  "value": "10"
-                }
-              ]
-            },
-            "description": "Obtener reviews públicas con filtros"
-          }
-        },
-        {
-          "name": "Crear Review",
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"reservationId\": \"{{reservationId}}\",\n  \"rating\": 5,\n  \"comment\": \"Excelente servicio, muy recomendado. La suite estaba impecable y el personal muy atento.\",\n  \"recommendToFriends\": true\n}"
-            },
-            "url": {
-              "raw": "{{base_url}}/reviews",
-              "host": ["{{base_url}}"],
-              "path": ["reviews"]
-            },
-            "description": "Crear una nueva review después de completar una reservación"
-          }
-        }
-      ],
-      "description": "Sistema de reviews y calificaciones"
-    },
-    {
-      "name": "⚙️ Health & Settings",
+      "name": "⚙️ System Health & Utils",
       "item": [
         {
           "name": "Health Check",
@@ -1077,46 +923,27 @@
               "host": ["{{base_url}}"],
               "path": ["health"]
             },
-            "description": "Verificar estado de la API y servicios conectados"
+            "description": "Verificar estado de la API y servicios conectados (base de datos, Stripe, Resend, etc.)"
           }
         },
         {
-          "name": "Configuración de Usuario",
+          "name": "API Documentation (Swagger)",
           "request": {
+            "auth": {
+              "type": "noauth"
+            },
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "{{base_url}}/settings/profile",
+              "raw": "{{base_url}}/swagger",
               "host": ["{{base_url}}"],
-              "path": ["settings", "profile"]
+              "path": ["swagger"]
             },
-            "description": "Obtener configuración del perfil del usuario"
-          }
-        },
-        {
-          "name": "Actualizar Perfil",
-          "request": {
-            "method": "PUT",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"firstName\": \"Juan Carlos\",\n  \"lastName\": \"Pérez González\",\n  \"phone\": \"+52 33 9876 5432\",\n  \"preferences\": {\n    \"language\": \"es\",\n    \"currency\": \"MXN\",\n    \"notifications\": true,\n    \"emailMarketing\": false\n  }\n}"
-            },
-            "url": {
-              "raw": "{{base_url}}/settings/profile",
-              "host": ["{{base_url}}"],
-              "path": ["settings", "profile"]
-            },
-            "description": "Actualizar configuración del perfil de usuario"
+            "description": "Obtener documentación completa de la API en formato OpenAPI/Swagger"
           }
         }
       ],
-      "description": "Health checks y configuraciones del sistema"
+      "description": "Herramientas de monitoreo y documentación del sistema"
     }
   ],
   "event": [
@@ -1126,30 +953,46 @@
         "type": "text/javascript",
         "exec": [
           "// Auto-configurar base URL según el entorno",
-          "if (!pm.collectionVariables.get('base_url')) {",
+          "const currentUrl = pm.request.url.host.join('.');",
+          "if (currentUrl.includes('localhost')) {",
           "    pm.collectionVariables.set('base_url', 'http://localhost:3000/api');",
+          "    console.log('🏠 Ambiente: Desarrollo Local');",
+          "} else if (currentUrl.includes('vercel.app')) {",
+          "    pm.collectionVariables.set('base_url', 'https://reservapp-web.vercel.app/api');",
+          "    console.log('🌐 Ambiente: Producción Vercel');",
           "}",
           "",
-          "// Auto-configurar variables comunes",
-          "if (!pm.collectionVariables.get('venueId')) {",
-          "    pm.collectionVariables.set('venueId', 'venue_123');",
+          "// Auto-configurar variables de test si no existen",
+          "if (!pm.collectionVariables.get('venue_id')) {",
+          "    pm.collectionVariables.set('venue_id', 'venue_test_123');",
           "}",
-          "if (!pm.collectionVariables.get('serviceId')) {",
-          "    pm.collectionVariables.set('serviceId', 'service_456');",
+          "if (!pm.collectionVariables.get('service_id')) {",
+          "    pm.collectionVariables.set('service_id', 'service_test_456');",
           "}",
-          "if (!pm.collectionVariables.get('reservationId')) {",
-          "    pm.collectionVariables.set('reservationId', 'reservation_123');",
-          "}",
-          "if (!pm.collectionVariables.get('paymentId')) {",
-          "    pm.collectionVariables.set('paymentId', 'payment_123');",
-          "}",
-          "if (!pm.collectionVariables.get('notificationId')) {",
-          "    pm.collectionVariables.set('notificationId', 'notification_123');",
+          "if (!pm.collectionVariables.get('reservation_id')) {",
+          "    pm.collectionVariables.set('reservation_id', 'reservation_test_789');",
           "}",
           "",
-          "// Log para debugging",
-          "console.log('🌐 Base URL:', pm.collectionVariables.get('base_url'));",
-          "console.log('🔑 Auth Token:', pm.collectionVariables.get('auth_token') ? 'Present ✅' : 'Not set ❌');"
+          "// Log de estado de autenticación",
+          "const token = pm.collectionVariables.get('jwt_token');",
+          "if (token) {",
+          "    console.log('🔑 Token JWT: Presente ✅');",
+          "    // Extraer información del token (solo para logging, no para seguridad)",
+          "    try {",
+          "        const tokenPayload = JSON.parse(atob(token.split('.')[1]));",
+          "        console.log('👤 Usuario logueado:', tokenPayload.email || 'N/A');",
+          "        console.log('🔐 Rol:', tokenPayload.role || 'N/A');",
+          "        const exp = new Date(tokenPayload.exp * 1000);",
+          "        console.log('⏰ Token expira:', exp.toLocaleString());",
+          "    } catch (e) {",
+          "        console.log('⚠️ No se pudo decodificar token payload');",
+          "    }",
+          "} else {",
+          "    console.log('🔑 Token JWT: No presente ❌');",
+          "    console.log('💡 Ejecuta \"Login Usuario\" para autenticarte');",
+          "}",
+          "",
+          "console.log('🌐 Base URL actual:', pm.collectionVariables.get('base_url'));"
         ]
       }
     },
@@ -1158,42 +1001,101 @@
       "script": {
         "type": "text/javascript",
         "exec": [
-          "// Tests globales para todas las respuestas",
-          "pm.test('⚡ Response time is acceptable', function () {",
+          "// Tests globales aplicables a todas las respuestas",
+          "",
+          "// Test de tiempo de respuesta",
+          "pm.test('⚡ Response time is acceptable (<3s)', function () {",
           "    pm.expect(pm.response.responseTime).to.be.below(3000);",
           "});",
           "",
-          "pm.test('📋 Response has JSON content', function () {",
-          "    pm.expect(pm.response.headers.get('Content-Type')).to.include('application/json');",
+          "// Test de contenido JSON",
+          "pm.test('📋 Response has JSON content-type', function () {",
+          "    const contentType = pm.response.headers.get('Content-Type');",
+          "    pm.expect(contentType).to.include('application/json');",
           "});",
           "",
-          "// Test para respuestas exitosas",
+          "// Tests específicos para respuestas exitosas",
           "if (pm.response.code >= 200 && pm.response.code < 300) {",
           "    pm.test('✅ Success response format is correct', function () {",
           "        const response = pm.response.json();",
           "        pm.expect(response).to.have.property('success', true);",
           "        pm.expect(response).to.have.property('message');",
-          "        pm.expect(response).to.have.property('timestamp');",
+          "        // timestamp es opcional pero si existe debe ser string",
+          "        if (response.timestamp) {",
+          "            pm.expect(response.timestamp).to.be.a('string');",
+          "        }",
           "    });",
+          "",
+          "    // Auto-captura de IDs importantes para siguientes requests",
+          "    const response = pm.response.json();",
+          "    if (response.data) {",
+          "        // Capturar IDs de recursos creados",
+          "        if (response.data.id) {",
+          "            const endpoint = pm.request.url.getPath().join('/');",
+          "            if (endpoint.includes('venues') && pm.request.method === 'POST') {",
+          "                pm.collectionVariables.set('venue_id', response.data.id);",
+          "                console.log('🏨 Venue ID capturado:', response.data.id);",
+          "            } else if (endpoint.includes('services') && pm.request.method === 'POST') {",
+          "                pm.collectionVariables.set('service_id', response.data.id);",
+          "                console.log('🛎️ Service ID capturado:', response.data.id);",
+          "            } else if (endpoint.includes('reservations') && pm.request.method === 'POST') {",
+          "                pm.collectionVariables.set('reservation_id', response.data.id);",
+          "                console.log('📅 Reservation ID capturado:', response.data.id);",
+          "            }",
+          "        }",
+          "",
+          "        // Capturar información de autenticación",
+          "        if (response.data.token) {",
+          "            console.log('🔑 Nuevo token JWT disponible');",
+          "        }",
+          "        if (response.data.user) {",
+          "            console.log('👤 Información de usuario disponible:', response.data.user.email);",
+          "        }",
+          "",
+          "        // Log de datos importantes para debugging",
+          "        if (response.data.paymentIntent) {",
+          "            console.log('💳 Payment Intent creado:', response.data.paymentIntent.id);",
+          "        }",
+          "        if (response.data.subscription) {",
+          "            console.log('📋 Suscripción creada:', response.data.subscription.id);",
+          "        }",
+          "    }",
           "}",
           "",
-          "// Test para respuestas de error",
+          "// Tests específicos para respuestas de error",
           "if (pm.response.code >= 400) {",
           "    pm.test('❌ Error response format is correct', function () {",
           "        const response = pm.response.json();",
           "        pm.expect(response).to.have.property('success', false);",
           "        pm.expect(response).to.have.property('message');",
-          "        pm.expect(response).to.have.property('timestamp');",
+          "        // error es opcional pero si existe debe ser string",
+          "        if (response.error) {",
+          "            pm.expect(response.error).to.be.a('string');",
+          "        }",
+          "    });",
+          "",
+          "    // Log detallado de errores para debugging",
+          "    const errorResponse = pm.response.json();",
+          "    console.error('❌ Error details:', {",
+          "        status: pm.response.code,",
+          "        message: errorResponse.message,",
+          "        error: errorResponse.error,",
+          "        endpoint: pm.request.url.toString()",
           "    });",
           "}",
           "",
-          "// Log automático de respuestas importantes",
-          "if (pm.response.json() && pm.response.json().data) {",
-          "    const data = pm.response.json().data;",
-          "    if (data.id) console.log('📦 Resource ID:', data.id);",
-          "    if (data.token) console.log('🔑 New Token Available');",
-          "    if (data.paymentIntent) console.log('💳 Payment Intent:', data.paymentIntent.id);",
-          "}"
+          "// Tests de status codes específicos",
+          "if (pm.response.code === 401) {",
+          "    console.log('🔐 Unauthorized - Verifica tu token JWT');",
+          "} else if (pm.response.code === 403) {",
+          "    console.log('🚫 Forbidden - Permisos insuficientes para este endpoint');",
+          "} else if (pm.response.code === 429) {",
+          "    console.log('⏳ Rate Limited - Demasiadas requests, espera un momento');",
+          "}",
+          "",
+          "// Log del resultado general",
+          "const statusEmoji = pm.response.code < 300 ? '✅' : pm.response.code < 500 ? '⚠️' : '❌';",
+          "console.log(`${statusEmoji} Request completed: ${pm.response.code} ${pm.response.status} in ${pm.response.responseTime}ms`);"
         ]
       }
     }

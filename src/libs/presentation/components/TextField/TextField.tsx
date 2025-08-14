@@ -164,8 +164,8 @@ export const TextField = forwardRef<HTMLInputElement | HTMLTextAreaElement, Text
 
           {multiline ? (
             <StyledTextArea
-              hasEndIcon={Boolean(effectiveEndIcon)}
-              hasStartIcon={Boolean(startIcon)}
+              $hasEndIcon={Boolean(effectiveEndIcon)}
+              $hasStartIcon={Boolean(startIcon)}
               ref={ref as React.Ref<HTMLTextAreaElement>}
               rows={rows}
               style={{ maxHeight: maxRows ? `${maxRows * 1.5}em` : undefined }}
@@ -173,8 +173,8 @@ export const TextField = forwardRef<HTMLInputElement | HTMLTextAreaElement, Text
             />
           ) : (
             <StyledInput
-              hasEndIcon={Boolean(effectiveEndIcon)}
-              hasStartIcon={Boolean(startIcon)}
+              $hasEndIcon={Boolean(effectiveEndIcon)}
+              $hasStartIcon={Boolean(startIcon)}
               ref={ref as React.Ref<HTMLInputElement>}
               {...inputProps}
             />
