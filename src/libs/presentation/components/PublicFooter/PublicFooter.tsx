@@ -40,15 +40,12 @@ export const PublicFooter: React.FC = () => {
           <FooterSection>
             <h3>{t('landing.footer.sections.company')}</h3>
             <FooterLink href='/about'>{t('landing.footer.links.about')}</FooterLink>
-            <FooterLink href='/careers'>{t('landing.footer.links.careers')}</FooterLink>
-            <FooterLink href='/blog'>{t('landing.footer.links.blog')}</FooterLink>
             <FooterLink href='/contact'>{t('landing.footer.links.contact')}</FooterLink>
           </FooterSection>
 
           <FooterSection>
             <h3>{t('landing.footer.sections.support')}</h3>
             <FooterLink href='/help'>{t('landing.footer.links.helpCenter')}</FooterLink>
-            <FooterLink href='/docs'>{t('landing.footer.links.documentation')}</FooterLink>
           </FooterSection>
         </FooterGrid>
 

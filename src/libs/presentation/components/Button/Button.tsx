@@ -19,11 +19,13 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
       children,
       color = 'primary',
       disabled = false,
+      download,
       endIcon = undefined,
       fullWidth = false,
       href = undefined,
       loading = false,
       loadingText = undefined,
+      rel,
       size = 'medium',
       startIcon = undefined,
       target = undefined,
@@ -39,11 +41,11 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
     // If href is provided and no 'as' prop, default to 'a'
     const component = as || (href ? 'a' : 'button');
 
-    // Props specific to the rendered element
+    // Props specific to the rendered element (filter out styled component props)
     const elementProps = {
       ...rest,
       ...(component === 'button' && { type }),
-      ...(component === 'a' && { href, target }),
+      ...(component === 'a' && { download, href, rel, target }),
     };
 
     return (

@@ -1,6 +1,9 @@
 // Dashboard
 export * from './dashboard';
 
+// Business Account
+export * from './businessAccount';
+
 // Users
 export * from './users';
 

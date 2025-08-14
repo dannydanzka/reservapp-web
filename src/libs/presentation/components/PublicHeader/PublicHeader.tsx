@@ -4,6 +4,8 @@ import React from 'react';
 
 import { Facebook, Instagram, Linkedin, Music, Twitter } from 'lucide-react';
 
+import { useTranslation } from '@i18n/index';
+
 import {
   AuthButtons,
   Button,
@@ -21,16 +23,17 @@ import {
  * Public header component for landing and marketing pages.
  */
 export const PublicHeader: React.FC = () => {
+  const { t } = useTranslation();
+
   return (
     <HeaderContainer>
       <HeaderContent>
-        <LogoText href='/landing'>ReservApp</LogoText>
+        <LogoText href='/landing'>{t('common.appName')}</LogoText>
 
         <Navigation>
-          <NavLink href='/services'>Servicios</NavLink>
-          <NavLink href='/business'>Negocios</NavLink>
-          <NavLink href='/api-docs'>API</NavLink>
-          <NavLink href='/contact'>Contacto</NavLink>
+          <NavLink href='/landing'>{t('navigation.home')}</NavLink>
+          <NavLink href='/business'>{t('navigation.business')}</NavLink>
+          <NavLink href='/contact'>{t('navigation.contact')}</NavLink>
         </Navigation>
 
         <RightSection>
@@ -79,10 +82,10 @@ export const PublicHeader: React.FC = () => {
 
           <AuthButtons>
             <Button $variant='secondary' href='/auth/login'>
-              Portal de Negocios
+              {t('navigation.businessPortal')}
             </Button>
             <Button $variant='primary' href='/auth/register'>
-              Registrar Negocio
+              {t('navigation.registerBusiness')}
             </Button>
           </AuthButtons>
         </RightSection>

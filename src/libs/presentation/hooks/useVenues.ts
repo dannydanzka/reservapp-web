@@ -270,13 +270,13 @@ export function useVenues(): UseVenuesReturn {
 
     error,
 
-    goToNextPage,
-
     filters,
 
-    hasActiveFilters,
+    goToNextPage,
 
     goToPreviousPage,
+
+    hasActiveFilters,
     hasNextPage,
 
     hasPreviousPage,
@@ -296,9 +296,10 @@ export function useVenues(): UseVenuesReturn {
 
     totalPages,
 
+    totalVenues,
+
+    updateVenue,
     // State
     venues,
-    totalVenues,
-    updateVenue,
   };
 }

@@ -15,10 +15,6 @@ export type {
   UserWithReservations,
 } from './UserRepository';
 
-// UserSettings repository (shared across multiple modules)
-export { userSettingsRepository } from './UserSettingsRepository';
-export type { CreateUserSettingsData, UpdateUserSettingsData } from './UserSettingsRepository';
-
 // UserRole repository (shared across multiple modules)
 // export * from './UserRoleRepository'; // Temporarily disabled due to imports
 

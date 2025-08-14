@@ -28,30 +28,137 @@ model User {
   reservations Reservation[]
   payments     Payment[]
   notifications Notification[]
-  userSettings UserSettings?
   reviews      Review[]
   receipts     Receipt[]     @relation("UserReceipts")
   adminActions AdminAuditLog[] @relation("AdminActions")
-  userRoles    UserRoleAssignment[]    @relation("UserRoles")
-  grantedRoles UserRoleAssignment[]    @relation("GrantedRoles")
+  systemLogs   SystemLog[]     @relation("SystemLogs")
+  // Venues owned by this admin (empty for regular users)
+  ownedVenues  Venue[]                 @relation("VenueOwner")
+  // Business account for ADMIN users
+  businessAccount BusinessAccount?
 
   @@map("users")
 }
 
-// User Settings (notification preferences and other settings)
-model UserSettings {
-  id                    String   @id @default(cuid())
-  emailNotifications    Boolean  @default(true)  // Receive email notifications
-  pushNotifications     Boolean  @default(true)  // Receive push notifications  
-  marketingEmails       Boolean  @default(false) // Receive marketing/promotional emails
-  createdAt            DateTime @default(now())
-  updatedAt            DateTime @updatedAt
+// Business Account Management (for ADMIN users)
+model BusinessAccount {
+  id                String   @id @default(cuid())
+  businessName      String
+  businessType      BusinessType
+  taxId             String?   // RFC for Mexico, Tax ID for other countries
+  legalName         String?   // Legal business name if different from business name
+  contactEmail      String?
+  contactPhone      String?
+  website           String?
+  description       String?   @db.Text
+
+  // Address information
+  address           String?
+  city              String?
+  state             String?
+  country           String    @default("México")
+  zipCode           String?
+
+  // Business verification
+  isVerified        Boolean   @default(false)
+  verificationDate  DateTime?
+  documents         Json?     // Array of verification documents
+
+  // Business settings
+  settings          Json?     // Business-specific settings
+  metadata          Json?     // Additional flexible data
+
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
 
   // Relations
-  user     User   @relation(fields: [userId], references: [id], onDelete: Cascade)
-  userId   String @unique
+  owner             User         @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  ownerId           String       @unique
+  bankAccounts      BankAccount[]
+  paymentHistories  PaymentHistory[]
 
-  @@map("user_settings")
+  @@map("business_accounts")
+}
+
+enum BusinessType {
+  HOTEL
+  RESTAURANT
+  SPA
+  TOUR_AGENCY
+  EVENT_CENTER
+  ENTERTAINMENT
+  OTHER
+}
+
+// Bank Account Management
+model BankAccount {
+  id              String   @id @default(cuid())
+  bankName        String
+  accountNumber   String   // Encrypted/masked account number
+  accountType     AccountType
+  accountHolder   String   // Name on the account
+  routingNumber   String?  // For international transfers
+  swiftCode       String?  // For international transfers
+
+  // Verification
+  isVerified      Boolean  @default(false)
+  verificationDate DateTime?
+
+  // Status
+  isActive        Boolean  @default(true)
+  isPrimary       Boolean  @default(false) // Primary account for deposits
+
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  // Relations
+  businessAccount   BusinessAccount @relation(fields: [businessAccountId], references: [id], onDelete: Cascade)
+  businessAccountId String
+  paymentHistories  PaymentHistory[]
+
+  @@map("bank_accounts")
+}
+
+enum AccountType {
+  CHECKING
+  SAVINGS
+  BUSINESS_CHECKING
+  BUSINESS_SAVINGS
+}
+
+// Payment History for businesses (deposits received)
+model PaymentHistory {
+  id              String         @id @default(cuid())
+  amount          Decimal        @db.Decimal(10, 2)
+  currency        String         @default("MXN")
+  status          DepositStatus  @default(PENDING)
+  transactionRef  String?        // Reference from payment processor
+  description     String?
+
+  // Deposit details
+  depositDate     DateTime?
+  processedDate   DateTime?
+
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+
+  // Relations
+  businessAccount   BusinessAccount @relation(fields: [businessAccountId], references: [id])
+  businessAccountId String
+  bankAccount       BankAccount     @relation(fields: [bankAccountId], references: [id])
+  bankAccountId     String
+  reservation       Reservation     @relation(fields: [reservationId], references: [id])
+  reservationId     String
+
+  @@map("payment_histories")
+}
+
+enum DepositStatus {
+  PENDING
+  PROCESSING
+  COMPLETED
+  FAILED
+  CANCELLED
 }
 
 enum UserRoleEnum {
@@ -89,7 +196,9 @@ model Venue {
   services     Service[]
   reservations Reservation[]
   reviews      Review[]
-  userRoles    UserRoleAssignment[]    @relation("VenueRoles")
+  // Owner relationship (admin who manages this venue)
+  ownerId      String?
+  owner        User?         @relation("VenueOwner", fields: [ownerId], references: [id])
 
   @@map("venues")
 }
@@ -168,6 +277,7 @@ model Reservation {
   serviceId String
   payments  Payment[]
   reviews   Review[]
+  paymentHistories PaymentHistory[]
 
   @@map("reservations")
 }
@@ -276,7 +386,7 @@ model Review {
   venueId     String?
   service     Service?    @relation(fields: [serviceId], references: [id], onDelete: Cascade)
   serviceId   String?
-  
+
   // Optional reservation link (for verified reviews)
   reservation Reservation? @relation(fields: [reservationId], references: [id], onDelete: SetNull)
   reservationId String?
@@ -379,71 +489,108 @@ enum ReceiptStatus {
   REGENERATED      // Receipt was regenerated
 }
 
-// Advanced Role and Permission System
-model Role {
-  id              String        @id @default(cuid())
-  name            String        @unique
-  description     String?
-  isSystemRole    Boolean       @default(false) // Cannot be deleted
-  isActive        Boolean       @default(true)
-  createdAt       DateTime      @default(now())
-  updatedAt       DateTime      @updatedAt
+// Contact Form Management
+model ContactForm {
+  id        String   @id @default(cuid())
+  name      String
+  email     String
+  phone     String?
+  subject   String
+  message   String   @db.Text
+  status    ContactFormStatus @default(PENDING)
+  notes     String?  @db.Text // Admin notes
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-  // Relations
-  permissions     RolePermission[]
-  userRoles       UserRoleAssignment[]
-  
-  @@map("roles")
+  @@map("contact_forms")
 }
 
-model Permission {
-  id              String        @id @default(cuid())
-  name            String        @unique
-  description     String?
-  module          String        // e.g., "payments", "reservations", "users"
-  action          String        // e.g., "read", "create", "update", "delete"
-  resource        String?       // specific resource if applicable
-  isSystemPerm    Boolean       @default(true) // Cannot be deleted
-  createdAt       DateTime      @default(now())
-
-  // Relations  
-  rolePermissions RolePermission[]
-
-  @@unique([module, action, resource])
-  @@map("permissions")
+enum ContactFormStatus {
+  PENDING
+  IN_PROGRESS
+  RESOLVED
+  ARCHIVED
 }
 
-model RolePermission {
-  id            String      @id @default(cuid())
-  roleId        String
-  permissionId  String
-  createdAt     DateTime    @default(now())
+// System Logs Management for comprehensive monitoring
+model SystemLog {
+  id              String            @id @default(cuid())
+  level           SystemLogLevel
+  category        SystemLogCategory
+  eventType       String            // Specific event identifier
+  message         String            @db.Text
 
-  // Relations
-  role          Role        @relation(fields: [roleId], references: [id], onDelete: Cascade)
-  permission    Permission  @relation(fields: [permissionId], references: [id], onDelete: Cascade)
+  // User context (optional)
+  userId          String?
+  userName        String?
+  userEmail       String?
+  userRole        UserRoleEnum?
 
-  @@unique([roleId, permissionId])
-  @@map("role_permissions")
+  // Request context
+  ipAddress       String?
+  userAgent       String?           @db.Text
+  requestId       String?           // For request tracking
+  sessionId       String?           // Session tracking
+
+  // Resource context
+  resourceType    String?           // e.g., 'user', 'payment', 'reservation'
+  resourceId      String?           // ID of affected resource
+
+  // Performance tracking
+  duration        Int?              // Duration in milliseconds
+  statusCode      Int?              // HTTP status code for API events
+
+  // Data context (sanitized)
+  oldValues       Json?             // Previous state
+  newValues       Json?             // New state
+  metadata        Json?             // Additional context data
+
+  // Error context
+  errorCode       String?           // Error code if applicable
+  errorMessage    String?           @db.Text
+  stackTrace      String?           @db.LongText
+
+  createdAt       DateTime          @default(now())
+
+  // Relations (optional user reference)
+  user            User?             @relation("SystemLogs", fields: [userId], references: [id], onDelete: SetNull)
+
+  // Indexes for performance
+  @@index([level])
+  @@index([category])
+  @@index([eventType])
+  @@index([userId])
+  @@index([createdAt])
+  @@index([resourceType, resourceId])
+  @@index([level, createdAt])
+  @@index([category, createdAt])
+  @@index([userId, createdAt])
+  @@map("system_logs")
 }
 
-model UserRoleAssignment {
-  id            String      @id @default(cuid())
-  userId        String
-  roleId        String
-  venueId       String?     // For venue-specific roles
-  grantedBy     String?     // Admin who granted this role
-  grantedAt     DateTime    @default(now())
-  expiresAt     DateTime?   // Optional role expiration
-  isActive      Boolean     @default(true)
-  metadata      Json?       // Additional role context
-
-  // Relations
-  user          User        @relation("UserRoles", fields: [userId], references: [id], onDelete: Cascade)
-  role          Role        @relation(fields: [roleId], references: [id], onDelete: Cascade)
-  venue         Venue?      @relation("VenueRoles", fields: [venueId], references: [id], onDelete: Cascade)
-  grantor       User?       @relation("GrantedRoles", fields: [grantedBy], references: [id], onDelete: SetNull)
-
-  @@unique([userId, roleId, venueId])
-  @@map("user_roles")
+enum SystemLogLevel {
+  DEBUG
+  INFO
+  WARN
+  ERROR
+  CRITICAL
 }
+
+enum SystemLogCategory {
+  AUTHENTICATION      // Login, logout, registration, password reset
+  AUTHORIZATION      // Permission checks, role changes
+  USER_MANAGEMENT    // User creation, updates, deletion
+  PAYMENT_PROCESSING // Payment events, refunds, failures
+  RESERVATION_SYSTEM // Reservation operations
+  EMAIL_SERVICE      // Email sending, failures
+  API_REQUEST        // API calls, responses, errors
+  DATABASE_OPERATION // Critical DB operations
+  SECURITY_EVENT     // Security-related events
+  SYSTEM_ERROR       // General system errors
+  PERFORMANCE        // Performance monitoring
+  ADMIN_ACTION       // Administrative actions
+  AUDIT_TRAIL        // Compliance and audit events
+}
+
+// Simplified for MVP - Complex role system removed
+// Using UserRoleEnum (SUPER_ADMIN, ADMIN, USER) with direct venue ownership

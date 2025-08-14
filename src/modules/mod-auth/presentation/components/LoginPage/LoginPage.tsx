@@ -14,24 +14,41 @@ import { LoginPageProps } from './LoginPage.interfaces';
 
 import {
   AuthLink,
-  BusinessInfo,
-  BusinessInfoText,
-  BusinessInfoTitle,
-  DemoCredentials,
-  DemoItem,
+  DemoButton,
+  DemoCard,
+  DemoContainer,
+  DemoCredential,
+  DemoGrid,
+  DemoLabel,
+  DemoSection,
   DemoTitle,
   ErrorMessage,
   Form,
   FormContainer,
   FormGroup,
+  FormSection,
+  FormSubtitle,
+  FormTitle,
+  HeroSection,
+  HeroSubtitle,
+  HeroTitle,
+  InfoContainer,
+  InfoSection,
+  InfoText,
+  InfoTitle,
   Input,
   Label,
-  LinkContainer,
+  LinksContainer,
+  LinksGrid,
+  LinksSection,
+  LinksText,
+  LoginContainer,
   SubmitButton,
 } from './LoginPage.styled';
 
 /**
  * Login page component with form validation and authentication.
+ * Follows LandingPage structure pattern with multiple sections.
  */
 export const LoginPage: React.FC<LoginPageProps> = () => {
   const { t } = useTranslation();
@@ -94,84 +111,103 @@ export const LoginPage: React.FC<LoginPageProps> = () => {
   };
 
   const handleManagerDemoLogin = () => {
-    handleDemoLogin('manager@reservapp.com');
+    handleDemoLogin('demo@reservapp.com');
   };
 
   return (
-    <FormContainer>
-      <Form onSubmit={handleSubmit}>
-        <FormGroup>
-          <Label htmlFor='email'>{t('auth.login.email')}</Label>
-          <Input
-            disabled={isLoading}
-            id='email'
-            placeholder={t('auth.login.emailPlaceholder')}
-            required
-            type='email'
-            value={email}
-            onChange={handleEmailChange}
-          />
-        </FormGroup>
+    <LoginContainer>
+      <HeroSection>
+        <HeroTitle>{t('auth.login.title')}</HeroTitle>
+        <HeroSubtitle>
+          {t('auth.login.subtitle')}
+          <br />
+          <strong>{t('auth.login.businessAccess')}</strong>
+        </HeroSubtitle>
+      </HeroSection>
 
-        <FormGroup>
-          <Label htmlFor='password'>{t('auth.login.password')}</Label>
-          <Input
-            disabled={isLoading}
-            id='password'
-            placeholder={t('auth.login.passwordPlaceholder')}
-            required
-            type='password'
-            value={password}
-            onChange={handlePasswordChange}
-          />
-        </FormGroup>
+      <FormSection>
+        <FormContainer>
+          <FormTitle>{t('auth.login.formTitle')}</FormTitle>
+          <FormSubtitle>{t('auth.login.formSubtitle')}</FormSubtitle>
 
-        {error && <ErrorMessage>{error}</ErrorMessage>}
+          <Form onSubmit={handleSubmit}>
+            <FormGroup>
+              <Label htmlFor='email'>{t('auth.login.email')}</Label>
+              <Input
+                disabled={isLoading}
+                id='email'
+                placeholder={t('auth.login.emailPlaceholder')}
+                required
+                type='email'
+                value={email}
+                onChange={handleEmailChange}
+              />
+            </FormGroup>
 
-        <SubmitButton $isLoading={isLoading} disabled={isLoading} type='submit'>
-          {isLoading && <LoadingSpinner color='#ffffff' size='small' />}
-          {isLoading ? t('auth.login.success.redirecting') : t('auth.login.loginButton')}
-        </SubmitButton>
-      </Form>
+            <FormGroup>
+              <Label htmlFor='password'>{t('auth.login.password')}</Label>
+              <Input
+                disabled={isLoading}
+                id='password'
+                placeholder={t('auth.login.passwordPlaceholder')}
+                required
+                type='password'
+                value={password}
+                onChange={handlePasswordChange}
+              />
+            </FormGroup>
 
-      <DemoCredentials>
-        <DemoTitle>Cuentas Demo para Negocios</DemoTitle>
-        <DemoItem>
-          <strong>Administrador:</strong> admin@reservapp.com / password123
-          <button
-            style={{ fontSize: '12px', marginLeft: '8px', padding: '2px 6px' }}
-            type='button'
-            onClick={handleAdminDemoLogin}
-          >
-            Usar
-          </button>
-        </DemoItem>
-        <DemoItem>
-          <strong>Gestor:</strong> manager@reservapp.com / password123
-          <button
-            style={{ fontSize: '12px', marginLeft: '8px', padding: '2px 6px' }}
-            type='button'
-            onClick={handleManagerDemoLogin}
-          >
-            Usar
-          </button>
-        </DemoItem>
-      </DemoCredentials>
+            {error && <ErrorMessage>{error}</ErrorMessage>}
 
-      <BusinessInfo>
-        <BusinessInfoTitle>
-          <Smartphone size={16} style={{ marginRight: '0.5rem', verticalAlign: 'middle' }} />
-          {t('auth.info.endUserTitle')}
-        </BusinessInfoTitle>
-        <BusinessInfoText>{t('auth.info.endUserDescription')}</BusinessInfoText>
-      </BusinessInfo>
+            <SubmitButton $isLoading={isLoading} disabled={isLoading} type='submit'>
+              {isLoading && <LoadingSpinner color='#ffffff' size='small' />}
+              {isLoading ? t('auth.login.success.redirecting') : t('auth.login.loginButton')}
+            </SubmitButton>
+          </Form>
+        </FormContainer>
+      </FormSection>
 
-      <LinkContainer>
-        <p>
-          ¿No tienes cuenta de negocio?{' '}
-          <AuthLink href='/auth/register'>Registrar mi negocio</AuthLink>
-        </p>
-      </LinkContainer>
-    </FormContainer>
+      <DemoSection>
+        <DemoContainer>
+          <DemoTitle>{t('auth.login.demo.title')}</DemoTitle>
+          <DemoGrid>
+            <DemoCard>
+              <DemoLabel>{t('auth.login.demo.adminLabel')}</DemoLabel>
+              <DemoCredential>admin@reservapp.com / password123</DemoCredential>
+              <DemoButton disabled={isLoading} type='button' onClick={handleAdminDemoLogin}>
+                {t('auth.login.demo.useButton')}
+              </DemoButton>
+            </DemoCard>
+            <DemoCard>
+              <DemoLabel>{t('auth.login.demo.managerLabel')}</DemoLabel>
+              <DemoCredential>demo@reservapp.com / password123</DemoCredential>
+              <DemoButton disabled={isLoading} type='button' onClick={handleManagerDemoLogin}>
+                {t('auth.login.demo.useButton')}
+              </DemoButton>
+            </DemoCard>
+          </DemoGrid>
+        </DemoContainer>
+      </DemoSection>
+
+      <InfoSection>
+        <InfoContainer>
+          <InfoTitle>
+            <Smartphone size={24} />
+            {t('auth.info.endUserTitle')}
+          </InfoTitle>
+          <InfoText>{t('auth.info.endUserDescription')}</InfoText>
+        </InfoContainer>
+      </InfoSection>
+
+      <LinksSection>
+        <LinksContainer>
+          <LinksText>{t('auth.login.links.noAccount')}</LinksText>
+          <LinksGrid>
+            <AuthLink href='/auth/user-register'>{t('auth.login.links.registerUser')}</AuthLink>
+            <AuthLink href='/auth/register'>{t('auth.login.links.registerBusiness')}</AuthLink>
+          </LinksGrid>
+        </LinksContainer>
+      </LinksSection>
+    </LoginContainer>
   );
 };

@@ -1,5 +1,6 @@
 {
   "common": {
+    "appName": "ReservApp",
     "loading": "Cargando...",
     "error": "Error",
     "success": "Éxito",
@@ -8,6 +9,7 @@
     "delete": "Eliminar",
     "edit": "Editar",
     "save": "Guardar",
+    "saving": "Guardando...",
     "search": "Buscar",
     "filter": "Filtrar",
     "next": "Siguiente",
@@ -29,8 +31,11 @@
   },
   "landing": {
     "hero": {
-      "title": "Reserva servicios premium desde tu móvil",
-      "subtitle": "La plataforma digital que conecta usuarios con los mejores servicios locales: restaurantes, spas, salones de belleza, tours y entretenimiento.",
+      "title": "La Plataforma que Conecta Venues Pequeños con Huéspedes Premium",
+      "subtitle": "Descubre venues únicos y auténticos mientras apoyas a negocios locales. Con comisiones más bajas para venues y experiencias personalizadas para huéspedes.",
+      "mobileAppAvailable": "Disponible en nuestra app móvil",
+      "registerUser": "Registrarme como Usuario",
+      "registerBusiness": "Registrar mi Negocio",
       "cta": "Comenzar Ahora",
       "ctaSecondary": "Conocer Más"
     },
@@ -56,6 +61,14 @@
       "smartNotifications": {
         "title": "Recordatorios Inteligentes",
         "description": "Recibe confirmaciones y recordatorios automáticos por email y notificaciones push."
+      },
+      "uniqueVenues": {
+        "title": "Venues Pequeños Únicos",
+        "description": "Descubre venues boutique, familiares y con encanto local. Experiencias auténticas que no encontrarás en grandes cadenas."
+      },
+      "localTourism": {
+        "title": "Apoyo al Turismo Local",
+        "description": "Cada reserva que haces ayuda directamente a venues pequeños y familias locales, promoviendo un turismo sostenible."
       },
       "customerSupport": {
         "title": "Soporte para Usuarios",
@@ -134,8 +147,9 @@
       "subtitle": "Descarga nuestra aplicación móvil y haz reservaciones desde cualquier lugar",
       "description": "Con la aplicación móvil de ReservApp puedes explorar servicios, hacer reservaciones y gestionar tus citas desde la palma de tu mano. Disponible para iOS y Android.",
       "features": {
+        "title": "Características Principales",
         "instantBooking": "Reservaciones instantáneas",
-        "realTimeNotifications": "Notificaciones en email y smartphone",
+        "realTimeNotifications": "Notificaciones",
         "offlineAccess": "Reservaciones con pocos pasos",
         "securePayments": "Pagos seguros integrados"
       },
@@ -147,11 +161,90 @@
         "googlePlay": "Disponible en Google Play"
       }
     },
+    "pricing": {
+      "userModel": {
+        "title": "Modelo de Usuarios: Apoyo a Venues Pequeños",
+        "subtitle": "Únete a nuestra comunidad que apoya venues locales. Comienza gratis y desbloquea beneficios premium.",
+        "freePlan": {
+          "name": "Usuario Free",
+          "price": "$0",
+          "period": "Siempre gratis",
+          "features": [
+            "Explorar algunos venues registrados",
+            "Información básica de servicios",
+            "Apoya el turismo local",
+            "Acceso a la app móvil"
+          ],
+          "button": "Registrarse Gratis"
+        },
+        "premiumPlan": {
+          "name": "Usuario Premium",
+          "price": "$20 USD",
+          "period": "Por mes",
+          "badge": "Más Popular",
+          "features": [
+            "Todo lo del Usuario Free",
+            "Reservaciones prioritarias y rápidas",
+            "Acceso completo a información de venues",
+            "Descuentos exclusivos en venues",
+            "Comunidad privada de viajeros conscientes",
+            "Notificaciones personalizadas",
+            "Historial completo y facturación",
+            "Soporte premium dedicado",
+            "Experiencias exclusivas locales"
+          ],
+          "button": "Registrarse Premium"
+        }
+      },
+      "venueModel": {
+        "title": "Para Venues: Modelo de Comisión Transparente",
+        "subtitle": "Únete a la revolución de venues pequeños. Menores comisiones, pagos semanales y ecosistema completo.",
+        "firstYear": {
+          "name": "Primer Año",
+          "price": "5%",
+          "period": "comisión por reserva",
+          "features": [
+            "Registro completamente gratuito",
+            "Comisión promocional del 5%",
+            "Pagos semanales automáticos",
+            "Panel administrativo completo"
+          ],
+          "button": "Registrar Venue"
+        },
+        "standardRate": {
+          "name": "Tarifa Estándar",
+          "price": "10-12%",
+          "period": "comisión por reserva",
+          "badge": "Después del Primer Año",
+          "features": [
+            "Aún 3-5% menor que plataformas grandes",
+            "Hasta $18,000 MXN/mes de ahorro",
+            "Ecosistema completo: spa, tours, restaurantes",
+            "Herramientas administrativas avanzadas",
+            "Bonos por productividad"
+          ],
+          "button": "Comenzar Ahora"
+        },
+        "comparison": {
+          "name": "Comparación",
+          "price": "vs Competencia",
+          "period": "ahorro significativo",
+          "features": [
+            "Grandes plataformas: 15-25%",
+            "Pagos hasta 30 días después",
+            "Solo hospedaje, servicios limitados",
+            "ReservApp: Ecosistema completo",
+            "Apoyo a venues pequeños"
+          ],
+          "button": "Ver Detalles"
+        }
+      }
+    },
     "cta": {
-      "title": "¿Tienes un Negocio? Únete a Nosotros",
-      "subtitle": "Conecta con miles de usuarios que buscan servicios como el tuyo",
-      "button": "Crear Cuenta Gratis",
-      "businessButton": "Soy un Negocio"
+      "title": "Únete a la Revolución del Turismo Local",
+      "subtitle": "Para usuarios: Descubre venues únicos y apoya el turismo local.\nPara venues: Comisiones más bajas, pagos semanales y ecosistema completo.",
+      "userButton": "Registrarme como Usuario",
+      "businessButton": "Registrar mi Venue"
     },
     "footer": {
       "company": "ReservApp",
@@ -192,10 +285,20 @@
       "copyright": "© {year} ReservApp. Todos los derechos reservados."
     }
   },
+  "navigation": {
+    "home": "Inicio",
+    "business": "Negocios",
+    "contact": "Contacto",
+    "businessPortal": "Portal de Negocios",
+    "registerBusiness": "Registrar Negocio"
+  },
   "auth": {
     "login": {
       "title": "Portal de Negocios",
       "subtitle": "Accede al panel de gestión de tu negocio",
+      "businessAccess": "Acceso exclusivo para empresarios",
+      "formTitle": "Iniciar Sesión",
+      "formSubtitle": "Ingresa tus credenciales para acceder",
       "email": "Correo Electrónico",
       "emailPlaceholder": "tu@email.com",
       "password": "Contraseña",
@@ -208,6 +311,17 @@
       "orContinueWith": "O continúa con",
       "googleLogin": "Continuar con Google",
       "facebookLogin": "Continuar con Facebook",
+      "demo": {
+        "title": "Cuentas Demo para Negocios",
+        "adminLabel": "Administrador",
+        "managerLabel": "Gestor",
+        "useButton": "Usar"
+      },
+      "links": {
+        "noAccount": "¿No tienes cuenta? Elige tu tipo de registro:",
+        "registerUser": "👤 Registro de Usuario",
+        "registerBusiness": "🏨 Registro de Negocio"
+      },
       "errors": {
         "emailRequired": "El correo electrónico es requerido",
         "emailInvalid": "Ingresa un correo electrónico válido",
@@ -259,7 +373,7 @@
         "privacyRequired": "Debes aceptar la política de privacidad",
         "serverError": "Error del servidor. Intenta más tarde"
       },
-      "success": {
+      "messages": {
         "accountCreated": "¡Cuenta creada exitosamente!",
         "welcomeMessage": "Bienvenido a ReservApp",
         "redirecting": "Configurando tu cuenta..."
@@ -323,6 +437,242 @@
     "info": {
       "endUserTitle": "¿Eres un usuario final?",
       "endUserDescription": "Los usuarios descargan nuestra aplicación móvil gratuita para hacer reservaciones. Este portal web es exclusivo para la gestión de negocios."
+    },
+    "userRegister": {
+      "title": "¡Únete GRATIS a ReservApp!",
+      "subtitle": "Crea tu cuenta GRATUITA y descubre experiencias únicas en pequeños venues",
+      "hero": {
+        "title": "Únete a ReservApp",
+        "subtitle": "Descubre venues únicos y experiencias auténticas que no encontrarás en ninguna otra plataforma.",
+        "free": "100% Gratis · Registro en 1 minuto"
+      },
+      "stats": {
+        "venues": {
+          "number": "100+",
+          "text": "Venues boutique únicos"
+        },
+        "experiences": {
+          "number": "500+",
+          "text": "Experiencias locales exclusivas"
+        },
+        "savings": {
+          "number": "25%",
+          "text": "Menos vs otras plataformas"
+        }
+      },
+      "benefits": {
+        "uniqueVenues": {
+          "title": "Venues Únicos",
+          "description": "Descubre venues boutique y experiencias auténticas que no encontrarás en otras plataformas."
+        },
+        "directPrices": {
+          "title": "Precios Directos",
+          "description": "Sin comisiones ocultas. Reserva directamente con los venues y obtén los mejores precios."
+        },
+        "fastBooking": {
+          "title": "Reserva Rápida",
+          "description": "Confirmación inmediata y proceso de reserva simple y seguro en minutos."
+        },
+        "localExperiences": {
+          "title": "Experiencias Locales",
+          "description": "Accede a servicios y experiencias exclusivas recomendadas por locales."
+        }
+      },
+      "pioneer": {
+        "title": "🚀 Usuario Pionero",
+        "description": "Como usuario pionero, tendrás acceso temprano a nuevos venues y ofertas exclusivas. ¡Únete ahora y forma parte de la revolución del turismo local!"
+      },
+      "valueProps": {
+        "directPrices": {
+          "title": "Precios Directos",
+          "subtitle": "Sin comisiones ocultas · Ahorra hasta 25%"
+        },
+        "instantConfirmation": {
+          "title": "Confirmación Inmediata",
+          "subtitle": "Pagos seguros · Proceso en 3 minutos"
+        },
+        "premiumHotels": {
+          "title": "Hoteles Premium",
+          "subtitle": "Experiencias únicas · Solo en ReservApp"
+        },
+        "completeEcosystem": {
+          "title": "Ecosistema Completo",
+          "subtitle": "Hospedaje, Spa, Tours, Gastronomía"
+        }
+      },
+      "form": {
+        "title": "Crear Cuenta · 100% Gratis",
+        "subtitle": "Solo toma 1 minuto · Sin compromisos · Cancela cuando quieras"
+      },
+      "success": {
+        "title": "¡Bienvenido a ReservApp! 🎉",
+        "subtitle": "Tu cuenta ha sido creada exitosamente. Como usuario pionero tienes acceso exclusivo a:",
+        "benefits": {
+          "0": "✅ Descuentos especiales en venues boutique",
+          "1": "✅ Experiencias auténticas locales",
+          "2": "✅ Comunidad privada de viajeros conscientes",
+          "3": "✅ Soporte prioritario premium"
+        },
+        "appMessage": "¡Descarga nuestra aplicación móvil para disfrutar todos los beneficios!",
+        "closeButton": "Comenzar a Explorar"
+      },
+      "description": "🚀 Somos una startup mexicana conectando viajeros con venues boutique únicos. ¡Los primeros usuarios tienen ventajas especiales!",
+      "businessName": "Tu Nombre Completo",
+      "businessNamePlaceholder": "Ej: Juan Pérez, María González...",
+      "email": "Correo Electrónico",
+      "emailPlaceholder": "tu@email.com",
+      "phone": "Teléfono (Opcional)",
+      "phonePlaceholder": "33-1234-5678",
+      "password": "Contraseña",
+      "passwordPlaceholder": "Mínimo 6 caracteres",
+      "confirmPassword": "Confirmar Contraseña",
+      "confirmPasswordPlaceholder": "Confirma tu contraseña",
+      "passwordRequirements": "Mínimo 6 caracteres - ¡Fácil y seguro!",
+      "createAccountButton": "Crear Cuenta GRATIS",
+      "creatingAccount": "Creando tu cuenta...",
+      "alreadyHaveAccount": "¿Ya tienes cuenta?",
+      "loginLink": "Iniciar sesión",
+      "haveBusinessAccount": "¿Tienes un negocio turístico?",
+      "businessRegisterLink": "Registro para Negocios",
+      "earlyAdopterBenefits": "🎁 Como usuario pionero obtienes:",
+      "freeForeverMessage": "🎉 ¡Registro GRATIS! Descubre venues pequeños increíbles.",
+      "plans": {
+        "free": {
+          "title": "Plan Explorador (GRATIS)",
+          "description": "Explora venues únicos, ve información básica, contacta directamente a los negocios.",
+          "price": "Gratis para siempre"
+        },
+        "premium": {
+          "title": "Plan Viajero Premium",
+          "description": "Haz reservas, descuentos exclusivos, experiencias premium.",
+          "price": "Disponible en la app"
+        }
+      },
+      "errors": {
+        "businessNameRequired": "Tu nombre completo es requerido",
+        "emailRequired": "El correo electrónico es requerido",
+        "emailInvalid": "Ingresa un correo electrónico válido",
+        "phoneRequired": "El número de teléfono es requerido",
+        "passwordMinLength": "La contraseña debe tener al menos 6 caracteres",
+        "passwordWeak": "La contraseña es muy simple",
+        "passwordsNotMatch": "Las contraseñas no coinciden",
+        "createAccountError": "Error al crear la cuenta"
+      },
+      "results": {
+        "accountCreatedFree": "🎉 ¡Bienvenido a ReservApp! Tu cuenta ha sido creada. ¡Descubre experiencias únicas!",
+        "accountCreatedPremium": "¡Bienvenido! Tu cuenta ha sido creada exitosamente."
+      }
+    },
+    "businessRegister": {
+      "hero": {
+        "title": "Únete a ReservApp",
+        "subtitle": "Registra tu negocio sin costo alguno, sin mensualidades. Empezamos juntos a hacer crecer tu negocio.",
+        "cta": "Registro 100% Gratis",
+        "free": "¡Completamente GRATIS!"
+      },
+      "dashboard": {
+        "title": "Panel de Control Profesional",
+        "subtitle": "Gestiona reservas, clientes, servicios y pagos desde una plataforma integral diseñada para hacer crecer tu negocio turístico.",
+        "imageAlt": "Panel administrativo de ReservApp - Gestión completa para negocios turísticos"
+      },
+      "stats": {
+        "businesses": {
+          "number": "5%",
+          "text": "Comisión Primer Año"
+        },
+        "revenue": {
+          "number": "$18K",
+          "text": "Ahorro Mensual MXN"
+        },
+        "growth": {
+          "number": "7 días",
+          "text": "Pago Semanal"
+        }
+      },
+      "benefits": {
+        "title": "¿Por qué elegir ReservApp?",
+        "subtitle": "La única plataforma que realmente se preocupa por el crecimiento de tu negocio"
+      },
+      "form": {
+        "title": "Registra tu negocio ahora",
+        "subtitle": "Completa el registro básico. Podrás agregar más detalles desde tu panel administrativo.",
+        "firstName": "Nombre *",
+        "firstNamePlaceholder": "Tu nombre",
+        "lastName": "Apellidos *",
+        "lastNamePlaceholder": "Tus apellidos",
+        "email": "Email *",
+        "emailPlaceholder": "tu@email.com",
+        "phone": "Teléfono *",
+        "phonePlaceholder": "+52 33 1234 5678",
+        "businessName": "Nombre del Negocio *",
+        "businessNamePlaceholder": "Hotel Paraíso, Restaurante Central, etc.",
+        "businessType": "Tipo de Negocio *",
+        "password": "Contraseña *",
+        "passwordPlaceholder": "Mínimo 8 caracteres",
+        "confirmPassword": "Confirmar Contraseña *",
+        "confirmPasswordPlaceholder": "Repite tu contraseña",
+        "registering": "Registrando...",
+        "submit": "Registrar Negocio GRATIS",
+        "hasAccount": "¿Ya tienes cuenta?",
+        "login": "Iniciar Sesión"
+      },
+      "types": {
+        "venue": "Venue/Alojamiento",
+        "restaurant": "Restaurante",
+        "spa": "Spa/Wellness",
+        "tours": "Tours/Experiencias",
+        "events": "Centro de Eventos",
+        "entertainment": "Entretenimiento",
+        "other": "Otro"
+      },
+      "features": {
+        "free": {
+          "title": "100% Gratuito",
+          "description": "Sin costo de registro, sin mensualidades, sin comisiones. Tu negocio crece, nosotros crecemos contigo."
+        },
+        "directPayments": {
+          "title": "Pagos Directos",
+          "description": "Recibe los pagos directamente en tu cuenta bancaria. Sin intermediarios, sin esperas."
+        },
+        "secure": {
+          "title": "Seguro y Confiable",
+          "description": "Plataforma segura con encriptación bancaria. Tus datos y los de tus clientes están protegidos."
+        },
+        "completePanel": {
+          "title": "Panel Completo",
+          "description": "Gestiona reservas, venues, servicios y clientes desde un solo lugar. Herramientas profesionales incluidas."
+        }
+      },
+      "giros": {
+        "title": "Giros del Negocio *",
+        "subtitle": "Selecciona todos los giros que apliquen a tu negocio",
+        "hospitality": "Hospitalidad y Alojamiento",
+        "food": "Alimentos y Bebidas",
+        "wellness": "Bienestar y Salud",
+        "tourism": "Turismo y Experiencias",
+        "events": "Eventos y Celebraciones",
+        "entertainment": "Entretenimiento",
+        "retail": "Comercio y Retail",
+        "services": "Servicios Profesionales",
+        "other": "Otros Giros"
+      },
+      "errors": {
+        "firstNameRequired": "El nombre es requerido",
+        "lastNameRequired": "Los apellidos son requeridos",
+        "emailRequired": "Email válido es requerido",
+        "passwordLength": "La contraseña debe tener al menos 8 caracteres",
+        "passwordMismatch": "Las contraseñas no coinciden",
+        "businessNameRequired": "El nombre del negocio es requerido",
+        "phoneRequired": "El teléfono es requerido",
+        "giroRequired": "Selecciona al menos un giro del negocio",
+        "registrationFailed": "Error en el registro"
+      },
+      "success": {
+        "title": "¡Registro exitoso!",
+        "welcome": "Bienvenido a ReservApp"
+      },
+      "isUser": "¿Eres cliente?",
+      "userRegisterLink": "Registro de Usuario"
     }
   },
   "admin": {
@@ -335,24 +685,36 @@
       "payments": "Pagos",
       "analytics": "Analíticas",
       "settings": "Configuración",
-      "logout": "Cerrar Sesión"
+      "logout": "Cerrar Sesión",
+      "home": "Inicio",
+      "business": "Negocios",
+      "contact": "Contacto",
+      "businessPortal": "Portal de Negocios",
+      "registerBusiness": "Registrar Negocio"
     },
     "dashboard": {
-      "title": "¡Bienvenido de vuelta, {name}!",
-      "subtitle": "Aquí está lo que está pasando con tus reservaciones hoy.",
+      "title": "Panel de Administración",
+      "subtitle": "Bienvenido al sistema de gestión de reservas",
+      "popularVenues": "Venues Populares",
+      "noRecentReservations": "No hay reservas recientes para mostrar",
+      "noVenueData": "No hay datos de venues disponibles",
+      "at": "a las",
+      "reservations": "reservas",
       "stats": {
-        "totalReservations": "Total Reservaciones",
+        "totalReservations": "Total de Reservas",
         "activeVenues": "Venues Activos",
+        "monthlyRevenue": "Ingresos del Mes",
+        "registeredUsers": "Usuarios Registrados",
         "totalRevenue": "Ingresos Totales",
         "averageStay": "Estancia Promedio",
         "occupancyRate": "Tasa de Ocupación",
         "fromLastMonth": "del mes pasado",
         "days": "días"
       },
-      "recentReservations": {
-        "title": "Reservaciones Recientes",
-        "noReservations": "No hay reservaciones recientes",
-        "viewAll": "Ver todas"
+      "status": {
+        "confirmed": "Confirmada",
+        "pending": "Pendiente",
+        "cancelled": "Cancelada"
       },
       "quickActions": {
         "title": "Acciones Rápidas",
@@ -368,13 +730,177 @@
         "checkIns": "Check-ins de Hoy",
         "checkOuts": "Check-outs de Hoy",
         "noEvents": "No hay eventos próximos"
+      },
+      "emptyStates": {
+        "noVenues": {
+          "title": "¡Comienza creando tu primer venue!",
+          "description": "Aún no tienes venues registrados. Crea tu primer espacio para empezar a recibir reservaciones.",
+          "button": "Crear Mi Primer Venue",
+          "steps": {
+            "title": "Pasos para empezar:",
+            "step1": "Crea tu primer venue",
+            "step2": "Agrega servicios y precios",
+            "step3": "¡Empieza a recibir reservaciones!"
+          }
+        },
+        "noReservations": {
+          "title": "¡Tus primeras reservaciones están por llegar!",
+          "description": "Una vez que tengas venues y servicios configurados, aquí aparecerán todas tus reservaciones.",
+          "button": "Ver Mis Venues",
+          "step1": "Crea tu primer venue",
+          "step2": "Agrega servicios disponibles",
+          "step3": "¡Empieza a recibir reservaciones!"
+        }
+      },
+      "charts": {
+        "revenue": {
+          "title": "Ingresos por Mes",
+          "subtitle": "Tendencia de ingresos de los últimos 6 meses",
+          "revenue": "Ingresos",
+          "noData": {
+            "title": "No hay datos de ingresos",
+            "description": "Los datos de ingresos aparecerán aquí cuando tengas reservaciones confirmadas."
+          }
+        },
+        "reservations": {
+          "title": "Tendencia de Reservaciones",
+          "subtitle": "Evolución de reservaciones por estado",
+          "total": "Total",
+          "noData": {
+            "title": "No hay datos de reservaciones",
+            "description": "Los datos de tendencias aparecerán aquí cuando tengas más reservaciones."
+          }
+        }
+      },
+      "tables": {
+        "recentReservations": {
+          "title": "Reservaciones Recientes",
+          "subtitle": "Últimas reservaciones del sistema",
+          "columns": {
+            "customer": "Cliente",
+            "venue": "Venue & Servicio",
+            "date": "Fecha & Hora",
+            "status": "Estado",
+            "amount": "Monto"
+          },
+          "noData": {
+            "title": "No hay reservaciones recientes",
+            "description": "Las reservaciones recientes aparecerán aquí cuando los clientes hagan nuevas reservas."
+          }
+        },
+        "popularVenues": {
+          "title": "Venues Populares",
+          "subtitle": "Venues con más reservaciones",
+          "columns": {
+            "name": "Nombre",
+            "category": "Categoría",
+            "reservations": "Reservaciones",
+            "rating": "Calificación"
+          },
+          "noData": {
+            "title": "No hay venues populares",
+            "description": "Los venues más populares aparecerán aquí basados en el número de reservaciones."
+          }
+        }
+      }
+    },
+    "businessAccount": {
+      "title": "Mi Cuenta de Negocio",
+      "subtitle": "Completa tu perfil empresarial y configura tus métodos de pago",
+      "saveChanges": "Guardar Cambios",
+      "confirmDeleteBank": "¿Estás seguro de que deseas eliminar esta cuenta bancaria?",
+      "completion": {
+        "complete": "¡Perfil Completo!",
+        "incomplete": "Perfil Incompleto",
+        "text": "Has completado el {{percentage}}% de tu perfil empresarial",
+        "completed": "completado"
+      },
+      "businessInfo": {
+        "title": "Información del Negocio",
+        "businessName": "Nombre del Negocio",
+        "businessNamePlaceholder": "Ej: Hotel Boutique Las Flores",
+        "taxId": "RFC",
+        "taxIdPlaceholder": "Ej: ABC123456DEF",
+        "businessGiros": "Giros del Negocio",
+        "description": "Descripción",
+        "descriptionPlaceholder": "Describe tu negocio, servicios principales y lo que te hace único..."
+      },
+      "contactInfo": {
+        "title": "Información de Contacto",
+        "address": "Dirección",
+        "addressPlaceholder": "Calle y número",
+        "city": "Ciudad",
+        "cityPlaceholder": "Ej: Zapopan",
+        "state": "Estado",
+        "statePlaceholder": "Ej: Jalisco",
+        "zipCode": "Código Postal",
+        "zipCodePlaceholder": "Ej: 45000",
+        "phone": "Teléfono",
+        "phonePlaceholder": "Ej: 33 1234 5678",
+        "email": "Email",
+        "emailPlaceholder": "contacto@tunegocio.com",
+        "website": "Sitio Web",
+        "websitePlaceholder": "https://www.tunegocio.com"
+      },
+      "bankAccounts": {
+        "title": "Cuentas Bancarias",
+        "description": "Configura tus cuentas bancarias para recibir depósitos directos de tus reservaciones.",
+        "infoTitle": "Depósitos Directos",
+        "infoText": "ReservApp deposita tus ganancias semanalmente cada viernes, menos nuestra comisión del 5%.",
+        "active": "Activa",
+        "addNewAccount": "Agregar Cuenta Bancaria",
+        "addAccount": "Agregar Cuenta",
+        "bankName": "Banco",
+        "bankNamePlaceholder": "Ej: BBVA, Santander, Banamex",
+        "accountHolder": "Titular",
+        "accountHolderPlaceholder": "Nombre completo del titular",
+        "accountNumber": "Número de Cuenta",
+        "accountNumberPlaceholder": "Número de cuenta bancaria",
+        "accountType": "Tipo de Cuenta",
+        "clabe": "CLABE",
+        "clabePlaceholder": "CLABE interbancaria (18 dígitos)"
+      },
+      "accountTypes": {
+        "checking": "Cuenta de Cheques",
+        "savings": "Cuenta de Ahorros",
+        "business": "Cuenta Empresarial"
+      },
+      "giros": {
+        "hospitality": "Hospedaje",
+        "food": "Alimentos y Bebidas",
+        "wellness": "Spa y Bienestar",
+        "tourism": "Turismo",
+        "events": "Eventos",
+        "entertainment": "Entretenimiento",
+        "retail": "Comercio",
+        "services": "Servicios"
+      },
+      "success": {
+        "title": "¡Éxito!",
+        "saved": "Los cambios se han guardado correctamente",
+        "bankAdded": "Cuenta bancaria agregada exitosamente",
+        "bankDeleted": "Cuenta bancaria eliminada"
+      },
+      "errors": {
+        "saveFailed": "Error al guardar los cambios. Por favor intenta de nuevo.",
+        "missingBankInfo": "Por favor completa la información bancaria requerida",
+        "bankAddFailed": "Error al agregar la cuenta bancaria",
+        "bankDeleteFailed": "Error al eliminar la cuenta bancaria"
       }
     },
     "reservations": {
       "title": "Gestión de Reservaciones",
       "subtitle": "Administra todas las reservaciones del sistema",
       "newReservation": "Nueva Reservación",
+      "createNew": "Nueva Reserva",
+      "refresh": "Actualizar",
       "export": "📊 Exportar",
+      "totalReservations": "Total Reservas",
+      "confirmed": "Confirmadas",
+      "pending": "Pendientes",
+      "revenue": "Ingresos Pagados",
+      "noReservations": "No se encontraron reservas",
+      "showAll": "Mostrar todas las reservas",
       "filters": {
         "status": "Estado",
         "allStatuses": "Todos los Estados",
@@ -382,18 +908,38 @@
         "search": "Buscar",
         "searchPlaceholder": "Buscar clientes, servicios...",
         "venue": "Venue",
-        "service": "Servicio"
+        "service": "Servicio",
+        "paymentStatus": "Estado de Pago",
+        "dateFrom": "Desde",
+        "dateTo": "Hasta"
       },
       "table": {
         "id": "ID",
         "customer": "Cliente",
         "service": "Servicio",
         "venue": "Venue",
+        "businessOwner": "Propietario del Negocio",
         "checkInOut": "Check-in / Check-out",
+        "checkIn": "Check-in",
+        "checkOut": "Check-out",
+        "guests": "Huéspedes",
         "status": "Estado",
+        "payment": "Pago",
         "total": "Total",
         "actions": "Acciones",
         "noReservations": "No se encontraron reservaciones"
+      },
+      "form": {
+        "title": "Información de la Reserva",
+        "userId": "ID del Usuario",
+        "serviceId": "ID del Servicio",
+        "guestCount": "Número de Huéspedes",
+        "totalAmount": "Monto Total",
+        "checkIn": "Check-in",
+        "checkOut": "Check-out",
+        "status": "Estado de la Reserva",
+        "paymentStatus": "Estado del Pago",
+        "specialRequests": "Solicitudes Especiales"
       },
       "actions": {
         "edit": "Editar",
@@ -410,6 +956,12 @@
         "CHECKED_OUT": "Check-out",
         "CANCELLED": "Cancelada",
         "NO_SHOW": "No Show"
+      },
+      "paymentStatus": {
+        "PENDING": "Pago Pendiente",
+        "PAID": "Pagado",
+        "FAILED": "Pago Fallido",
+        "REFUNDED": "Reembolsado"
       },
       "pagination": {
         "previous": "Anterior",
@@ -438,6 +990,13 @@
       "title": "Gestión de Venues",
       "subtitle": "Administra todos los venues del sistema",
       "addVenue": "Agregar Venue",
+      "createNew": "Nuevo Venue",
+      "export": "Exportar",
+      "totalVenues": "Total Venues",
+      "activeVenues": "Venues Activos",
+      "averageRating": "Rating Promedio",
+      "noVenues": "No se encontraron venues",
+      "clearFilters": "Limpiar filtros",
       "filters": {
         "category": "Categoría",
         "allCategories": "Todas las Categorías",
@@ -452,30 +1011,41 @@
         "rating": "Calificación",
         "services": "Servicios",
         "reservations": "Reservaciones",
+        "businessOwner": "Propietario del Negocio",
         "status": "Estado"
       },
       "categories": {
-        "VENUE": "Venue",
+        "ACCOMMODATION": "Alojamiento",
         "RESTAURANT": "Restaurante",
         "SPA": "Spa",
-        "TOUR_AGENCY": "Agencia de Tours",
-        "EVENT_VENUE": "Venue de Eventos",
-        "ENTERTAINMENT": "Entretenimiento"
+        "TOUR_OPERATOR": "Operador de Tours",
+        "EVENT_CENTER": "Centro de Eventos",
+        "ENTERTAINMENT": "Entretenimiento",
+        "accommodation": "Alojamiento",
+        "restaurant": "Restaurante",
+        "spa": "Spa",
+        "tourOperator": "Operador de Tours",
+        "eventCenter": "Centro de Eventos",
+        "entertainment": "Entretenimiento"
       },
       "form": {
+        "title": "Información del Venue",
         "basicInfo": "Información Básica",
         "name": "Nombre del Venue",
         "category": "Categoría",
         "description": "Descripción",
         "contactInfo": "Información de Contacto",
         "address": "Dirección",
+        "city": "Ciudad",
         "phone": "Teléfono",
-        "email": "Correo Electrónico",
+        "email": "Email",
         "website": "Sitio Web",
         "location": "Ubicación",
         "latitude": "Latitud",
         "longitude": "Longitud",
         "amenities": "Amenidades",
+        "images": "Imágenes",
+        "isActive": "Venue activo",
         "businessHours": "Horarios de Operación",
         "policies": "Políticas",
         "metadata": "Información Adicional"
@@ -499,13 +1069,70 @@
       "title": "Gestión de Servicios",
       "subtitle": "Administra todos los servicios disponibles",
       "addService": "Agregar Servicio",
-      "categories": {
-        "ACCOMMODATION": "Alojamiento",
-        "DINING": "Gastronomía",
-        "SPA_WELLNESS": "Spa y Bienestar",
-        "TOURS": "Tours",
-        "EVENTS": "Eventos",
-        "ENTERTAINMENT": "Entretenimiento"
+      "createNew": "Nuevo Servicio",
+      "form": {
+        "title": "Información del Servicio",
+        "venue": "Venue",
+        "name": "Nombre del Servicio",
+        "category": "Categoría",
+        "description": "Descripción",
+        "price": "Precio",
+        "currency": "Moneda",
+        "capacity": "Capacidad",
+        "duration": "Duración",
+        "amenities": "Comodidades",
+        "images": "Imágenes",
+        "isActive": "Servicio activo"
+      },
+      "table": {
+        "name": "Servicio",
+        "category": "Categoría",
+        "venue": "Venue",
+        "businessOwner": "Propietario del Negocio",
+        "price": "Precio",
+        "capacity": "Capacidad",
+        "status": "Estado",
+        "actions": "Acciones"
+      }
+    },
+    "businessAccounts": {
+      "title": "Gestión de Negocios",
+      "subtitle": "Administra todas las cuentas de negocio en el sistema",
+      "stats": {
+        "totalAccounts": "Total de Cuentas",
+        "activeAccounts": "Cuentas Activas",
+        "totalVenues": "Total de Venues",
+        "totalRevenue": "Ingresos Totales"
+      },
+      "filters": {
+        "search": "Buscar",
+        "searchPlaceholder": "Buscar por nombre, propietario, email...",
+        "status": "Estado",
+        "allStatuses": "Todos los Estados",
+        "giro": "Giro Comercial",
+        "allGiros": "Todos los Giros"
+      },
+      "status": {
+        "active": "Activo",
+        "inactive": "Inactivo",
+        "pending": "Pendiente"
+      },
+      "table": {
+        "business": "Negocio",
+        "owner": "Propietario",
+        "giros": "Giros",
+        "location": "Ubicación",
+        "metrics": "Métricas",
+        "status": "Estado",
+        "joined": "Se Unió",
+        "actions": "Acciones"
+      },
+      "empty": {
+        "title": "No hay negocios registrados",
+        "description": "No se encontraron cuentas de negocio que coincidan con los filtros aplicados."
+      },
+      "errors": {
+        "loadFailed": "Error al cargar las cuentas de negocio"
       }
     },
     "users": {
@@ -522,6 +1149,16 @@
         "userDeleted": "Usuario eliminado exitosamente",
         "errorDeleting": "Error al eliminar el usuario",
         "confirmDelete": "¿Estás seguro de que deseas eliminar el usuario?"
+      },
+      "table": {
+        "name": "Nombre",
+        "email": "Email",
+        "role": "Rol",
+        "businessInfo": "Información de Negocio",
+        "phone": "Teléfono",
+        "status": "Estado",
+        "registered": "Registrado",
+        "actions": "Acciones"
       }
     },
     "common": {
@@ -548,93 +1185,204 @@
       "deactivate": "desactivar",
       "deleted": "eliminado",
       "successfully": "exitosamente"
+    },
+    "payments": {
+      "title": "Gestión de Pagos",
+      "subtitle": "Administra todos los pagos, reembolsos y comisiones de la plataforma",
+      "stats": {
+        "totalPayments": "Pagos Totales",
+        "completedPayments": "Pagos Completados",
+        "pendingPayments": "Pagos Pendientes",
+        "failedPayments": "Pagos Fallidos",
+        "refundedPayments": "Pagos Reembolsados",
+        "averageAmount": "Monto promedio",
+        "successRate": "Tasa de éxito",
+        "totalRevenue": "Ingresos Totales",
+        "platformFees": "Comisiones de Plataforma",
+        "netRevenue": "Ingresos Netos"
+      },
+      "table": {
+        "payment": "Pago",
+        "amount": "Monto",
+        "status": "Estado",
+        "customer": "Cliente",
+        "venue": "Venue",
+        "service": "Servicio",
+        "date": "Fecha",
+        "actions": "Acciones",
+        "showing": "Mostrando",
+        "to": "a",
+        "of": "de",
+        "results": "resultados",
+        "page": "Página",
+        "noResults": "No se encontraron pagos",
+        "noResultsDescription": "No hay pagos que coincidan con los filtros seleccionados. Intenta ajustar tus criterios de búsqueda."
+      },
+      "filters": {
+        "venue": "Venue",
+        "allVenues": "Todos los venues",
+        "status": "Estado",
+        "allStatuses": "Todos los estados",
+        "search": "Buscar",
+        "advanced": "Filtros Avanzados",
+        "dateFrom": "Fecha desde",
+        "dateTo": "Fecha hasta",
+        "minAmount": "Monto mínimo",
+        "maxAmount": "Monto máximo",
+        "userId": "ID de Usuario",
+        "active": "filtros activos"
+      },
+      "actions": {
+        "viewReservation": "Ver Reservación",
+        "processRefund": "Procesar Reembolso",
+        "markAsCompleted": "Marcar como Completado",
+        "paymentDetails": "Detalles del Pago",
+        "service": "Servicio",
+        "refundAmount": "Monto del Reembolso",
+        "maxRefund": "Máximo",
+        "refundReason": "Razón del Reembolso",
+        "refundReasonPlaceholder": "Describe la razón del reembolso...",
+        "refundWarning": "⚠️ Advertencia de Reembolso",
+        "fullRefundWarning": "Este será un reembolso completo. La acción no se puede deshacer.",
+        "partialRefundWarning": "Este será un reembolso parcial. La acción no se puede deshacer.",
+        "manualVerification": "Verificación Manual",
+        "manualVerificationDescription": "Marcar este pago como verificado manualmente por el administrador.",
+        "verificationNotes": "Notas de Verificación",
+        "verificationNotesPlaceholder": "Agrega notas sobre la verificación manual...",
+        "confirmRefund": "Confirmar Reembolso",
+        "confirmVerification": "Confirmar Verificación",
+        "invalidAmount": "Monto inválido",
+        "refundExceedsAmount": "El reembolso no puede exceder el monto del pago",
+        "reasonRequired": "La razón del reembolso es requerida",
+        "notesRequired": "Las notas de verificación son requeridas",
+        "verifyPayment": "Verificar Pago"
+      },
+      "status": {
+        "PENDING": "Pendiente",
+        "COMPLETED": "Completado",
+        "PROCESSING": "Procesando",
+        "FAILED": "Fallido",
+        "CANCELLED": "Cancelado",
+        "REFUNDED": "Reembolsado"
+      },
+      "details": {
+        "stripeId": "ID de Stripe",
+        "transactionId": "ID de Transacción",
+        "paymentMethod": "Método de Pago",
+        "processedAt": "Procesado en",
+        "customer": "Cliente",
+        "business": "Negocio",
+        "platformFee": "Comisión de Plataforma",
+        "netAmount": "Monto Neto",
+        "bankDeposit": "Depósito Bancario",
+        "refundDetails": "Detalles del Reembolso",
+        "verificationDetails": "Detalles de Verificación"
+      }
     }
   },
   "errors": {
-    "generic": "Ha ocurrido un error inesperado",
-    "network": "Error de conexión. Verifica tu internet",
-    "timeout": "La solicitud ha tardado demasiado",
-    "unauthorized": "No tienes autorización para esta acción",
-    "forbidden": "Acceso prohibido",
-    "notFound": "Recurso no encontrado",
-    "validation": "Error de validación",
-    "server": "Error del servidor. Intenta más tarde",
-    "maintenance": "Servicio en mantenimiento"
+    "server": "Error del servidor. Intenta más tarde"
   },
-  "success": {
-    "saved": "Guardado exitosamente",
-    "updated": "Actualizado exitosamente",
-    "deleted": "Eliminado exitosamente",
-    "created": "Creado exitosamente",
-    "sent": "Enviado exitosamente"
-  },
-  "notifications": {
-    "reservation": {
-      "confirmed": "Tu reservación ha sido confirmada",
-      "cancelled": "Tu reservación ha sido cancelada",
-      "reminder": "Recordatorio: Tienes una cita en {time}",
-      "completed": "Gracias por usar nuestros servicios"
+  "about": {
+    "hero": {
+      "title": "La Startup que Revoluciona el Turismo en México",
+      "subtitle": "Somos una startup mexicana innovadora que conecta a pequeños venues con su ecosistema de servicios, ofreciendo comisiones justas y ventajas exclusivas para usuarios pioneros"
     },
-    "payment": {
-      "successful": "Pago procesado exitosamente",
-      "failed": "Error al procesar el pago",
-      "refunded": "Reembolso procesado"
-    }
-  },
-  "dates": {
-    "today": "Hoy",
-    "yesterday": "Ayer",
-    "tomorrow": "Mañana",
-    "thisWeek": "Esta semana",
-    "nextWeek": "Próxima semana",
-    "thisMonth": "Este mes",
-    "nextMonth": "Próximo mes"
-  },
-  "services": {
-    "title": "Servicios Disponibles",
-    "subtitle": "Descubre todos los servicios disponibles en nuestra comunidad privada",
-    "filters": {
-      "allServices": "Todos los Servicios",
-      "accommodation": "Hospedaje",
-      "restaurant": "Restaurantes",
-      "spa": "Spa & Bienestar",
-      "tours": "Tours",
-      "events": "Eventos",
-      "entertainment": "Entretenimiento"
+    "mission": {
+      "title": "Nuestra Misión",
+      "subtitle": "Impulsamos el crecimiento del turismo local a través de la tecnología",
+      "ourMission": {
+        "title": "Misión",
+        "description": "Como startup mexicana, democratizamos las reservaciones para pequeños negocios turísticos con tecnología de vanguardia, comisiones del 5% el primer año y pagos semanales. Somos el socio de crecimiento que tu negocio necesita."
+      },
+      "ourVision": {
+        "title": "Visión",
+        "description": "Ser la plataforma líder en México para reservaciones de venues boutique y su ecosistema de servicios, reconocida por su transparencia y apoyo al comercio local."
+      },
+      "ourGoal": {
+        "title": "Objetivo",
+        "description": "Conectar a 10,000 venues pequeños con más de 1 millón de viajeros en los próximos 3 años, generando un impacto positivo en las comunidades locales."
+      }
     },
-    "details": {
-      "location": "Ubicación",
-      "category": "Categoría",
-      "servicesAvailable": "servicios disponibles",
-      "rating": "Calificación",
-      "phone": "Teléfono",
-      "viewDetails": "Ver Detalles",
-      "bookNow": "Reservar Ahora"
+    "values": {
+      "title": "Nuestros Valores",
+      "subtitle": "Los principios que guían cada decisión que tomamos",
+      "innovation": {
+        "title": "Innovación",
+        "description": "Desarrollamos tecnología de vanguardia para simplificar la gestión de venues."
+      },
+      "transparency": {
+        "title": "Transparencia",
+        "description": "Comisiones claras, pagos puntuales y comunicación honesta con nuestros socios."
+      },
+      "collaboration": {
+        "title": "Colaboración",
+        "description": "Trabajamos junto con venues y proveedores para crear experiencias memorables."
+      },
+      "excellence": {
+        "title": "Excelencia",
+        "description": "Nos esforzamos por superar las expectativas en cada interacción."
+      },
+      "sustainability": {
+        "title": "Sostenibilidad",
+        "description": "Promovemos el turismo responsable y el desarrollo económico local."
+      },
+      "community": {
+        "title": "Comunidad",
+        "description": "Fortalecemos los lazos entre negocios locales y viajeros conscientes."
+      }
     },
-    "categories": {
-      "ACCOMMODATION": "Hospedaje",
-      "RESTAURANT": "Restaurante",
-      "SPA": "Spa & Bienestar",
-      "TOUR_OPERATOR": "Tours",
-      "EVENT_CENTER": "Centro de Eventos",
-      "ENTERTAINMENT": "Entretenimiento"
+    "team": {
+      "title": "Nuestro Equipo",
+      "subtitle": "Profesionales apasionados por transformar la industria turística",
+      "members": {
+        "ceo": {
+          "name": "Roberto Salazar",
+          "role": "CEO & Co-fundador",
+          "description": "15 años de experiencia en la industria de hospitalidad y tecnología."
+        },
+        "cto": {
+          "name": "Patricia Morales",
+          "role": "CTO & Co-fundadora",
+          "description": "Experta en desarrollo de plataformas escalables y seguras."
+        },
+        "cmo": {
+          "name": "Carlos Mendoza",
+          "role": "CMO",
+          "description": "Especialista en marketing digital y crecimiento de startups."
+        },
+        "coo": {
+          "name": "Ana García",
+          "role": "COO",
+          "description": "Líder en operaciones y optimización de procesos empresariales."
+        }
+      }
     },
-    "descriptions": {
-      "ACCOMMODATION": "Desde hoteles boutique hasta casas completas. Encuentra el lugar perfecto para tu estadía en cualquiera de nuestros destinos.",
-      "RESTAURANT": "Los mejores sabores de calidad. Reserva mesa en restaurantes gourmet, tradicionales y de comida internacional.",
-      "SPA": "Relájate y renuévate. Masajes, faciales, tratamientos de belleza y terapias holísticas.",
-      "TOUR_OPERATOR": "Descubre destinos únicos como nunca antes. Tours gastronómicos, culturales, de aventura y más.",
-      "EVENT_CENTER": "Organiza eventos inolvidables. Salones, jardines, centros de convenciones para cualquier ocasión.",
-      "ENTERTAINMENT": "Diversión garantizada. Espectáculos, conciertos, obras de teatro y actividades recreativas."
+    "timeline": {
+      "title": "Nuestro Viaje",
+      "subtitle": "Hitos importantes en nuestra historia",
+      "2023": {
+        "title": "Fundación de ReservApp",
+        "description": "Iniciamos con la visión de transformar las reservaciones de venues en México."
+      },
+      "2024Q1": {
+        "title": "Lanzamiento Beta",
+        "description": "100 venues se unen a nuestra plataforma durante el período de prueba."
+      },
+      "2024Q3": {
+        "title": "Expansión Nacional",
+        "description": "Alcanzamos presencia en 15 estados de la República Mexicana."
+      },
+      "2025": {
+        "title": "Ecosistema Completo",
+        "description": "Integramos restaurantes, spas, tours y más servicios a la plataforma."
+      }
     },
-    "emptyState": {
-      "title": "No hay servicios disponibles",
-      "description": "No se encontraron servicios en la categoría seleccionada. Prueba con otra categoría."
-    },
-    "error": {
-      "loadTitle": "No se pudieron cargar los servicios",
-      "failedToLoad": "Error al cargar servicios. Inténtalo de nuevo.",
-      "tryAgain": "Intentar de nuevo"
+    "cta": {
+      "title": "¡Únete GRATIS a los Primeros 1000 Negocios!",
+      "description": "Sé usuario pionero de la startup que está transformando el turismo mexicano. Registro gratuito + 5% comisión el primer año + pagos semanales.",
+      "joinButton": "Registrarme GRATIS Ahora",
+      "contactButton": "Más Información"
     }
   },
   "contact": {
@@ -689,87 +1437,137 @@
     }
   },
   "business": {
-    "title": "Haz Crecer tu Negocio con ReservApp",
-    "subtitle": "Únete a la comunidad privada más exclusiva y conecta con miles de clientes potenciales de alta calidad",
+    "title": "La Plataforma Integral para Hoteles Pequeños y su Ecosistema de Servicios",
+    "subtitle": "ReservApp se posiciona como la solución estratégica para venues pequeños y su ecosistema de servicios, ofreciendo mayor rentabilidad, control y alcance con una comisión inferior, pagos rápidos y herramientas integradas de gestión. Es más que una plataforma de reservas: es un socio de crecimiento.",
     "hero": {
       "registerButton": "Registrar mi Negocio"
     },
+    "mobileApp": {
+      "title": "Lleva ReservApp Contigo",
+      "description": "Con la aplicación móvil de ReservApp puedes explorar servicios, hacer reservaciones y gestionar tus citas desde la palma de tu mano. Disponible para iOS y Android.",
+      "features": {
+        "instantBooking": "Reservaciones instantáneas",
+        "realTimeNotifications": "Notificaciones en email y smartphone",
+        "offlineAccess": "Reservaciones con pocos pasos",
+        "securePayments": "Pagos seguros integrados"
+      },
+      "download": {
+        "title": "Descarga Gratis",
+        "appStore": "Descargar en App Store",
+        "googlePlay": "Disponible en Google Play"
+      }
+    },
     "benefits": {
-      "title": "¿Por qué elegir ReservApp?",
-      "subtitle": "Descubre todos los beneficios que tenemos para tu negocio",
+      "title": "¿Por qué ReservApp es tu mejor aliado estratégico?",
+      "subtitle": "Diseñado específicamente para venues pequeños y su ecosistema de servicios complementarios",
+      "competitiveCommissions": {
+        "title": "Comisiones más Competitivas",
+        "description": "5% el primer año, luego 10-12%. Significativamente menor que las grandes plataformas (15-25%). Ahorra hasta $18,000 MXN mensuales comparado con la competencia tradicional."
+      },
+      "weeklyPayments": {
+        "title": "Pagos Semanales Automáticos",
+        "description": "Recibe tu dinero cada semana, no esperes 30 días como en otras plataformas. flujo de caja y liquidez inmediatamente."
+      },
+      "integralEcosystem": {
+        "title": "Ecosistema Integral de Servicios",
+        "description": "Gestiona hospedaje, spa, tours, restaurantes, belleza y limpieza desde un solo panel. Más ingresos por cliente, mayor valor agregado."
+      },
+      "advancedPanel": {
+        "title": "Panel Administrativo Avanzado",
+        "description": "Métricas completas, gestión de usuarios, reservas, venues, pagos y reportes detallados. Herramientas que las grandes plataformas no ofrecen a venues pequeños."
+      },
+      "productivityBonuses": {
+        "title": "Bonos por Productividad",
+        "description": "Alcanza metas mensuales de reservas y obtén reducción temporal de comisión o incentivos económicos extra. Premiamos tu éxito."
+      },
+      "privateCommunity": {
+        "title": "Comunidad Privada de Clientes",
+        "description": "Acceso a una red exclusiva de huéspedes premium con beneficios especiales. fidelización y valor de vida del cliente."
+      },
       "increaseBookings": {
         "title": "Aumenta tus Reservaciones",
         "description": "Atrae más clientes con nuestra comunidad privada que conecta a miles de usuarios premium que buscan servicios de calidad como el tuyo."
-      },
-      "schedule247": {
-        "title": "Gestión de Horarios 24/7",
-        "description": "Los clientes pueden reservar en cualquier momento del día. Nuestro sistema maneja automáticamente la disponibilidad y confirmaciones."
-      },
-      "securePayments": {
-        "title": "Pagos Seguros",
-        "description": "Integración completa con Stripe para procesar pagos de forma segura. Recibe el dinero directamente en tu cuenta bancaria."
-      },
-      "analytics": {
-        "title": "Analytics y Reportes",
-        "description": "Panel de administración unificado para todos los negocios. Plan Profesional y Enterprise incluyen reportes más detallados y analytics avanzados."
-      },
-      "notifications": {
-        "title": "Notificaciones Automáticas",
-        "description": "Sistema automático de recordatorios por email y SMS para reducir las cancelaciones y no-shows."
-      },
-      "reviews": {
-        "title": "Reseñas y Calificaciones",
-        "description": "Construye la reputación de tu negocio con el sistema de reseñas. Los clientes satisfechos atraen más reservaciones."
       }
     },
+    "comparison": {
+      "title": "Comparativo Real: ReservApp vs Grandes Plataformas",
+      "subtitle": "Los números hablan por sí solos. Ve cuánto puedes ahorrar cambiándote a ReservApp.",
+      "table": {
+        "feature": "Característica",
+        "reservapp": "ReservApp",
+        "platformA": "Plataforma A*",
+        "platformB": "Plataforma B*",
+        "registration": "Registro",
+        "free": "Gratuito",
+        "commission": "Comisión (Primer Año)",
+        "commissionAfter": "Comisión (Posterior)",
+        "paymentFrequency": "Frecuencia de Pago",
+        "serviceTypes": "Tipos de Servicios",
+        "adminPanel": "Panel Administrativo",
+        "monthlySavings": "Ahorro Mensual Estimado",
+        "weekly": "Semanal",
+        "oneToSevenDays": "1-7 días",
+        "upToThirtyDays": "Hasta 30 días",
+        "completeEcosystem": "Ecosistema Completo",
+        "onlyAccommodation": "Solo Hospedaje",
+        "advanced": "Avanzado",
+        "basic": "Básico",
+        "upToAmount": "Hasta $18,000 MXN",
+        "none": "-"
+      },
+      "example": {
+        "title": "Ejemplo Real: Hotel con $180,000 MXN mensuales en ingresos",
+        "withReservapp": "Con ReservApp (Año 1)",
+        "amountReservapp": "$171,000 MXN",
+        "descriptionReservapp": "Te quedas con más dinero",
+        "withTraditional": "Con Plataformas Tradicionales",
+        "amountTraditional": "$153,000 MXN",
+        "descriptionTraditional": "Pierdes $18,000 en comisiones"
+      },
+      "disclaimer": "*Principales plataformas internacionales de reservas"
+    },
     "pricing": {
-      "title": "Planes para tu Negocio",
-      "subtitle": "Elige el plan que mejor se adapte a las necesidades de tu empresa",
-      "basic": {
-        "name": "Plan Inicial",
-        "price": "$1,299",
-        "period": "por mes",
-        "features": [
-          "Hospedaje de hasta 5 servicios",
-          "5% comisión por venta realizada",
-          "Hasta 500 visitas mensuales",
-          "$0.50 por visita adicional",
-          "Panel de administración unificado",
-          "Soporte por email"
-        ],
-        "button": "Empezar Prueba Gratuita"
+      "title": "Estructura de Comisiones Transparente",
+      "subtitle": "Sin costos de registro. Solo pagas comisión por reserva exitosa. Pagos semanales automáticos.",
+      "firstYear": {
+        "name": "Primer Año",
+        "price": "5%",
+        "period": "comisión por reserva",
+        "features": {
+          "freeRegistration": "Registro completamente gratuito",
+          "fivePercentCommission": "Solo 5% de comisión el primer año",
+          "allServices": "Todos los servicios: hospedaje, spa, tours, restaurantes",
+          "weeklyPayments": "Pagos semanales automáticos",
+          "dedicatedSupport": "Soporte dedicado"
+        },
+        "button": "Registrarme Gratis"
       },
-      "professional": {
-        "name": "Plan Profesional",
-        "price": "$2,499",
-        "period": "por mes",
-        "badge": "Más Popular",
-        "features": [
-          "Servicios ilimitados",
-          "4% comisión por venta realizada",
-          "Hasta 2,500 visitas mensuales",
-          "$0.50 por visita adicional",
-          "Analytics avanzados y reportes detallados",
-          "Integración completa de pagos",
-          "Soporte prioritario 24/7 para negocios"
-        ],
-        "button": "Empezar Ahora"
+      "standard": {
+        "badge": "Después del Primer Año",
+        "name": "Tarifa Estándar",
+        "price": "10-12%",
+        "period": "comisión por reserva",
+        "features": {
+          "lowerThanBig": "Aún 3-5% menor que plataformas grandes (15%)",
+          "lowerThanTraditional": "Hasta 13% menor que competencia tradicional (25%)",
+          "volumeReduction": "Reducción de comisión por volumen",
+          "advancedTools": "Herramientas administrativas avanzadas"
+        },
+        "button": "Comenzar Ahora"
       },
-      "enterprise": {
-        "name": "Plan Enterprise",
-        "price": "$4,999",
-        "period": "por mes",
-        "features": [
-          "Todo lo del Plan Profesional",
-          "3% comisión por venta realizada",
-          "Hasta 10,000 visitas mensuales",
-          "$0.50 por visita adicional",
-          "Múltiples ubicaciones y sucursales",
-          "API personalizada y integraciones",
-          "Account manager dedicado",
-          "Capacitación y onboarding personalizado"
-        ],
-        "button": "Contactar Ventas"
+      "comparison": {
+        "name": "Comparación",
+        "price": "vs Competencia",
+        "period": "ahorro estimado",
+        "features": {
+          "platformACommission": "Plataforma A: 15% comisión estándar",
+          "platformBCommission": "Plataforma B: 15-25% comisión",
+          "slowPayments": "Pagos hasta 30 días después",
+          "limitedServices": "Solo hospedaje, servicios limitados",
+          "reservappSavings": "ReservApp: Hasta $18,000 MXN/mes de ahorro",
+          "completeEcosystem": "Ecosistema completo de servicios"
+        },
+        "button": "Ver Comparativo"
       }
     },
     "form": {
@@ -805,117 +1603,564 @@
       "title": "¿Listo para Empezar?"
     }
   },
-  "admin": {
-    "venues": {
-      "title": "Gestión de Venues",
-      "createNew": "Nuevo Venue",
-      "export": "Exportar",
-      "totalVenues": "Total Venues",
-      "activeVenues": "Venues Activos",
-      "categories": "Categorías",
-      "averageRating": "Rating Promedio",
-      "noVenues": "No se encontraron venues",
-      "clearFilters": "Limpiar filtros",
-      "form": {
-        "title": "Información del Venue",
-        "name": "Nombre del Venue",
-        "category": "Categoría",
-        "description": "Descripción",
-        "address": "Dirección",
-        "city": "Ciudad",
-        "phone": "Teléfono",
-        "email": "Email",
-        "website": "Sitio Web",
-        "latitude": "Latitud",
-        "longitude": "Longitud",
-        "amenities": "Comodidades",
-        "images": "Imágenes",
-        "isActive": "Venue activo"
-      }
+  "help": {
+    "hero": {
+      "title": "Centro de Ayuda",
+      "subtitle": "Todo lo que necesitas saber para aprovechar al máximo ReservApp. Somos una startup innovadora democratizando las reservaciones para pequeños negocios."
     },
-    "reservations": {
-      "title": "Gestión de Reservas",
-      "createNew": "Nueva Reserva",
-      "refresh": "Actualizar",
-      "totalReservations": "Total Reservas",
-      "confirmed": "Confirmadas",
-      "pending": "Pendientes",
-      "revenue": "Ingresos Pagados",
-      "noReservations": "No se encontraron reservas",
-      "showAll": "Mostrar todas las reservas",
-      "filters": {
-        "status": "Estado de Reserva",
-        "paymentStatus": "Estado de Pago",
-        "search": "Buscar",
-        "dateFrom": "Desde",
-        "dateTo": "Hasta"
-      },
-      "table": {
-        "id": "ID",
-        "customer": "Cliente",
-        "service": "Servicio",
-        "venue": "Venue",
-        "checkIn": "Check-in",
-        "checkOut": "Check-out",
-        "guests": "Huéspedes",
-        "status": "Estado",
-        "payment": "Pago",
-        "total": "Total",
-        "actions": "Acciones"
-      },
-      "form": {
-        "title": "Información de la Reserva",
-        "userId": "ID del Usuario",
-        "serviceId": "ID del Servicio",
-        "guestCount": "Número de Huéspedes",
-        "totalAmount": "Monto Total",
-        "checkIn": "Check-in",
-        "checkOut": "Check-out",
-        "status": "Estado de la Reserva",
-        "paymentStatus": "Estado del Pago",
-        "specialRequests": "Solicitudes Especiales"
-      },
-      "status": {
-        "PENDING": "Pendiente",
-        "CONFIRMED": "Confirmada",
-        "CHECKED_IN": "Check-in",
-        "CHECKED_OUT": "Check-out",
-        "NO_SHOW": "No Show",
-        "CANCELLED": "Cancelada"
-      },
-      "paymentStatus": {
-        "PENDING": "Pago Pendiente",
-        "PAID": "Pagado",
-        "FAILED": "Pago Fallido",
-        "REFUNDED": "Reembolsado"
-      }
+    "narrative": {
+      "title": "🚀 Únete a la Revolución del Turismo Local",
+      "description": "Somos una startup innovadora que está democratizando las reservaciones para pequeños negocios. Comienza gratis y aprovecha descuentos especiales en tus primeros meses. Tu registro gratuito te da acceso inmediato a venues únicos y servicios exclusivos.",
+      "ctaButton": "Registrarse Gratis"
     },
-    "services": {
-      "title": "Gestión de Servicios",
-      "createNew": "Nuevo Servicio",
-      "form": {
-        "title": "Información del Servicio",
-        "venue": "Venue",
-        "name": "Nombre del Servicio",
-        "category": "Categoría",
-        "description": "Descripción",
-        "price": "Precio",
-        "currency": "Moneda",
-        "capacity": "Capacidad",
-        "duration": "Duración",
-        "amenities": "Comodidades",
-        "images": "Imágenes",
-        "isActive": "Servicio activo"
-      },
+    "faq": {
+      "title": "Preguntas Frecuentes",
+      "subtitle": "Encuentra respuestas rápidas a las preguntas más comunes sobre ReservApp",
       "categories": {
-        "ACCOMMODATION": "Hospedaje",
-        "DINING": "Gastronomía",
-        "SPA_WELLNESS": "Spa y Bienestar",
-        "TOUR_EXPERIENCE": "Tours y Experiencias",
-        "EVENT_MEETING": "Eventos y Reuniones",
-        "TRANSPORTATION": "Transporte",
-        "ENTERTAINMENT": "Entretenimiento"
+        "registration": "Registro y Cuentas",
+        "reservations": "Reservaciones",
+        "payments": "Pagos y Facturación",
+        "support": "Soporte y Contacto"
+      },
+      "registration": {
+        "howToRegister": "¿Cómo me registro en ReservApp?",
+        "howToRegisterAnswer": "Súper fácil y rápido: Solo necesitas tu email y crear una contraseña. El registro es GRATUITO para siempre. La selección de planes se hace después dentro de la app cuando quieras hacer tu primera reserva.",
+        "whichPlan": "¿Qué plan debo elegir?",
+        "whichPlanAnswer": "Puedes empezar GRATIS. El plan gratuito te permite ver negocios con información limitada pero no puedes hacer reservas. Para reservar necesitas seleccionar un plan premium dentro de la app.",
+        "freeFeatures": "¿Qué incluye el plan gratuito?",
+        "freeFeaturesAnswer": "Con el plan gratuito puedes: explorar pequeños venues y servicios, ver información básica (fotos, ubicación, descripción), contactar directamente a los negocios, pero NO puedes hacer reservas a través de la plataforma."
+      },
+      "reservations": {
+        "howToBook": "¿Cómo hago una reservación?",
+        "howToBookAnswer": "Es muy simple: explora los servicios disponibles, selecciona fechas y horarios, personaliza tu experiencia, y confirma con pago seguro. Recibes confirmación inmediata por email y notificaciones.",
+        "cancelPolicy": "¿Cuál es la política de cancelación?",
+        "cancelPolicyAnswer": "Las políticas varían según el establecimiento. Generalmente permites cancelación gratuita hasta 24-48 horas antes. Los usuarios premium tienen políticas más flexibles.",
+        "confirmations": "¿Cómo recibo las confirmaciones?",
+        "confirmationsAnswer": "Recibes confirmación inmediata por email con todos los detalles. También enviamos recordatorios automáticos 24 horas antes de tu cita, y notificaciones push en la app móvil."
+      },
+      "payments": {
+        "paymentMethods": "¿Qué métodos de pago aceptan?",
+        "paymentMethodsAnswer": "Usamos Stripe para procesar pagos de forma segura. Aceptamos todas las tarjetas de crédito y débito principales (Visa, Mastercard, American Express). Stripe maneja la facturación automática con recibos digitales.",
+        "security": "¿Es seguro pagar en ReservApp?",
+        "securityAnswer": "Absolutamente. Utilizamos Stripe, líder mundial en pagos seguros, con encriptación de nivel bancario. Cumplimos con estándares PCI DSS y nunca almacenamos tu información de tarjetas.",
+        "refunds": "¿Cómo funcionan los reembolsos?",
+        "refundsAnswer": "Los reembolsos se procesan automáticamente a través de Stripe según la política del establecimiento. Generalmente tardan 5-10 días hábiles en aparecer en tu estado de cuenta."
+      },
+      "support": {
+        "hours": "¿Cuáles son los horarios de soporte?",
+        "hoursAnswer": "Soporte para usuarios: Lunes a Viernes de 9:00 a 18:00 hrs. Soporte para negocios: Disponible 24/7 todos los días. Emergencias siempre atendidas.",
+        "contact": "¿Cómo puedo contactar soporte?",
+        "contactAnswer": "Puedes escribirnos por email a info@reservapp.com, llamar al +52 33 3615 4000, usar el chat en vivo en la app, o WhatsApp al +52 33 1234 5678.",
+        "emergencies": "¿Qué hago en caso de emergencias?",
+        "emergenciesAnswer": "Para emergencias durante tu estancia, contacta directamente al establecimiento. Para problemas urgentes con reservaciones, utiliza nuestro chat 24/7 o línea de emergencia."
       }
+    },
+    "quickGuides": {
+      "title": "Guías de Inicio Rápido",
+      "subtitle": "Tutoriales paso a paso para comenzar a usar ReservApp de inmediato",
+      "userRegistration": {
+        "title": "Registro de Usuario",
+        "description": "Crea tu cuenta en menos de 2 minutos y comienza a explorar servicios únicos",
+        "step1": "Visita la página de registro y elige 'Usuario'",
+        "step2": "Completa tus datos básicos (nombre, email, teléfono)",
+        "step3": "Selecciona tu plan (Gratuito o Premium)",
+        "step4": "Verifica tu email y ¡listo! Ya puedes explorar y reservar"
+      },
+      "makeReservation": {
+        "title": "Hacer una Reservación",
+        "description": "Reserva servicios de calidad en venues pequeños y únicos en pocos pasos",
+        "step1": "Explora servicios disponibles por categoría",
+        "step2": "Selecciona fechas, horarios, y número de personas",
+        "step3": "Revisa detalles y procede al pago seguro",
+        "step4": "Recibe confirmación instantánea y disfruta tu experiencia"
+      },
+      "businessRegistration": {
+        "title": "Registro de Negocio",
+        "description": "Únete como socio y comienza a recibir reservaciones con comisiones bajas",
+        "step1": "Completa el formulario de registro empresarial",
+        "step2": "Sube fotos y describe tus servicios",
+        "step3": "Configura precios y disponibilidad",
+        "step4": "¡Comienza a recibir reservaciones con solo 5% de comisión el primer año!"
+      }
+    },
+    "benefits": {
+      "title": "Ventajas para Nuevos Usuarios",
+      "subtitle": "Descubre por qué miles de usuarios eligen ReservApp para sus experiencias de viaje",
+      "simplicity": {
+        "title": "Simplicidad Total",
+        "description": "Interfaz intuitiva diseñada para hacer reservaciones en segundos. Sin complicaciones, sin esperas telefónicas, solo experiencias excepcionales."
+      },
+      "community": {
+        "title": "Comunidad Exclusiva",
+        "description": "Acceso a una red privada de venues boutique, familiares y con encanto local. Descubre lugares únicos que no encontrarás en grandes plataformas."
+      },
+      "exclusive": {
+        "title": "Beneficios Exclusivos",
+        "description": "Usuarios premium disfrutan descuentos especiales, reservaciones prioritarias, y experiencias exclusivas diseñadas para viajeros conscientes."
+      }
+    },
+    "support": {
+      "title": "¿Necesitas Ayuda Personalizada?",
+      "description": "Nuestro equipo de soporte está listo para ayudarte con cualquier pregunta o problema. Estamos aquí para hacer tu experiencia perfecta.",
+      "email": {
+        "title": "Soporte por Email",
+        "description": "Envíanos tu consulta a info@reservapp.com y recibirás respuesta en menos de 24 horas"
+      },
+      "phone": {
+        "title": "Soporte Telefónico",
+        "description": "Llama al +52 33 3615 4000 durante horario de oficina para atención personalizada"
+      },
+      "chat": {
+        "title": "Chat en Vivo",
+        "description": "Usa nuestro chat 24/7 en la app móvil para resolver dudas al instante"
+      },
+      "contactButton": "Contactar Soporte"
+    }
+  },
+  "terms": {
+    "hero": {
+      "title": "Términos y Condiciones",
+      "subtitle": "Términos justos y transparentes para pequeños negocios. Sin letra pequeña, con comisiones claras y beneficios reales para nuestros socios."
+    },
+    "acceptance": {
+      "title": "1. Aceptación de los Términos",
+      "content": "Al acceder y utilizar ReservApp, usted acepta estar sujeto a estos Términos y Condiciones de uso, todas las leyes y reglamentos aplicables, y acepta que es responsable del cumplimiento de las leyes locales aplicables.",
+      "highlight": {
+        "title": "Nuestra Filosofía: Transparencia Total",
+        "content": "Creemos en términos justos para pequeños negocios. No hay letra pequeña ni condiciones ocultas. Todo está diseñado para ser claro, justo y favorable para el crecimiento de tu negocio."
+      }
+    },
+    "service": {
+      "title": "2. Descripción del Servicio",
+      "description": "ReservApp es una plataforma integral de reservaciones diseñada específicamente para venues pequeños y su ecosistema de servicios complementarios. Nos posicionamos como tu socio estratégico de crecimiento.",
+      "whatWeOffer": {
+        "title": "Lo que ofrecemos:",
+        "platform": "Plataforma de reservaciones en línea fácil de usar",
+        "management": "Panel administrativo avanzado con métricas completas",
+        "payments": "Sistema de pagos automáticos semanales",
+        "support": "Soporte técnico 24/7 especializado en pequeños negocios",
+        "marketing": "Acceso a nuestra comunidad privada de huéspedes premium"
+      }
+    },
+    "registration": {
+      "title": "3. Registro y Cuentas de Usuario",
+      "content": "Para utilizar ciertos aspectos de ReservApp, debe registrarse creando una cuenta. Al registrarse, se compromete a proporcionar información verdadera, precisa, actual y completa sobre usted según lo solicite el formulario de registro.",
+      "highlight": {
+        "title": "Registro GRATUITO para Siempre",
+        "content": "El registro en ReservApp es completamente gratuito y sin compromisos. No cobramos cuotas de inscripción, configuración o mensualidades. Solo pagas cuando vendes."
+      },
+      "requirements": {
+        "title": "Requisitos de registro:",
+        "accurate": "Proporcionar información precisa y actualizada",
+        "current": "Mantener los datos de contacto actualizados",
+        "security": "Proteger la seguridad de su contraseña",
+        "compliance": "Cumplir con todas las regulaciones locales aplicables"
+      }
+    },
+    "fees": {
+      "title": "4. Comisiones y Estructura de Pagos",
+      "description": "ReservApp opera con una estructura de comisiones transparente y competitiva, diseñada para maximizar la rentabilidad de pequeños venues.",
+      "structure": {
+        "title": "Estructura de Comisiones Transparente:",
+        "firstYear": "• Primer año: Solo 5% de comisión por reserva confirmada",
+        "afterFirstYear": "• Años posteriores: 10-12% (significativamente menor que competidores que cobran 15-25%)"
+      },
+      "benefits": {
+        "title": "Beneficios adicionales:",
+        "transparent": "Sin costos ocultos, setup fees o cuotas mensuales",
+        "fast": "Pagos automáticos semanales (no esperar 30 días)",
+        "lower": "Comisiones hasta 50% menores que grandes plataformas",
+        "noHidden": "Sin penalizaciones por cancelación o modificaciones"
+      }
+    },
+    "responsibilities": {
+      "title": "5. Responsabilidades de las Partes",
+      "description": "Tanto ReservApp como nuestros socios tienen responsabilidades claras para garantizar el mejor servicio posible.",
+      "business": {
+        "title": "Responsabilidades del Negocio:",
+        "accurate": "Mantener información precisa sobre servicios y disponibilidad",
+        "availability": "Actualizar calendarios y horarios en tiempo real",
+        "service": "Proporcionar servicios de calidad según lo publicitado",
+        "legal": "Cumplir con todas las regulaciones locales y licencias necesarias"
+      },
+      "users": {
+        "title": "Responsabilidades de los Usuarios:",
+        "respectful": "Usar la plataforma de manera respetuosa y profesional",
+        "accurate": "Proporcionar información precisa en las reservaciones",
+        "comply": "Cumplir con las políticas de cancelación y modificación"
+      }
+    },
+    "intellectual": {
+      "title": "6. Propiedad Intelectual",
+      "content": "ReservApp y sus licenciantes poseen todos los derechos de propiedad intelectual en la plataforma, incluyendo pero no limitado a software, diseño, contenido, marcas comerciales y patentes.",
+      "platform": {
+        "title": "Contenido de la Plataforma:",
+        "content": "Todo el contenido, funcionalidades y tecnología de ReservApp están protegidos por derechos de autor, marcas comerciales y otras leyes. No puede copiar, modificar, distribuir o crear trabajos derivados sin autorización previa."
+      },
+      "userContent": {
+        "title": "Contenido del Usuario:",
+        "content": "Conserva todos los derechos sobre el contenido que publique (fotos, descripciones, etc.), pero otorga a ReservApp una licencia para usarlo en la promoción de sus servicios en nuestra plataforma."
+      }
+    },
+    "liability": {
+      "title": "7. Limitación de Responsabilidad",
+      "description": "ReservApp funciona como intermediario entre negocios y clientes. Nuestra responsabilidad se centra en proporcionar una plataforma confiable y segura.",
+      "highlight": {
+        "title": "Compromiso con Pequeños Negocios:",
+        "content": "A diferencia de grandes plataformas, ReservApp se compromete activamente con el éxito de pequeños venues, ofreciendo soporte personalizado y herramientas específicas para su crecimiento."
+      },
+      "coverage": {
+        "title": "Nuestra cobertura incluye:",
+        "platform": "Funcionamiento óptimo de la plataforma de reservaciones",
+        "technical": "Soporte técnico especializado 24/7",
+        "mediation": "Mediación en caso de disputas entre negocios y clientes"
+      }
+    },
+    "date": {
+      "title": "Fecha de Vigencia",
+      "effective": "Fecha de vigencia: Enero 2025",
+      "lastUpdated": "Última actualización: Enero 2025"
+    },
+    "contact": {
+      "title": "¿Listo para Comenzar?",
+      "description": "Únete a la comunidad de pequeños venues que están creciendo con ReservApp. Registro gratuito, comisiones justas y soporte especializado.",
+      "registerButton": "Registrar mi Negocio",
+      "contactButton": "Resolver Dudas"
+    }
+  },
+  "privacy": {
+    "title": "Política de Privacidad",
+    "subtitle": "En ReservApp, protegemos tu privacidad y garantizamos el uso transparente de tus datos personales",
+    "lastUpdated": "Última actualización: Enero 2025",
+    "introduction": "En ReservApp, valoramos tu privacidad y nos comprometemos a proteger tus datos personales. Esta Política de Privacidad describe cómo recopilamos, utilizamos, compartimos y protegemos tu información cuando utilizas nuestra plataforma de reservaciones para venues pequeños y servicios turísticos.",
+    "commitment": {
+      "title": "Nuestro Compromiso",
+      "description": "Como startup comprometida con la transparencia, protegemos los datos de pequeños negocios y viajeros conscientes. Cumplimos con todas las leyes mexicanas de protección de datos y adoptamos las mejores prácticas internacionales de privacidad."
+    },
+    "dataCollection": {
+      "title": "Información que Recopilamos",
+      "intro": "Recopilamos diferentes tipos de información para brindarte el mejor servicio posible:",
+      "personalInfo": {
+        "title": "Información Personal",
+        "item1": "Nombre completo, correo electrónico y número de teléfono",
+        "item2": "Información de cuenta y preferencias de usuario",
+        "item3": "Historial de reservaciones y servicios utilizados",
+        "item4": "Reseñas y comentarios que proporcionas",
+        "item5": "Información de comunicación y soporte"
+      },
+      "businessInfo": {
+        "title": "Información de Negocios (para socios)",
+        "item1": "Información de registro empresarial y documentos fiscales",
+        "item2": "Detalles de servicios, precios y disponibilidad",
+        "item3": "Información bancaria para procesamiento de pagos",
+        "item4": "Fotografías y contenido promocional de tu negocio"
+      },
+      "technicalInfo": {
+        "title": "Información Técnica",
+        "item1": "Dirección IP y ubicación geográfica aproximada",
+        "item2": "Información del dispositivo y navegador",
+        "item3": "Cookies y tecnologías similares de seguimiento",
+        "item4": "Datos de uso de la plataforma y patrones de navegación"
+      }
+    },
+    "dataUsage": {
+      "title": "Cómo Utilizamos tu Información",
+      "intro": "Utilizamos tu información para los siguientes propósitos legítimos:",
+      "purpose1": {
+        "title": "Prestación de Servicios",
+        "description": "Procesar reservaciones, facilitar pagos y conectarte con negocios locales"
+      },
+      "purpose2": {
+        "title": "Comunicación",
+        "description": "Enviarte confirmaciones, recordatorios y actualizaciones importantes sobre tus reservaciones"
+      },
+      "purpose3": {
+        "title": "Mejora del Servicio",
+        "description": "Analizar el uso de la plataforma para mejorar la experiencia del usuario"
+      },
+      "purpose4": {
+        "title": "Soporte al Cliente",
+        "description": "Proporcionar asistencia técnica y resolver consultas o problemas"
+      },
+      "purpose5": {
+        "title": "Marketing Personalizado",
+        "description": "Enviarte ofertas relevantes y contenido personalizado (solo con tu consentimiento)"
+      },
+      "purpose6": {
+        "title": "Seguridad y Prevención de Fraudes",
+        "description": "Detectar actividades sospechosas y proteger la integridad de la plataforma"
+      }
+    },
+    "dataSharing": {
+      "title": "Cómo Compartimos tu Información",
+      "intro": "Solo compartimos tu información en las siguientes circunstancias limitadas:",
+      "withPartners": {
+        "title": "Con Socios Comerciales",
+        "item1": "Compartimos información de reservación con venues y proveedores de servicios para completar tu reserva",
+        "item2": "Los datos se limitan a lo necesario para prestar el servicio solicitado",
+        "item3": "Todos los socios deben cumplir con nuestros estándares de privacidad"
+      },
+      "serviceProviders": {
+        "title": "Con Proveedores de Servicios de Confianza",
+        "item1": "Procesadores de pagos para transacciones seguras (Stripe)",
+        "item2": "Servicios de email para comunicaciones (Resend)",
+        "item3": "Servicios de hosting y almacenamiento en la nube (Vercel)",
+        "item4": "Herramientas de análisis para mejorar nuestros servicios"
+      },
+      "legalRequirements": {
+        "title": "Por Requerimientos Legales",
+        "description": "Podemos divulgar tu información cuando sea requerido por ley, orden judicial, o para proteger nuestros derechos legítimos y los de nuestros usuarios."
+      }
+    },
+    "dataSecurity": {
+      "title": "Seguridad de tus Datos",
+      "intro": "Implementamos múltiples capas de seguridad para proteger tu información:",
+      "technicalMeasures": {
+        "title": "Medidas Técnicas",
+        "item1": "Encriptación SSL/TLS para todas las transmisiones de datos",
+        "item2": "Cifrado de contraseñas usando algoritmos seguros (bcrypt)",
+        "item3": "Autenticación JWT para sesiones seguras",
+        "item4": "Monitoreo continuo de actividades sospechosas"
+      },
+      "organizationalMeasures": {
+        "title": "Medidas Organizacionales",
+        "item1": "Acceso limitado a datos personales solo para personal autorizado",
+        "item2": "Capacitación regular del equipo en privacidad y seguridad",
+        "item3": "Auditorías de seguridad periódicas y actualizaciones de sistemas"
+      }
+    },
+    "userRights": {
+      "title": "Tus Derechos de Privacidad",
+      "intro": "De acuerdo con las leyes mexicanas de protección de datos, tienes los siguientes derechos:",
+      "access": {
+        "title": "Derecho de Acceso",
+        "description": "Solicitar información sobre qué datos personales tenemos sobre ti"
+      },
+      "rectification": {
+        "title": "Derecho de Rectificación",
+        "description": "Corregir datos inexactos o incompletos en tu perfil"
+      },
+      "cancellation": {
+        "title": "Derecho de Cancelación",
+        "description": "Solicitar la eliminación de tus datos personales cuando ya no sean necesarios"
+      },
+      "opposition": {
+        "title": "Derecho de Oposición",
+        "description": "Oponerte al procesamiento de tus datos para fines específicos como marketing"
+      },
+      "portability": {
+        "title": "Derecho de Portabilidad",
+        "description": "Recibir una copia de tus datos en formato estructurado y legible"
+      },
+      "limitation": {
+        "title": "Derecho de Limitación",
+        "description": "Restringir el procesamiento de tus datos en ciertas circunstancias"
+      },
+      "exerciseRights": {
+        "title": "Ejercer tus Derechos",
+        "description": "Para ejercer cualquiera de estos derechos, contáctanos en privacy@reservapp.com con una identificación válida. Responderemos a tu solicitud dentro de 20 días hábiles."
+      }
+    },
+    "cookies": {
+      "title": "Cookies y Tecnologías Similares",
+      "intro": "Utilizamos cookies y tecnologías similares para mejorar tu experiencia en nuestra plataforma:",
+      "types": {
+        "title": "Tipos de Cookies que Utilizamos",
+        "essential": {
+          "title": "Cookies Esenciales",
+          "description": "Necesarias para el funcionamiento básico del sitio web (autenticación, carrito de compras)"
+        },
+        "functional": {
+          "title": "Cookies Funcionales",
+          "description": "Mejoran la funcionalidad y personalización (preferencias de idioma, configuraciones)"
+        },
+        "analytics": {
+          "title": "Cookies de Análisis",
+          "description": "Nos ayudan a entender cómo los usuarios interactúan con nuestra plataforma"
+        },
+        "marketing": {
+          "title": "Cookies de Marketing",
+          "description": "Utilizadas para mostrar anuncios relevantes y medir la efectividad de campañas"
+        }
+      },
+      "management": {
+        "title": "Gestión de Cookies",
+        "description": "Puedes configurar las preferencias de cookies en la configuración de tu navegador. Ten en cuenta que desactivar ciertas cookies puede afectar la funcionalidad del sitio."
+      }
+    },
+    "minors": {
+      "title": "Protección de Menores",
+      "description": "ReservApp no está dirigido a menores de 18 años. No recopilamos conscientemente información personal de menores. Si descubrimos que hemos recopilado información de un menor, la eliminaremos inmediatamente. Si eres padre/tutor y crees que tu hijo nos ha proporcionado información personal, contáctanos."
+    },
+    "internationalTransfers": {
+      "title": "Transferencias Internacionales",
+      "description": "Algunos de nuestros proveedores de servicios pueden procesar datos fuera de México. Cuando esto ocurre, nos aseguramos de que existan las salvaguardas adecuadas para proteger tu información, incluyendo contratos de transferencia de datos y certificaciones de privacidad."
+    },
+    "dataRetention": {
+      "title": "Retención de Datos",
+      "intro": "Conservamos tu información solo el tiempo necesario para los fines establecidos:",
+      "users": {
+        "title": "Datos de Usuarios",
+        "description": "Mientras mantengas tu cuenta activa y durante 3 años después del último uso"
+      },
+      "businesses": {
+        "title": "Datos de Negocios",
+        "description": "Durante la vigencia del contrato y 7 años después para cumplimiento fiscal"
+      },
+      "reservations": {
+        "title": "Historial de Reservaciones",
+        "description": "5 años para efectos fiscales y de servicio al cliente"
+      },
+      "marketing": {
+        "title": "Datos de Marketing",
+        "description": "Hasta que retires tu consentimiento o 2 años de inactividad"
+      }
+    },
+    "legalCompliance": {
+      "title": "Cumplimiento Legal",
+      "description": "ReservApp cumple con todas las leyes aplicables de privacidad y protección de datos, incluyendo regulaciones mexicanas e internacionales cuando corresponda.",
+      "mexicanLaws": {
+        "title": "Leyes Mexicanas",
+        "description": "Cumplimos con la Ley Federal de Protección de Datos Personales en Posesión de los Particulares y su Reglamento, así como con los lineamientos del Instituto Nacional de Transparencia, Acceso a la Información y Protección de Datos Personales (INAI)."
+      }
+    },
+    "policyChanges": {
+      "title": "Cambios en esta Política",
+      "description": "Nos reservamos el derecho de modificar esta Política de Privacidad en cualquier momento. Los cambios importantes serán notificados por email y mediante un aviso prominente en nuestra plataforma. Tu uso continuado de nuestros servicios después de los cambios constituye tu aceptación de la política actualizada."
+    },
+    "contact": {
+      "title": "Contacto",
+      "intro": "Si tienes preguntas sobre esta Política de Privacidad o deseas ejercer tus derechos de privacidad, puedes contactarnos:",
+      "dataController": {
+        "title": "Responsable del Tratamiento de Datos",
+        "company": "ReservApp México, S.A. de C.V.",
+        "address": "Av. Revolución 1425, Colonia Americana, Guadalajara, Jalisco, México, C.P. 44160",
+        "emailLabel": "Email de Privacidad",
+        "email": "privacy@reservapp.com",
+        "phoneLabel": "Teléfono",
+        "phone": "+52 33 3615 4000"
+      }
+    }
+  },
+  "systemLogs": {
+    "title": "Logs del Sistema",
+    "description": "Monitor y administra todos los logs del sistema para mantener la seguridad y rendimiento",
+    "autoRefresh": "Auto-actualizar",
+    "autoRefreshOn": "Auto-actualización activa",
+    "autoRefreshOff": "Auto-actualización inactiva",
+    "export": "Exportar",
+    "cleanup": "Limpiar",
+    "cleanupConfirm": "¿Estás seguro de que quieres limpiar los logs antiguos? Esta acción no se puede deshacer.",
+    "stats": {
+      "totalLogs": "Total de Logs",
+      "recentErrors": "Errores Recientes",
+      "criticalAlerts": "Alertas Críticas",
+      "avgResponseTime": "Tiempo Respuesta Promedio"
+    },
+    "filters": {
+      "title": "Filtros",
+      "search": "Buscar",
+      "searchPlaceholder": "Buscar en mensajes, usuarios, eventos...",
+      "eventType": "Tipo de Evento",
+      "eventTypePlaceholder": "Filtrar por tipo de evento...",
+      "userId": "ID de Usuario",
+      "userIdPlaceholder": "Filtrar por ID de usuario...",
+      "dateFrom": "Fecha Desde",
+      "dateTo": "Fecha Hasta",
+      "resourceType": "Tipo de Recurso",
+      "resourceTypePlaceholder": "Filtrar por tipo de recurso...",
+      "levels": "Niveles",
+      "categories": "Categorías",
+      "reset": "Limpiar Filtros",
+      "apply": "Aplicar Filtros"
+    },
+    "table": {
+      "title": "Logs del Sistema",
+      "showing": "Mostrando {{start}}-{{end}} de {{total}}",
+      "timestamp": "Marca de Tiempo",
+      "level": "Nivel",
+      "category": "Categoría",
+      "eventType": "Tipo de Evento",
+      "message": "Mensaje",
+      "user": "Usuario",
+      "resource": "Recurso",
+      "duration": "Duración"
+    },
+    "pagination": {
+      "info": "Mostrando {{start}}-{{end}} de {{total}} registros",
+      "first": "Primero",
+      "previous": "Anterior",
+      "next": "Siguiente",
+      "last": "Último",
+      "current": "Página {{page}} de {{totalPages}}"
+    },
+    "modal": {
+      "title": "Detalles del Log",
+      "basicInfo": "Información Básica",
+      "message": "Mensaje",
+      "userContext": "Contexto del Usuario",
+      "requestContext": "Contexto de la Petición",
+      "resourceContext": "Contexto del Recurso",
+      "errorInfo": "Información del Error",
+      "dataContext": "Contexto de Datos"
+    },
+    "fields": {
+      "level": "Nivel",
+      "category": "Categoría",
+      "eventType": "Tipo de Evento",
+      "timestamp": "Marca de Tiempo",
+      "userEmail": "Email del Usuario",
+      "userName": "Nombre del Usuario",
+      "userRole": "Rol del Usuario",
+      "userId": "ID del Usuario",
+      "ipAddress": "Dirección IP",
+      "userAgent": "Agente de Usuario",
+      "requestId": "ID de Petición",
+      "sessionId": "ID de Sesión",
+      "statusCode": "Código de Estado",
+      "duration": "Duración",
+      "resourceType": "Tipo de Recurso",
+      "resourceId": "ID del Recurso",
+      "errorCode": "Código de Error",
+      "errorMessage": "Mensaje de Error",
+      "stackTrace": "Stack Trace",
+      "oldValues": "Valores Anteriores",
+      "newValues": "Valores Nuevos",
+      "metadata": "Metadatos"
+    },
+    "levels": {
+      "DEBUG": "Debug",
+      "INFO": "Información",
+      "WARN": "Advertencia",
+      "ERROR": "Error",
+      "CRITICAL": "Crítico"
+    },
+    "categories": {
+      "AUTHENTICATION": "Autenticación",
+      "AUTHORIZATION": "Autorización",
+      "USER_MANAGEMENT": "Gestión de Usuarios",
+      "PAYMENT_PROCESSING": "Procesamiento de Pagos",
+      "RESERVATION_SYSTEM": "Sistema de Reservas",
+      "EMAIL_SERVICE": "Servicio de Email",
+      "API_REQUEST": "Petición API",
+      "DATABASE_OPERATION": "Operación de Base de Datos",
+      "SECURITY_EVENT": "Evento de Seguridad",
+      "SYSTEM_ERROR": "Error del Sistema",
+      "PERFORMANCE": "Rendimiento",
+      "ADMIN_ACTION": "Acción de Administrador",
+      "AUDIT_TRAIL": "Pista de Auditoría"
+    },
+    "empty": {
+      "title": "No hay logs disponibles",
+      "description": "No se encontraron logs que coincidan con los filtros aplicados"
+    },
+    "error": {
+      "title": "Error al cargar logs",
+      "description": "Ha ocurrido un error al cargar los logs del sistema"
+    },
+    "loading": {
+      "title": "Cargando logs...",
+      "description": "Por favor espera mientras cargamos los logs del sistema"
     }
   }
 }

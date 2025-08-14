@@ -5,6 +5,17 @@
 
 import { handleRequest } from '../http/handleRequest';
 
+interface BusinessOwner {
+  id: string;
+  firstName: string;
+  lastName: string;
+  email: string;
+  businessAccount?: {
+    businessName: string;
+    businessType: string;
+  };
+}
+
 export interface Reservation {
   id: string;
   venueId: string;
@@ -27,6 +38,7 @@ export interface Reservation {
   venue?: {
     id: string;
     name: string;
+    owner?: BusinessOwner; // Only included for SUPER_ADMIN users
   };
   service?: {
     id: string;

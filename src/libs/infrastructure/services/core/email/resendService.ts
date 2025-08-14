@@ -65,6 +65,15 @@ export interface PaymentEmailData {
   userId?: string; // Optional for creating notifications
 }
 
+export interface WelcomeEmailData {
+  userName: string;
+  userEmail: string;
+  userType: 'USER' | 'BUSINESS';
+  firstName?: string;
+  lastName?: string;
+  businessName?: string;
+}
+
 export class ResendService {
   static isEmailEnabled(): boolean {
     return process.env.NEXT_PUBLIC_ENABLE_EMAILS === 'true';
@@ -102,19 +111,33 @@ export class ResendService {
         };
       }
 
+      // Para MVP: redirigir todos los emails al propietario pero mantener info del destinatario original
+      const originalRecipient = Array.isArray(params.to) ? params.to[0] : params.to;
+      const targetEmail = process.env.RESEND_TARGET_EMAIL || 'danny.danzka21@gmail.com';
+
+      // Modificar el HTML para incluir información del destinatario original
+      const modifiedHtml = params.html
+        ? `<div style="background: #f0f9ff; padding: 15px; border-radius: 5px; margin-bottom: 20px; border-left: 4px solid #0ea5e9;">
+          <strong>📧 Email MVP - Destinatario Original:</strong> ${originalRecipient}
+        </div>
+        ${params.html}`
+        : params.html;
+
       const emailData = {
         attachments: params.attachments,
         bcc: params.bcc ? (Array.isArray(params.bcc) ? params.bcc : [params.bcc]) : undefined,
         cc: params.cc ? (Array.isArray(params.cc) ? params.cc : [params.cc]) : undefined,
         from: params.from || this.getFromAddress(),
         headers: params.headers,
-        html: params.html,
+        html: modifiedHtml,
         react: params.react,
         reply_to: params.replyTo,
-        subject: params.subject,
+        subject: `[ReservApp - Para: ${originalRecipient}] ${params.subject}`,
         tags: params.tags,
-        text: params.text,
-        to: Array.isArray(params.to) ? params.to : [params.to],
+        text: params.text
+          ? `Email destinado a: ${originalRecipient}\n\n${params.text}`
+          : params.text,
+        to: [targetEmail],
       };
 
       const response = await resend.emails.send(emailData);
@@ -260,6 +283,34 @@ export class ResendService {
         // Don't fail the email operation if notification creation fails
       }
     }
+
+    return emailResponse;
+  }
+
+  static async sendWelcomeEmail(data: WelcomeEmailData): Promise<EmailResponse> {
+    const isUser = data.userType === 'USER';
+    const subject = isUser
+      ? '¡Bienvenido a ReservApp! 🎉'
+      : '¡Bienvenido a ReservApp para Negocios! 🏨';
+
+    const html = isUser
+      ? this.generateUserWelcomeHTML(data)
+      : this.generateBusinessWelcomeHTML(data);
+
+    const text = isUser
+      ? this.generateUserWelcomeText(data)
+      : this.generateBusinessWelcomeText(data);
+
+    const emailResponse = await this.sendEmail({
+      html,
+      subject,
+      tags: [
+        { name: 'type', value: isUser ? 'user_welcome' : 'business_welcome' },
+        { name: 'user_type', value: data.userType.toLowerCase() },
+      ],
+      text,
+      to: data.userEmail,
+    });
 
     return emailResponse;
   }
@@ -670,6 +721,206 @@ INFORMACIÓN IMPORTANTE:
 ---
 ${this.getFromName()} - Sistema de Reservas
 Este es un email automático, por favor no responda a este mensaje.
+    `.trim();
+  }
+
+  // Welcome Email Templates
+  private static generateUserWelcomeHTML(data: WelcomeEmailData): string {
+    return `
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>¡Bienvenido a ReservApp!</title>
+    <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #333; }
+        .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+        .header { background: linear-gradient(135deg, #8B5CF6, #F97316); color: white; padding: 30px; text-align: center; border-radius: 8px 8px 0 0; }
+        .content { background: white; padding: 30px; border: 1px solid #e5e7eb; }
+        .footer { background: #f9fafb; padding: 20px; text-align: center; border-radius: 0 0 8px 8px; font-size: 14px; color: #6b7280; }
+        .benefits { background: #f0fdf4; padding: 20px; border-radius: 8px; margin: 20px 0; border: 1px solid #bbf7d0; }
+        .benefit-item { padding: 10px 0; border-bottom: 1px solid #d1fae5; }
+        .benefit-item:last-child { border-bottom: none; }
+        .cta-button { display: inline-block; background: #8B5CF6; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; margin: 20px 0; }
+        .stats { display: flex; justify-content: space-around; margin: 20px 0; }
+        .stat { text-align: center; }
+        .stat-number { font-size: 24px; font-weight: bold; color: #8B5CF6; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>¡Bienvenido a ReservApp! 🎉</h1>
+            <p>Tu aventura de viajes únicos comienza aquí</p>
+        </div>
+        
+        <div class="content">
+            <p>¡Hola ${data.firstName || data.userName}!</p>
+            
+            <p>¡Gracias por unirte a ReservApp! Como usuario pionero, tienes acceso a experiencias de viaje únicas que no encontrarás en ninguna otra plataforma.</p>
+            
+            <div class="stats">
+                <div class="stat">
+                    <div class="stat-number">100+</div>
+                    <div>Hoteles boutique únicos</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-number">500+</div>
+                    <div>Experiencias locales</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-number">25%</div>
+                    <div>Menos vs otras plataformas</div>
+                </div>
+            </div>
+            
+            <div class="benefits">
+                <h3>🎁 Beneficios de Usuario Pionero:</h3>
+                <div class="benefit-item">✅ Descuentos especiales en venues boutique</div>
+                <div class="benefit-item">✅ Experiencias auténticas locales</div>
+                <div class="benefit-item">✅ Comunidad privada de viajeros conscientes</div>
+                <div class="benefit-item">✅ Soporte prioritario premium</div>
+            </div>
+            
+            <p>Próximamente lanzaremos nuestra aplicación móvil con funcionalidades completas de reserva. ¡Serás el primero en saberlo!</p>
+            
+            <div style="text-align: center;">
+                <a href="https://reservapp-web.vercel.app" class="cta-button">Explorar Destinos</a>
+            </div>
+        </div>
+        
+        <div class="footer">
+            <p>¡Gracias por ser parte de la revolución del turismo local!</p>
+            <p>${this.getFromName()} - Tu compañero de viajes únicos</p>
+        </div>
+    </div>
+</body>
+</html>`;
+  }
+
+  private static generateUserWelcomeText(data: WelcomeEmailData): string {
+    return `
+¡BIENVENIDO A RESERVAPP! 🎉
+
+¡Hola ${data.firstName || data.userName}!
+
+¡Gracias por unirte a ReservApp! Como usuario pionero, tienes acceso a experiencias de viaje únicas que no encontrarás en ninguna otra plataforma.
+
+🏨 100+ Hoteles boutique únicos
+🌟 500+ Experiencias locales exclusivas  
+💰 25% Menos vs otras plataformas
+
+🎁 BENEFICIOS DE USUARIO PIONERO:
+✅ Descuentos especiales en venues boutique
+✅ Experiencias auténticas locales
+✅ Comunidad privada de viajeros conscientes
+✅ Soporte prioritario premium
+
+Próximamente lanzaremos nuestra aplicación móvil con funcionalidades completas de reserva. ¡Serás el primero en saberlo!
+
+Explora destinos: https://reservapp-web.vercel.app
+
+¡Gracias por ser parte de la revolución del turismo local!
+
+---
+${this.getFromName()} - Tu compañero de viajes únicos
+    `.trim();
+  }
+
+  private static generateBusinessWelcomeHTML(data: WelcomeEmailData): string {
+    return `
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>¡Bienvenido a ReservApp para Negocios!</title>
+    <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #333; }
+        .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+        .header { background: linear-gradient(135deg, #10b981, #059669); color: white; padding: 30px; text-align: center; border-radius: 8px 8px 0 0; }
+        .content { background: white; padding: 30px; border: 1px solid #e5e7eb; }
+        .footer { background: #f9fafb; padding: 20px; text-align: center; border-radius: 0 0 8px 8px; font-size: 14px; color: #6b7280; }
+        .benefits { background: #f0fdf4; padding: 20px; border-radius: 8px; margin: 20px 0; border: 1px solid #bbf7d0; }
+        .benefit-item { padding: 10px 0; border-bottom: 1px solid #d1fae5; }
+        .benefit-item:last-child { border-bottom: none; }
+        .cta-button { display: inline-block; background: #10b981; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; margin: 20px 0; }
+        .highlight { background: #fef3c7; padding: 15px; border-radius: 8px; border-left: 4px solid #f59e0b; margin: 20px 0; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>¡Bienvenido a ReservApp! 🏨</h1>
+            <p>Tu socio estratégico para crecer tu negocio turístico</p>
+        </div>
+        
+        <div class="content">
+            <p>¡Hola ${data.businessName || data.userName}!</p>
+            
+            <p>¡Excelente decisión! Te has unido a la plataforma que está revolucionando el turismo en México, conectando pequeños venues y negocios turísticos con viajeros que buscan experiencias auténticas.</p>
+            
+            <div class="highlight">
+                <strong>🚀 ¿Por qué ReservApp es diferente?</strong><br>
+                Nos enfocamos en venues boutique y pequeños negocios, ofreciendo menor comisión, pagos más rápidos y herramientas de gestión integradas.
+            </div>
+            
+            <div class="benefits">
+                <h3>💼 Beneficios para tu Negocio:</h3>
+                <div class="benefit-item">💰 Comisiones más bajas que la competencia</div>
+                <div class="benefit-item">⚡ Pagos rápidos - sin esperas largas</div>
+                <div class="benefit-item">📊 Panel de control completo</div>
+                <div class="benefit-item">🎯 Marketing dirigido a nichos específicos</div>
+                <div class="benefit-item">📞 Soporte dedicado 24/7</div>
+                <div class="benefit-item">📱 Herramientas de gestión integradas</div>
+            </div>
+            
+            <p><strong>Próximos pasos:</strong></p>
+            <p>Nuestro equipo se pondrá en contacto contigo para ayudarte a configurar tu perfil de negocio y comenzar a recibir reservas.</p>
+            
+            <div style="text-align: center;">
+                <a href="https://reservapp-web.vercel.app/admin" class="cta-button">Acceder al Panel</a>
+            </div>
+        </div>
+        
+        <div class="footer">
+            <p>¡Juntos haremos crecer tu negocio turístico!</p>
+            <p>${this.getFromName()} - Tu socio estratégico de crecimiento</p>
+        </div>
+    </div>
+</body>
+</html>`;
+  }
+
+  private static generateBusinessWelcomeText(data: WelcomeEmailData): string {
+    return `
+¡BIENVENIDO A RESERVAPP PARA NEGOCIOS! 🏨
+
+¡Hola ${data.businessName || data.userName}!
+
+¡Excelente decisión! Te has unido a la plataforma que está revolucionando el turismo en México, conectando pequeños venues y negocios turísticos con viajeros que buscan experiencias auténticas.
+
+🚀 ¿POR QUÉ RESERVAPP ES DIFERENTE?
+Nos enfocamos en venues boutique y pequeños negocios, ofreciendo menor comisión, pagos más rápidos y herramientas de gestión integradas.
+
+💼 BENEFICIOS PARA TU NEGOCIO:
+💰 Comisiones más bajas que la competencia
+⚡ Pagos rápidos - sin esperas largas
+📊 Panel de control completo
+🎯 Marketing dirigido a nichos específicos
+📞 Soporte dedicado 24/7
+📱 Herramientas de gestión integradas
+
+PRÓXIMOS PASOS:
+Nuestro equipo se pondrá en contacto contigo para ayudarte a configurar tu perfil de negocio y comenzar a recibir reservas.
+
+Panel de administración: https://reservapp-web.vercel.app/admin
+
+¡Juntos haremos crecer tu negocio turístico!
+
+---
+${this.getFromName()} - Tu socio estratégico de crecimiento
     `.trim();
   }
 

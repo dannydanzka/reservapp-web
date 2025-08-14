@@ -6,25 +6,25 @@ export const LandingContainer = styled.div`
 
 export const HeroSection = styled.section`
   align-items: center;
-  background: linear-gradient(
-    135deg,
-    ${({ theme }) => theme.colors.primary[500]} 0%,
-    ${({ theme }) => theme.colors.secondary[500]} 100%
-  );
-  color: white;
+  background: ${({ theme }) => theme.colors.primary[50]};
+  border-bottom: 1px solid ${({ theme }) => theme.colors.primary[100]};
+  color: ${({ theme }) => theme.colors.primary[900]};
   display: flex;
   flex-direction: column;
-  padding: 6rem 2rem;
+  padding: 4rem 2rem;
+  position: relative;
   text-align: center;
 `;
 
 export const HeroTitle = styled.h1`
+  color: ${({ theme }) => theme.colors.primary[900]};
   font-family: '"Montserrat"', sans-serif;
   font-size: 3.5rem;
   font-weight: 800;
   line-height: 1.2;
   margin-bottom: 1.5rem;
   max-width: 800px;
+  text-shadow: 0 1px 3px rgb(0 0 0 / 0.1);
 
   @media (width <= 768px) {
     font-size: 2.5rem;
@@ -32,44 +32,83 @@ export const HeroTitle = styled.h1`
 `;
 
 export const HeroSubtitle = styled.p`
+  color: ${({ theme }) => theme.colors.primary[700]};
   font-family: '"Lato"', sans-serif;
   font-size: 1.5rem;
   line-height: 1.6;
   margin-bottom: 3rem;
   max-width: 700px;
-  opacity: 0.9;
 
   @media (width <= 768px) {
     font-size: 1.25rem;
   }
+
+  strong {
+    color: ${({ theme }) => theme.colors.secondary[600]};
+    font-weight: 700;
+  }
+`;
+
+export const HeroGrid = styled.div`
+  align-items: center;
+  display: grid;
+  gap: 4rem;
+  grid-template-columns: 1fr 400px;
+  margin: 0 auto;
+  max-width: 1200px;
+
+  @media (width <= 1024px) {
+    gap: 3rem;
+    grid-template-columns: 1fr;
+    text-align: center;
+  }
+`;
+
+export const HeroContent = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
 `;
 
 export const HeroButtons = styled.div`
   display: flex;
-  flex-wrap: wrap;
   gap: 1rem;
   justify-content: center;
+  margin-top: 2rem;
+
+  @media (width <= 768px) {
+    align-items: center;
+    flex-direction: column;
+  }
+`;
+
+export const MobileAppShowcase = styled.div`
+  align-items: center;
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
 `;
 
 export const AppDownloadSection = styled.div`
   backdrop-filter: blur(10px);
-  background-color: rgb(255 255 255 / 0.1);
+  background-color: rgb(255 255 255 / 0.8);
   border-radius: ${({ theme }) => theme.borderRadius.xl};
-  margin-top: ${({ theme }) => theme.spacing[8]};
-  padding: ${({ theme }) => theme.spacing[6]};
+  box-shadow: ${({ theme }) => theme.shadows.lg};
+  padding: 2rem;
   text-align: center;
 `;
 
 export const AppDownloadTitle = styled.h3`
-  color: white;
+  color: ${({ theme }) => theme.colors.primary[900]};
   font-family: '"Montserrat"', sans-serif;
   font-size: 1.5rem;
   font-weight: 600;
   margin-bottom: ${({ theme }) => theme.spacing[3]};
+  text-shadow: 0 1px 3px rgb(0 0 0 / 0.1);
 `;
 
 export const AppDownloadText = styled.p`
-  color: rgb(255 255 255 / 0.9);
+  color: ${({ theme }) => theme.colors.primary[700]};
   font-family: '"Lato"', sans-serif;
   font-size: 1rem;
   margin-bottom: ${({ theme }) => theme.spacing[4]};
@@ -225,51 +264,12 @@ export const ServiceDescription = styled.p`
   line-height: 1.4;
 `;
 
-export const HowItWorksSection = styled.section`
+export const PricingSection = styled.section`
   background-color: ${({ theme }) => theme.colors.primary[50]};
   padding: 6rem 2rem;
 `;
 
-export const StepsContainer = styled.div`
-  display: grid;
-  gap: 3rem;
-  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-  margin: 0 auto;
-  max-width: 1000px;
-`;
-
-export const StepCard = styled.div`
-  position: relative;
-  text-align: center;
-`;
-
-export const StepNumber = styled.div`
-  align-items: center;
-  background: ${({ theme }) => theme.colors.secondary[500]};
-  border-radius: 50%;
-  color: white;
-  display: flex;
-  font-size: 1.5rem;
-  font-weight: 700;
-  height: 60px;
-  justify-content: center;
-  margin: 0 auto 2rem;
-  width: 60px;
-`;
-
-export const StepTitle = styled.h4`
-  color: ${({ theme }) => theme.colors.primary[900]};
-  font-size: 1.25rem;
-  font-weight: 600;
-  margin-bottom: 1rem;
-`;
-
-export const StepDescription = styled.p`
-  color: ${({ theme }) => theme.colors.primary[700]};
-  line-height: 1.5;
-`;
-
-export const PricingSection = styled.section`
+export const PricingSection2 = styled.section`
   background-color: white;
   padding: 6rem 2rem;
 `;
@@ -363,6 +363,7 @@ export const CTASection = styled.section`
 `;
 
 export const CTATitle = styled.h2`
+  color: white;
   font-size: 2.5rem;
   font-weight: 700;
   margin-bottom: 1rem;
@@ -375,145 +376,6 @@ export const CTASubtitle = styled.p`
   margin-right: auto;
   max-width: 600px;
   opacity: 0.9;
-`;
-
-export const MobileAppSection = styled.section`
-  background: linear-gradient(
-    135deg,
-    ${({ theme }) => theme.colors.primary[50]} 0%,
-    ${({ theme }) => theme.colors.secondary[50]} 100%
-  );
-  padding: 6rem 2rem;
-`;
-
-export const MobileAppContainer = styled.div`
-  align-items: center;
-  display: grid;
-  gap: 4rem;
-  grid-template-columns: 1fr 1fr;
-  margin: 0 auto;
-  max-width: 1200px;
-
-  @media (width <= 968px) {
-    grid-template-columns: 1fr;
-    text-align: center;
-  }
-`;
-
-export const MobileAppContent = styled.div`
-  @media (width <= 968px) {
-    order: 2;
-  }
-`;
-
-export const MobileAppTitle = styled.h2`
-  color: ${({ theme }) => theme.colors.primary[900]};
-  font-size: 2.5rem;
-  font-weight: 700;
-  margin-bottom: 1.5rem;
-
-  @media (width <= 768px) {
-    font-size: 2rem;
-  }
-`;
-
-export const MobileAppDescription = styled.p`
-  color: ${({ theme }) => theme.colors.primary[700]};
-  font-size: 1.125rem;
-  line-height: 1.6;
-  margin-bottom: 2rem;
-`;
-
-export const MobileAppFeatures = styled.div`
-  display: grid;
-  gap: 1rem;
-  grid-template-columns: 1fr 1fr;
-  margin-bottom: 3rem;
-
-  @media (width <= 568px) {
-    grid-template-columns: 1fr;
-  }
-`;
-
-export const FeatureItem = styled.div`
-  align-items: center;
-  display: flex;
-  gap: 0.75rem;
-`;
-
-export const MobileFeatureIcon = styled.div`
-  align-items: center;
-  background: ${({ theme }) => theme.colors.secondary[500]};
-  border-radius: 50%;
-  color: white;
-  display: flex;
-  font-size: 12px;
-  height: 24px;
-  justify-content: center;
-  width: 24px;
-`;
-
-export const FeatureText = styled.span`
-  color: ${({ theme }) => theme.colors.primary[700]};
-  font-weight: 500;
-`;
-
-export const DownloadButtons = styled.div`
-  display: flex;
-  flex-wrap: wrap;
-  gap: 1rem;
-
-  @media (width <= 968px) {
-    justify-content: center;
-  }
-`;
-
-export const DownloadButton = styled.a`
-  align-items: center;
-  background: ${({ theme }) => theme.colors.primary[900]};
-  border-radius: 12px;
-  color: white;
-  display: flex;
-  font-weight: 600;
-  gap: 0.75rem;
-  justify-content: center;
-  min-width: 160px;
-  padding: 0.875rem 1.5rem;
-  text-decoration: none;
-  transition: all 0.3s ease;
-
-  &:hover {
-    background: ${({ theme }) => theme.colors.primary[800]};
-    box-shadow: 0 8px 20px rgb(0 0 0 / 0.15);
-    color: white;
-    text-decoration: none;
-    transform: translateY(-2px);
-  }
-
-  &.coming-soon {
-    background: ${({ theme }) => theme.colors.secondary[200]};
-    color: ${({ theme }) => theme.colors.secondary[700]};
-    cursor: not-allowed;
-
-    &:hover {
-      background: ${({ theme }) => theme.colors.secondary[200]};
-      box-shadow: none;
-      color: ${({ theme }) => theme.colors.secondary[700]};
-      transform: none;
-    }
-  }
-`;
-
-export const MobileAppScreenshots = styled.div`
-  align-items: center;
-  display: flex;
-  justify-content: center;
-  position: relative;
-
-  @media (width <= 968px) {
-    margin-bottom: 2rem;
-    order: 1;
-  }
 `;
 
 export const ScreenshotImage = styled.img`
@@ -533,38 +395,17 @@ export const ScreenshotImage = styled.img`
   }
 `;
 
-export const MobileDeviceMockup = styled.div`
-  align-items: center;
-  display: flex;
-  justify-content: center;
-  padding: 2rem;
-  position: relative;
-
-  &::before {
-    background: linear-gradient(
-      135deg,
-      ${({ theme }) => theme.colors.primary[200]} 0%,
-      ${({ theme }) => theme.colors.secondary[200]} 100%
-    );
-    border-radius: 40px;
-    content: '';
-    height: 600px;
-    left: 50%;
-    opacity: 0.1;
-    position: absolute;
-    top: 0;
-    transform: translateX(-50%);
-    width: 300px;
-    z-index: -1;
-  }
-`;
-
 export const MobileScreenshotWrapper = styled.div`
-  max-width: 300px;
+  max-width: 400px;
   position: relative;
   width: 100%;
 
   @media (width <= 768px) {
     max-width: 250px;
   }
+`;
+
+export const AppStoreText = styled.div`
+  font-size: 0.9rem;
+  font-weight: 600;
 `;

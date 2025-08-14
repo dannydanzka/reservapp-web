@@ -1,25 +1,110 @@
 import bcrypt from 'bcryptjs';
 
 import {
+  ContactFormStatus,
+  NotificationType,
   PaymentStatus,
   PrismaClient,
+  ReceiptStatus,
+  ReceiptType,
   ReservationStatus,
   ServiceType,
   UserRoleEnum,
   VenueType,
+  BusinessType,
+  AccountType,
+  DepositStatus,
 } from '@prisma/client';
 
 const prisma = new PrismaClient();
 
+// Helper function to generate random date within the last 6 months
+function getRandomDateInLast6Months(): Date {
+  const now = new Date();
+  const sixMonthsAgo = new Date();
+  sixMonthsAgo.setMonth(now.getMonth() - 6);
+  const randomTime = sixMonthsAgo.getTime() + Math.random() * (now.getTime() - sixMonthsAgo.getTime());
+  return new Date(randomTime);
+}
+
+// Helper function to generate dates with business growth pattern
+function getBusinessGrowthDate(monthsAgo: number, growthFactor: number = 1): Date {
+  const now = new Date();
+  const targetMonth = new Date();
+  targetMonth.setMonth(now.getMonth() - monthsAgo);
+  
+  // Add some randomization within the month
+  let daysInMonth = new Date(targetMonth.getFullYear(), targetMonth.getMonth() + 1, 0).getDate();
+  
+  // For current month (August), only use days up to 14
+  if (monthsAgo === 0) {
+    daysInMonth = Math.min(14, daysInMonth);
+  }
+  
+  const randomDay = Math.floor(Math.random() * daysInMonth) + 1;
+  targetMonth.setDate(randomDay);
+  targetMonth.setHours(Math.floor(Math.random() * 24), Math.floor(Math.random() * 60));
+  
+  return targetMonth;
+}
+
+// Helper function to get random amount based on service type and month
+function getRealisticAmount(serviceType: ServiceType, monthsAgo: number): number {
+  let baseAmount = 1000;
+  
+  switch (serviceType) {
+    case ServiceType.ACCOMMODATION:
+      baseAmount = 1200 + Math.random() * 2800; // $1,200 - $4,000
+      break;
+    case ServiceType.DINING:
+      baseAmount = 300 + Math.random() * 700; // $300 - $1,000
+      break;
+    case ServiceType.SPA_WELLNESS:
+      baseAmount = 500 + Math.random() * 1500; // $500 - $2,000
+      break;
+    case ServiceType.TOUR_EXPERIENCE:
+      baseAmount = 800 + Math.random() * 1200; // $800 - $2,000
+      break;
+    case ServiceType.EVENT_MEETING:
+      baseAmount = 2000 + Math.random() * 8000; // $2,000 - $10,000
+      break;
+    case ServiceType.ENTERTAINMENT:
+      baseAmount = 400 + Math.random() * 600; // $400 - $1,000
+      break;
+  }
+  
+  // Seasonal variations - higher prices in recent months (growth)
+  let seasonalMultiplier;
+  
+  if (monthsAgo === 0) {
+    // August - continuation of peak season
+    seasonalMultiplier = 1.35; // 35% increase
+  } else if (monthsAgo === 1) {
+    // July - peak season with highest prices
+    seasonalMultiplier = 1.40; // 40% increase (highest)
+  } else {
+    // Feb to June - gradual growth
+    seasonalMultiplier = 1 + (6 - monthsAgo) * 0.05; // 5% growth per month
+  }
+  
+  return Math.round(baseAmount * seasonalMultiplier);
+}
+
 async function main() {
-  console.log('🌱 Starting comprehensive database seeding...');
+  console.log('🌱 Starting comprehensive 6-month historical database seeding...');
 
   // Clear existing data (order matters due to foreign key constraints)
+  await prisma.contactForm.deleteMany();
+  await prisma.receipt.deleteMany();
+  await prisma.notification.deleteMany();
   await prisma.review.deleteMany();
+  await prisma.paymentHistory.deleteMany();
   await prisma.payment.deleteMany();
   await prisma.reservation.deleteMany();
   await prisma.service.deleteMany();
   await prisma.venue.deleteMany();
+  await prisma.bankAccount.deleteMany();
+  await prisma.businessAccount.deleteMany();
   await prisma.user.deleteMany();
   await prisma.systemConfig.deleteMany();
 
@@ -28,2437 +113,1377 @@ async function main() {
   // Hash password for demo users
   const hashedPassword = await bcrypt.hash('password123', 12);
 
-  // Create comprehensive user base
-  const users = await Promise.all([
-    // Admin Users
-    prisma.user.create({
-      data: {
-        email: 'admin@reservapp.com',
-        firstName: 'Administrador',
-        lastName: 'Sistema',
-        password: hashedPassword,
-        phone: '+52 33 1234 5678',
-        role: UserRoleEnum.ADMIN,
-        stripeCustomerId: 'cus_admin123',
-      },
-    }),
-    prisma.user.create({
-      data: {
-        email: 'manager@reservapp.com',
-        firstName: 'Gerente',
-        lastName: 'General',
-        password: hashedPassword,
-        phone: '+52 33 8765 4321',
-        role: UserRoleEnum.MANAGER,
-        stripeCustomerId: 'cus_manager123',
-      },
-    }),
-    prisma.user.create({
-      data: {
-        email: 'employee@reservapp.com',
-        firstName: 'Empleado',
-        lastName: 'Servicio',
-        password: hashedPassword,
-        phone: '+52 33 5555 1234',
-        role: UserRoleEnum.EMPLOYEE,
-      },
-    }),
+  console.log('👥 Creating users with roles...');
 
-    // Regular Customers - Happy Path Users
+  // 1. SUPER ADMIN
+  const superAdmin = await prisma.user.create({
+    data: {
+      email: 'admin@reservapp.com',
+      firstName: 'Sistema',
+      lastName: 'Administrador',
+      password: hashedPassword,
+      phone: '+52 33 1111 1111',
+      role: UserRoleEnum.SUPER_ADMIN,
+      stripeCustomerId: 'cus_admin123',
+      createdAt: getBusinessGrowthDate(6),
+    },
+  });
+
+  // 2. DEMO ADMIN
+  const demoAdmin = await prisma.user.create({
+    data: {
+      email: 'demo@reservapp.com',
+      firstName: 'Demo',
+      lastName: 'Administrator',
+      password: hashedPassword,
+      phone: '+52 33 9999 9999',
+      role: UserRoleEnum.ADMIN,
+      stripeCustomerId: 'cus_demo123',
+      createdAt: getBusinessGrowthDate(5),
+    },
+  });
+
+  // 3. DEMO USER
+  const demoUser = await prisma.user.create({
+    data: {
+      email: 'user@reservapp.com',
+      firstName: 'Demo',
+      lastName: 'Usuario',
+      password: hashedPassword,
+      phone: '+52 33 8888 8888',
+      role: UserRoleEnum.USER,
+      stripeCustomerId: 'cus_user123',
+      createdAt: getBusinessGrowthDate(4),
+    },
+  });
+
+  // 4-8. 5 BUSINESS ADMINS (Hotel/Restaurant Owners)
+  const businessOwners = await Promise.all([
+    // Business 1: Luxury Hotel Chain
+    prisma.user.create({
+      data: {
+        email: 'admin.luxury@reservapp.com',
+        firstName: 'Roberto',
+        lastName: 'Salazar',
+        password: hashedPassword,
+        phone: '+52 33 2222 3333',
+        role: UserRoleEnum.ADMIN,
+        stripeCustomerId: 'cus_luxury123',
+        createdAt: getBusinessGrowthDate(6),
+      },
+    }),
+    // Business 2: Restaurant Group
+    prisma.user.create({
+      data: {
+        email: 'admin.dining@reservapp.com',
+        firstName: 'Patricia',
+        lastName: 'Morales',
+        password: hashedPassword,
+        phone: '+52 33 4444 5555',
+        role: UserRoleEnum.ADMIN,
+        stripeCustomerId: 'cus_dining123',
+        createdAt: getBusinessGrowthDate(5),
+      },
+    }),
+    // Business 3: Wellness & Spa
+    prisma.user.create({
+      data: {
+        email: 'admin.wellness@reservapp.com',
+        firstName: 'Carlos',
+        lastName: 'Mendoza',
+        password: hashedPassword,
+        phone: '+52 33 6666 7777',
+        role: UserRoleEnum.ADMIN,
+        stripeCustomerId: 'cus_wellness123',
+        createdAt: getBusinessGrowthDate(4),
+      },
+    }),
+    // Business 4: Event & Entertainment
+    prisma.user.create({
+      data: {
+        email: 'admin.events@reservapp.com',
+        firstName: 'Ana',
+        lastName: 'García',
+        password: hashedPassword,
+        phone: '+52 33 8888 9999',
+        role: UserRoleEnum.ADMIN,
+        stripeCustomerId: 'cus_events123',
+        createdAt: getBusinessGrowthDate(3),
+      },
+    }),
+    // Business 5: Tourism & Tours
+    prisma.user.create({
+      data: {
+        email: 'admin.tours@reservapp.com',
+        firstName: 'Miguel',
+        lastName: 'Rivera',
+        password: hashedPassword,
+        phone: '+52 33 1010 1111',
+        role: UserRoleEnum.ADMIN,
+        stripeCustomerId: 'cus_tours123',
+        createdAt: getBusinessGrowthDate(2),
+      },
+    }),
+  ]);
+
+  // 9-20. Regular users distributed across different months (12 users)
+  const regularUsers = await Promise.all([
+    // Month 6 users (early adopters)
     prisma.user.create({
       data: {
         email: 'juan.perez@gmail.com',
         firstName: 'Juan Carlos',
-        lastName: 'Pérez González',
+        lastName: 'Pérez',
         password: hashedPassword,
-        phone: '+52 33 1111 2222',
+        phone: '+52 33 1234 5678',
         role: UserRoleEnum.USER,
         stripeCustomerId: 'cus_juan123',
+        createdAt: getBusinessGrowthDate(6),
       },
     }),
     prisma.user.create({
       data: {
         email: 'maria.lopez@gmail.com',
         firstName: 'María Elena',
-        lastName: 'López Hernández',
+        lastName: 'López',
         password: hashedPassword,
-        phone: '+52 33 3333 4444',
+        phone: '+52 33 2345 6789',
         role: UserRoleEnum.USER,
         stripeCustomerId: 'cus_maria123',
+        createdAt: getBusinessGrowthDate(6),
       },
     }),
+    // Month 5 users
     prisma.user.create({
       data: {
         email: 'carlos.rodriguez@hotmail.com',
-        firstName: 'Carlos Alberto',
-        lastName: 'Rodríguez Silva',
+        firstName: 'Carlos',
+        lastName: 'Rodríguez',
         password: hashedPassword,
-        phone: '+52 33 5555 6666',
+        phone: '+52 33 3456 7890',
         role: UserRoleEnum.USER,
         stripeCustomerId: 'cus_carlos123',
-      },
-    }),
-
-    // Customers with issues - Sad Path Users
-    prisma.user.create({
-      data: {
-        email: 'ana.martinez@yahoo.com',
-        firstName: 'Ana Patricia',
-        lastName: 'Martínez Ruiz',
-        password: hashedPassword,
-        phone: '+52 33 7777 8888',
-        role: UserRoleEnum.USER,
-        stripeCustomerId: 'cus_ana123',
+        createdAt: getBusinessGrowthDate(5),
       },
     }),
     prisma.user.create({
       data: {
-        email: 'roberto.garcia@outlook.com',
-        firstName: 'Roberto',
-        lastName: 'García Morales',
+        email: 'lucia.martinez@yahoo.com',
+        firstName: 'Lucía',
+        lastName: 'Martínez',
         password: hashedPassword,
-        phone: '+52 33 9999 0000',
-        role: UserRoleEnum.USER,
-        stripeCustomerId: 'cus_roberto123',
-      },
-    }),
-    prisma.user.create({
-      data: {
-        email: 'lucia.torres@gmail.com',
-        firstName: 'Lucía Fernanda',
-        lastName: 'Torres Jiménez',
-        password: hashedPassword,
-        phone: '+52 33 2222 3333',
+        phone: '+52 33 4567 8901',
         role: UserRoleEnum.USER,
         stripeCustomerId: 'cus_lucia123',
+        createdAt: getBusinessGrowthDate(5),
+      },
+    }),
+    // Month 4 users
+    prisma.user.create({
+      data: {
+        email: 'diego.hernandez@gmail.com',
+        firstName: 'Diego',
+        lastName: 'Hernández',
+        password: hashedPassword,
+        phone: '+52 33 5678 9012',
+        role: UserRoleEnum.USER,
+        stripeCustomerId: 'cus_diego123',
+        createdAt: getBusinessGrowthDate(4),
       },
     }),
     prisma.user.create({
       data: {
-        email: 'diego.sanchez@gmail.com',
-        firstName: 'Diego Alejandro',
-        lastName: 'Sánchez Vega',
+        email: 'sofia.gonzalez@outlook.com',
+        firstName: 'Sofía',
+        lastName: 'González',
         password: hashedPassword,
-        phone: '+52 33 4444 5555',
+        phone: '+52 33 6789 0123',
         role: UserRoleEnum.USER,
+        stripeCustomerId: 'cus_sofia123',
+        createdAt: getBusinessGrowthDate(4),
+      },
+    }),
+    // Month 3 users (growth phase)
+    prisma.user.create({
+      data: {
+        email: 'fernando.torres@gmail.com',
+        firstName: 'Fernando',
+        lastName: 'Torres',
+        password: hashedPassword,
+        phone: '+52 33 7890 1234',
+        role: UserRoleEnum.USER,
+        stripeCustomerId: 'cus_fernando123',
+        createdAt: getBusinessGrowthDate(3),
+      },
+    }),
+    prisma.user.create({
+      data: {
+        email: 'valentina.ruiz@hotmail.com',
+        firstName: 'Valentina',
+        lastName: 'Ruiz',
+        password: hashedPassword,
+        phone: '+52 33 8901 2345',
+        role: UserRoleEnum.USER,
+        stripeCustomerId: 'cus_valentina123',
+        createdAt: getBusinessGrowthDate(3),
+      },
+    }),
+    // Month 2 users (acceleration)
+    prisma.user.create({
+      data: {
+        email: 'sebastian.vargas@gmail.com',
+        firstName: 'Sebastián',
+        lastName: 'Vargas',
+        password: hashedPassword,
+        phone: '+52 33 9012 3456',
+        role: UserRoleEnum.USER,
+        stripeCustomerId: 'cus_sebastian123',
+        createdAt: getBusinessGrowthDate(2),
+      },
+    }),
+    prisma.user.create({
+      data: {
+        email: 'isabella.castro@yahoo.com',
+        firstName: 'Isabella',
+        lastName: 'Castro',
+        password: hashedPassword,
+        phone: '+52 33 0123 4567',
+        role: UserRoleEnum.USER,
+        stripeCustomerId: 'cus_isabella123',
+        createdAt: getBusinessGrowthDate(2),
+      },
+    }),
+    // Month 1 users (recent growth)
+    prisma.user.create({
+      data: {
+        email: 'alejandro.moreno@gmail.com',
+        firstName: 'Alejandro',
+        lastName: 'Moreno',
+        password: hashedPassword,
+        phone: '+52 33 1357 2468',
+        role: UserRoleEnum.USER,
+        stripeCustomerId: 'cus_alejandro123',
+        createdAt: getBusinessGrowthDate(1),
+      },
+    }),
+    prisma.user.create({
+      data: {
+        email: 'camila.jimenez@outlook.com',
+        firstName: 'Camila',
+        lastName: 'Jiménez',
+        password: hashedPassword,
+        phone: '+52 33 2468 1357',
+        role: UserRoleEnum.USER,
+        stripeCustomerId: 'cus_camila123',
+        createdAt: getBusinessGrowthDate(1),
       },
     }),
   ]);
 
-  console.log('👥 Created 10 users with diverse profiles');
+  console.log(`✅ Created 20 users total: 1 super admin, 1 demo admin, 1 demo user, 5 business owners, 12 regular users`);
 
-  // Create comprehensive venues in various locations
-  const casaSalazar = await prisma.venue.create({
-    data: {
-      address: 'Av. Juárez 170, Zona Centro',
-      category: VenueType.ACCOMMODATION,
-      checkInTime: '15:00',
-      checkOutTime: '12:00',
-      city: 'Ciudad Central',
-      country: 'México',
-      description:
-        'Boutique venue ubicado en el corazón del centro histórico, combinando arquitectura colonial con comodidades modernas. Reconocido por su excelente servicio y ubicación privilegiada.',
-      email: 'reservas@casasalazar.com',
-      latitude: 20.6737777,
-      longitude: -103.3475935,
-      name: 'Casa Salazar',
-      phone: '+52 33 3658 5438',
-      rating: 4.5,
-      state: 'Jalisco',
-      website: 'https://casasalazar.com',
-      zipCode: '44100',
-    },
-  });
+  console.log('🏢 Creating business accounts for business owners...');
 
-  const moralesVenue = await prisma.venue.create({
-    data: {
-      address: 'Av. Corona 243, Centro Histórico',
-      category: VenueType.ACCOMMODATION,
-      checkInTime: '15:00',
-      checkOutTime: '13:00',
-      city: 'Ciudad Central',
-      country: 'México',
-      description:
-        'Venue histórico en el centro de la ciudad, famoso por su arquitectura colonial y su ubicación privilegiada.',
-      email: 'reservaciones@moralesvenue.com.mx',
-      latitude: 20.6755556,
-      longitude: -103.3444444,
-      name: 'Morales Historical & Colonial Downtown Core',
-      phone: '+52 33 3658 5232',
-      rating: 4.3,
-      state: 'Jalisco',
-      website: 'https://moralesvenue.com.mx',
-      zipCode: '44100',
-    },
-  });
-
-  const restauranteSantoDomingo = await prisma.venue.create({
-    data: {
-      address: 'Belén 139, Centro Histórico',
-      category: VenueType.RESTAURANT,
-      city: 'Ciudad Central',
-      country: 'México',
-      description:
-        'Restaurante tradicional especializado en birria y cocina regional desde 1950. Patrimonio culinario de calidad.',
-      email: 'contacto@santodomingorestaurante.com',
-      latitude: 20.6755556,
-      longitude: -103.3444444,
-      name: 'Restaurante Santo Domingo',
-      phone: '+52 33 3613 6334',
-      rating: 4.7,
-      state: 'Jalisco',
-      zipCode: '44100',
-    },
-  });
-
-  const restaurantHueso = await prisma.venue.create({
-    data: {
-      address: 'Av. México 2903, Ladron de Guevara',
-      category: VenueType.RESTAURANT,
-      city: 'Ciudad Central',
-      country: 'México',
-      description:
-        'Restaurante de alta cocina mexicana contemporánea, reconocido internacionalmente por su diseño único y propuesta gastronómica.',
-      email: 'reservas@huesorestaurante.com',
-      latitude: 20.6597222,
-      longitude: -103.3875,
-      name: 'Hueso Restaurante',
-      phone: '+52 33 3647 7474',
-      rating: 4.8,
-      state: 'Jalisco',
-      website: 'https://huesorestaurante.com',
-      zipCode: '44620',
-    },
-  });
-
-  const spaVitania = await prisma.venue.create({
-    data: {
-      address: 'Av. Patria 1501, Col. Puerta de Hierro',
-      category: VenueType.SPA,
-      city: 'Zapopan',
-      country: 'México',
-      description:
-        'Spa de lujo especializado en tratamientos holísticos y medicina alternativa. Experiencia de relajación total.',
-      email: 'reservas@vitaniaspa.mx',
-      latitude: 20.6666667,
-      longitude: -103.4166667,
-      name: 'Vitania Spa',
-      phone: '+52 33 3648 4848',
-      rating: 4.8,
-      state: 'Jalisco',
-      website: 'https://vitaniaspa.mx',
-      zipCode: '45116',
-    },
-  });
-
-  const spaGrandFiesta = await prisma.venue.create({
-    data: {
-      address: 'Av. Aurelio Aceves 225, Col. Vallarta Norte',
-      category: VenueType.SPA,
-      city: 'Ciudad Central',
-      country: 'México',
-      description:
-        'Spa de clase mundial ubicado en el Grand Fiesta Americana, ofreciendo tratamientos de lujo y relajación.',
-      email: 'spa@grandfiestamericana.com',
-      latitude: 20.6666667,
-      longitude: -103.3902778,
-      name: 'Grand Fiesta Americana Spa',
-      phone: '+52 33 3818 1400',
-      rating: 4.6,
-      state: 'Jalisco',
-      zipCode: '44690',
-    },
-  });
-
-  const toursCentrales = await prisma.venue.create({
-    data: {
-      address: 'Plaza de Armas, Centro Histórico',
-      category: VenueType.TOUR_OPERATOR,
-      city: 'Ciudad Central',
-      country: 'México',
-      description:
-        'Tours culturales y gastronómicos por la región. Descubre la auténtica cultura local.',
-      email: 'info@gdlculturaltours.com',
-      latitude: 20.6755556,
-      longitude: -103.3419444,
-      name: 'Tours Culturales Regionales',
-      phone: '+52 33 1234 5678',
-      rating: 4.6,
-      state: 'Jalisco',
-      website: 'https://gdlculturaltours.com',
-      zipCode: '44100',
-    },
-  });
-
-  const toursTequila = await prisma.venue.create({
-    data: {
-      address: 'José Cuervo 73, Tequila',
-      category: VenueType.TOUR_OPERATOR,
-      city: 'Tequila',
-      country: 'México',
-      description:
-        'Tours exclusivos a las destilerías de tequila en Tequila, Jalisco. Experiencia completa del proceso del tequila.',
-      email: 'tours@mundocuervo.com',
-      latitude: 20.8811111,
-      longitude: -103.8372222,
-      name: 'Mundo Cuervo Tours',
-      phone: '+52 374 742 2442',
-      rating: 4.9,
-      state: 'Jalisco',
-      website: 'https://mundocuervo.com',
-      zipCode: '46400',
-    },
-  });
-
-  const centroEventos = await prisma.venue.create({
-    data: {
-      address: 'Av. Mariano Otero 1499, Verde Valle',
-      category: VenueType.EVENT_CENTER,
-      city: 'Ciudad Central',
-      country: 'México',
-      description:
-        'El centro de convenciones más importante del occidente de México. Espacios versátiles para todo tipo de eventos.',
-      email: 'eventos@expoguadalajara.com.mx',
-      latitude: 20.6319444,
-      longitude: -103.4047222,
-      name: 'Centro de Convenciones Central',
-      phone: '+52 33 3343 3000',
-      rating: 4.4,
-      state: 'Jalisco',
-      website: 'https://expoguadalajara.com.mx',
-      zipCode: '44550',
-    },
-  });
-
-  const teatroDegollado = await prisma.venue.create({
-    data: {
-      address: 'Av. Degollado s/n, Centro Histórico',
-      category: VenueType.ENTERTAINMENT,
-      city: 'Ciudad Central',
-      country: 'México',
-      description:
-        'Teatro histórico, sede de espectáculos culturales y eventos especiales. Patrimonio arquitectónico de la ciudad.',
-      email: 'eventos@teatrodegollado.com',
-      latitude: 20.6761111,
-      longitude: -103.3436111,
-      name: 'Teatro Degollado',
-      phone: '+52 33 3614 4773',
-      rating: 4.7,
-      state: 'Jalisco',
-      zipCode: '44100',
-    },
-  });
-
-  console.log('🏢 Created 10 diverse venues across various locations');
-
-  // Create venues array for reviews
-  const venues = [
-    casaSalazar,
-    moralesVenue,
-    restauranteSantoDomingo,
-    restaurantHueso,
-    spaVitania,
-    spaGrandFiesta,
-    toursCentrales,
-    toursTequila,
-    centroEventos,
-    teatroDegollado,
-  ];
-
-  // Create comprehensive services with realistic pricing
-
-  // Casa Salazar Services (Accommodation)
-  const casaSalazarServices = await Promise.all([
-    prisma.service.create({
+  const businessAccounts = await Promise.all([
+    // Business 1: Luxury Hotel Chain
+    prisma.businessAccount.create({
       data: {
-        amenities: [
-          'WiFi gratuito',
-          'TV LED 65"',
-          'Minibar premium',
-          'Aire acondicionado',
-          'Caja fuerte',
-          'Balcón privado',
-          'Jacuzzi',
-          'Servicio de mayordomo',
-          'Desayuno incluido',
-        ],
-        cancellationPolicy:
-          'Cancelación gratuita hasta 48 horas antes. Cancelaciones tardías tienen cargo del 50%.',
-        capacity: 4,
-        category: ServiceType.ACCOMMODATION,
-        description:
-          'Suite de lujo con decoración colonial mexicana auténtica, sala de estar separada, jacuzzi privado, vista panorámica al Centro Histórico y servicio de mayordomo personal.',
-        duration: 1440,
-        images: [
-          'https://images.unsplash.com/photo-1566665797739-1674de7a421a?w=800',
-          'https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?w=800',
-        ],
-        name: 'Suite Presidencial Colonial',
-
-        price: 4500.0,
-
-        subcategory: 'Suite Presidencial',
-        // 24 hours
-        venueId: casaSalazar.id,
+        businessName: 'Casa Salazar Luxury Hotels',
+        businessType: BusinessType.HOTEL,
+        taxId: 'CSL950315ABC',
+        legalName: 'Casa Salazar Hotelería S.A. de C.V.',
+        contactEmail: 'info@casasalazar.com',
+        contactPhone: '+52 33 2222 3333',
+        website: 'https://casasalazar.com',
+        description: 'Cadena de hoteles boutique de lujo en el occidente de México, especializada en experiencias únicas y servicios de alta calidad.',
+        address: 'Av. Juárez 170',
+        city: 'Guadalajara',
+        state: 'Jalisco',
+        country: 'México',
+        zipCode: '44100',
+        isVerified: true,
+        verificationDate: getBusinessGrowthDate(6),
+        ownerId: businessOwners[0].id,
+        createdAt: getBusinessGrowthDate(6),
       },
     }),
-    prisma.service.create({
+    // Business 2: Restaurant Group
+    prisma.businessAccount.create({
       data: {
-        amenities: [
-          'WiFi gratuito',
-          'TV LED 55"',
-          'Minibar',
-          'Aire acondicionado',
-          'Caja fuerte',
-          'Balcón',
-          'Escritorio',
-        ],
-        cancellationPolicy: 'Cancelación gratuita hasta 24 horas antes.',
-        capacity: 2,
-        category: ServiceType.ACCOMMODATION,
-        description:
-          'Suite elegante con decoración colonial mexicana, cama king size, sala de estar y vista al jardín interior.',
-        duration: 1440,
-        images: ['https://images.unsplash.com/photo-1566665797739-1674de7a421a?w=800'],
-        name: 'Suite Junior Colonial',
-        price: 2800.0,
-        subcategory: 'Suite',
-        venueId: casaSalazar.id,
+        businessName: 'Grupo Gastronómico Morales',
+        businessType: BusinessType.RESTAURANT,
+        taxId: 'GGM880422DEF',
+        legalName: 'Morales Restaurantes S.A. de C.V.',
+        contactEmail: 'contacto@grupomorales.mx',
+        contactPhone: '+52 33 4444 5555',
+        website: 'https://grupomorales.mx',
+        description: 'Grupo restaurantero especializado en cocina mexicana contemporánea y experiencias gastronómicas únicas.',
+        address: 'Av. Américas 1500',
+        city: 'Guadalajara',
+        state: 'Jalisco',
+        country: 'México',
+        zipCode: '44630',
+        isVerified: true,
+        verificationDate: getBusinessGrowthDate(5),
+        ownerId: businessOwners[1].id,
+        createdAt: getBusinessGrowthDate(5),
       },
     }),
-    prisma.service.create({
+    // Business 3: Wellness & Spa
+    prisma.businessAccount.create({
       data: {
-        amenities: [
-          'WiFi gratuito',
-          'TV LED 42"',
-          'Aire acondicionado',
-          'Escritorio',
-          'Amenidades premium',
-          'Cafetera',
-        ],
-        cancellationPolicy: 'Cancelación gratuita hasta 24 horas antes.',
-        capacity: 2,
-        category: ServiceType.ACCOMMODATION,
-        description:
-          'Habitación elegante con cama matrimonial, escritorio y baño completo con amenidades premium. Vista a la ciudad.',
-        duration: 1440,
-        name: 'Habitación Deluxe',
-        price: 1800.0,
-        subcategory: 'Habitación',
-        venueId: casaSalazar.id,
+        businessName: 'Zentro Wellness & Spa',
+        businessType: BusinessType.SPA,
+        taxId: 'ZWS770618GHI',
+        legalName: 'Zentro Bienestar Integral S.A. de C.V.',
+        contactEmail: 'reservas@zentrowellness.com',
+        contactPhone: '+52 33 6666 7777',
+        website: 'https://zentrowellness.com',
+        description: 'Centro de bienestar integral con spa, tratamientos holísticos y experiencias de relajación.',
+        address: 'Av. Patria 888',
+        city: 'Zapopan',
+        state: 'Jalisco',
+        country: 'México',
+        zipCode: '45040',
+        isVerified: true,
+        verificationDate: getBusinessGrowthDate(4),
+        ownerId: businessOwners[2].id,
+        createdAt: getBusinessGrowthDate(4),
       },
     }),
-    prisma.service.create({
+    // Business 4: Event & Entertainment
+    prisma.businessAccount.create({
       data: {
-        amenities: ['WiFi gratuito', 'TV LED 32"', 'Aire acondicionado', 'Baño privado'],
-        cancellationPolicy: 'Cancelación gratuita hasta 12 horas antes.',
-        capacity: 2,
-        category: ServiceType.ACCOMMODATION,
-        description:
-          'Habitación cómoda y funcional con todas las amenidades básicas para una estancia placentera.',
-        duration: 1440,
-        name: 'Habitación Estándar',
-        price: 1200.0,
-        subcategory: 'Habitación',
-        venueId: casaSalazar.id,
+        businessName: 'García Events & Entertainment',
+        businessType: BusinessType.EVENT_CENTER,
+        taxId: 'GEE850920JKL',
+        legalName: 'García Eventos y Entretenimiento S.A. de C.V.',
+        contactEmail: 'eventos@garciaevents.mx',
+        contactPhone: '+52 33 8888 9999',
+        website: 'https://garciaevents.mx',
+        description: 'Organización de eventos corporativos y sociales con espacios únicos y entretenimiento premium.',
+        address: 'Av. López Mateos Norte 755',
+        city: 'Guadalajara',
+        state: 'Jalisco',
+        country: 'México',
+        zipCode: '44170',
+        isVerified: true,
+        verificationDate: getBusinessGrowthDate(3),
+        ownerId: businessOwners[3].id,
+        createdAt: getBusinessGrowthDate(3),
+      },
+    }),
+    // Business 5: Tourism & Tours
+    prisma.businessAccount.create({
+      data: {
+        businessName: 'Rivera Tours & Experiences',
+        businessType: BusinessType.TOUR_AGENCY,
+        taxId: 'RTE920714MNO',
+        legalName: 'Rivera Turismo y Experiencias S.A. de C.V.',
+        contactEmail: 'tours@riveraexperiences.com',
+        contactPhone: '+52 33 1010 1111',
+        website: 'https://riveraexperiences.com',
+        description: 'Agencia especializada en tours culturales, gastronómicos y de aventura por el occidente de México.',
+        address: 'Av. Chapultepec Norte 134',
+        city: 'Guadalajara',
+        state: 'Jalisco',
+        country: 'México',
+        zipCode: '44600',
+        isVerified: true,
+        verificationDate: getBusinessGrowthDate(2),
+        ownerId: businessOwners[4].id,
+        createdAt: getBusinessGrowthDate(2),
       },
     }),
   ]);
 
-  // Morales Venue Services
-  const moralesVenueServices = await Promise.all([
-    prisma.service.create({
+  console.log('✅ Created 5 business accounts with different business types');
+
+  console.log('🏦 Creating bank accounts for businesses...');
+
+  const bankAccounts = [];
+  for (const businessAccount of businessAccounts) {
+    const bankAccount = await prisma.bankAccount.create({
       data: {
-        amenities: [
-          'WiFi gratuito',
-          'TV LED 50"',
-          'Minibar',
-          'Aire acondicionado',
-          'Vista a la Catedral',
-          'Mobiliario de época',
-        ],
-        cancellationPolicy: 'Cancelación gratuita hasta 24 horas antes.',
-        capacity: 2,
-        category: ServiceType.ACCOMMODATION,
-        description:
-          'Suite con elementos arquitectónicos originales del siglo XIX, mobiliario de época y vista a la catedral local.',
-        duration: 1440,
-        name: 'Suite Ejecutiva Histórica',
-        price: 3200.0,
-        subcategory: 'Suite Ejecutiva',
-        venueId: moralesVenue.id,
+        bankName: 'Banco Santander México',
+        accountNumber: `****${Math.floor(Math.random() * 10000).toString().padStart(4, '0')}`,
+        accountType: AccountType.BUSINESS_CHECKING,
+        accountHolder: businessAccount.businessName,
+        routingNumber: '014180012',
+        isVerified: true,
+        verificationDate: businessAccount.createdAt,
+        isActive: true,
+        isPrimary: true,
+        businessAccountId: businessAccount.id,
+        createdAt: businessAccount.createdAt,
+      },
+    });
+    bankAccounts.push(bankAccount);
+  }
+
+  console.log('✅ Created bank accounts for all businesses');
+
+  console.log('🏢 Creating 15 venues across all businesses...');
+
+  // Business 1 venues (Luxury Hotels) - 4 venues
+  const luxuryVenues = await Promise.all([
+    prisma.venue.create({
+      data: {
+        name: 'Casa Salazar Centro Histórico',
+        description: 'Hotel boutique de lujo en el corazón del centro histórico de Guadalajara, en un edificio colonial restaurado.',
+        category: VenueType.ACCOMMODATION,
+        address: 'Av. Juárez 170, Zona Centro',
+        city: 'Guadalajara',
+        state: 'Jalisco',
+        country: 'México',
+        zipCode: '44100',
+        phone: '+52 33 3658 7777',
+        email: 'centro@casasalazar.com',
+        website: 'https://casasalazar.com/centro',
+        latitude: 20.676109,
+        longitude: -103.347730,
+        rating: 4.8,
+        checkInTime: '15:00',
+        checkOutTime: '12:00',
+        ownerId: businessOwners[0].id,
+        createdAt: getBusinessGrowthDate(6),
       },
     }),
-    prisma.service.create({
+    prisma.venue.create({
       data: {
-        amenities: [
-          'WiFi gratuito',
-          'TV LED 40"',
-          'Aire acondicionado',
-          'Techos altos',
-          'Vista al centro',
-        ],
-        cancellationPolicy: 'Cancelación gratuita hasta 24 horas antes.',
-        capacity: 2,
-        category: ServiceType.ACCOMMODATION,
-        description:
-          'Habitación con decoración colonial tradicional, techos altos y ventanas grandes con vista al centro histórico.',
-        duration: 1440,
-        name: 'Habitación Colonial Superior',
-        price: 1600.0,
-        subcategory: 'Habitación',
-        venueId: moralesVenue.id,
+        name: 'Casa Salazar Chapultepec',
+        description: 'Elegante hotel en la zona más exclusiva de Guadalajara, con vistas panorámicas y amenidades premium.',
+        category: VenueType.ACCOMMODATION,
+        address: 'Av. Chapultepec Norte 310',
+        city: 'Guadalajara',
+        state: 'Jalisco',
+        country: 'México',
+        zipCode: '44600',
+        phone: '+52 33 3647 8888',
+        email: 'chapultepec@casasalazar.com',
+        website: 'https://casasalazar.com/chapultepec',
+        latitude: 20.681389,
+        longitude: -103.364167,
+        rating: 4.9,
+        checkInTime: '15:00',
+        checkOutTime: '12:00',
+        ownerId: businessOwners[0].id,
+        createdAt: getBusinessGrowthDate(5),
+      },
+    }),
+    prisma.venue.create({
+      data: {
+        name: 'Casa Salazar Providencia',
+        description: 'Resort urbano con spa completo y espacios para eventos en la zona Providencia.',
+        category: VenueType.ACCOMMODATION,
+        address: 'Av. Providencia 1790',
+        city: 'Guadalajara',
+        state: 'Jalisco',
+        country: 'México',
+        zipCode: '44630',
+        phone: '+52 33 3640 9999',
+        email: 'providencia@casasalazar.com',
+        website: 'https://casasalazar.com/providencia',
+        latitude: 20.692778,
+        longitude: -103.366389,
+        rating: 4.7,
+        checkInTime: '15:00',
+        checkOutTime: '12:00',
+        ownerId: businessOwners[0].id,
+        createdAt: getBusinessGrowthDate(4),
+      },
+    }),
+    prisma.venue.create({
+      data: {
+        name: 'Casa Salazar Tlaquepaque',
+        description: 'Hacienda boutique en el pueblo mágico de Tlaquepaque, perfecta para escapadas románticas.',
+        category: VenueType.ACCOMMODATION,
+        address: 'Calle Independencia 227',
+        city: 'Tlaquepaque',
+        state: 'Jalisco',
+        country: 'México',
+        zipCode: '45500',
+        phone: '+52 33 3635 1010',
+        email: 'tlaquepaque@casasalazar.com',
+        website: 'https://casasalazar.com/tlaquepaque',
+        latitude: 20.641111,
+        longitude: -103.315556,
+        rating: 4.6,
+        checkInTime: '15:00',
+        checkOutTime: '12:00',
+        ownerId: businessOwners[0].id,
+        createdAt: getBusinessGrowthDate(3),
       },
     }),
   ]);
+
+  // Business 2 venues (Restaurants) - 3 venues
+  const restaurantVenues = await Promise.all([
+    prisma.venue.create({
+      data: {
+        name: 'Morales Cocina Mexicana',
+        description: 'Restaurante insignia del grupo, especializado en cocina mexicana contemporánea con ingredientes locales.',
+        category: VenueType.RESTAURANT,
+        address: 'Av. Américas 1500, Col. Providencia',
+        city: 'Guadalajara',
+        state: 'Jalisco',
+        country: 'México',
+        zipCode: '44630',
+        phone: '+52 33 3817 2020',
+        email: 'reservas@moralescocina.mx',
+        website: 'https://moralescocina.mx',
+        latitude: 20.692500,
+        longitude: -103.378611,
+        rating: 4.5,
+        ownerId: businessOwners[1].id,
+        createdAt: getBusinessGrowthDate(5),
+      },
+    }),
+    prisma.venue.create({
+      data: {
+        name: 'Morales Rooftop',
+        description: 'Restaurante con terraza al aire libre y vista panorámica de la ciudad, perfecto para cenas románticas.',
+        category: VenueType.RESTAURANT,
+        address: 'Av. López Mateos Sur 2375',
+        city: 'Guadalajara',
+        state: 'Jalisco',
+        country: 'México',
+        zipCode: '44550',
+        phone: '+52 33 3647 3030',
+        email: 'rooftop@grupomorales.mx',
+        website: 'https://moralesrooftop.mx',
+        latitude: 20.659722,
+        longitude: -103.378889,
+        rating: 4.7,
+        ownerId: businessOwners[1].id,
+        createdAt: getBusinessGrowthDate(4),
+      },
+    }),
+    prisma.venue.create({
+      data: {
+        name: 'Morales Cantina Gourmet',
+        description: 'Cantina moderna con cocina gourmet mexicana y la mejor selección de tequilas y mezcales artesanales.',
+        category: VenueType.RESTAURANT,
+        address: 'Av. México 3300, Col. Monraz',
+        city: 'Guadalajara',
+        state: 'Jalisco',
+        country: 'México',
+        zipCode: '44670',
+        phone: '+52 33 3640 4040',
+        email: 'cantina@grupomorales.mx',
+        website: 'https://moralescantina.mx',
+        latitude: 20.700833,
+        longitude: -103.381667,
+        rating: 4.4,
+        ownerId: businessOwners[1].id,
+        createdAt: getBusinessGrowthDate(3),
+      },
+    }),
+  ]);
+
+  // Business 3 venues (Spa & Wellness) - 2 venues
+  const spaVenues = await Promise.all([
+    prisma.venue.create({
+      data: {
+        name: 'Zentro Wellness Spa Providencia',
+        description: 'Spa de lujo con tratamientos holísticos, temazcal, y terapias especializadas en relajación profunda.',
+        category: VenueType.SPA,
+        address: 'Av. Patria 888, Col. Jardines del Bosque',
+        city: 'Zapopan',
+        state: 'Jalisco',
+        country: 'México',
+        zipCode: '45040',
+        phone: '+52 33 3647 5050',
+        email: 'providencia@zentrowellness.com',
+        website: 'https://zentrowellness.com/providencia',
+        latitude: 20.708611,
+        longitude: -103.391111,
+        rating: 4.8,
+        ownerId: businessOwners[2].id,
+        createdAt: getBusinessGrowthDate(4),
+      },
+    }),
+    prisma.venue.create({
+      data: {
+        name: 'Zentro Retreat Center',
+        description: 'Centro de retiros y bienestar integral con yoga, meditación y terapias alternativas en ambiente natural.',
+        category: VenueType.SPA,
+        address: 'Carretera a Colotlán Km 12.5',
+        city: 'Zapopan',
+        state: 'Jalisco',
+        country: 'México',
+        zipCode: '45200',
+        phone: '+52 33 3636 6060',
+        email: 'retreat@zentrowellness.com',
+        website: 'https://zentrowellness.com/retreat',
+        latitude: 20.756944,
+        longitude: -103.463889,
+        rating: 4.9,
+        ownerId: businessOwners[2].id,
+        createdAt: getBusinessGrowthDate(2),
+      },
+    }),
+  ]);
+
+  // Business 4 venues (Events & Entertainment) - 3 venues
+  const eventVenues = await Promise.all([
+    prisma.venue.create({
+      data: {
+        name: 'García Convention Center',
+        description: 'Centro de convenciones moderno con salones modulares para eventos corporativos y conferencias.',
+        category: VenueType.EVENT_CENTER,
+        address: 'Av. López Mateos Norte 755',
+        city: 'Guadalajara',
+        state: 'Jalisco',
+        country: 'México',
+        zipCode: '44170',
+        phone: '+52 33 3669 7070',
+        email: 'convenciones@garciaevents.mx',
+        website: 'https://garciaevents.mx/convention',
+        latitude: 20.698056,
+        longitude: -103.356944,
+        rating: 4.3,
+        ownerId: businessOwners[3].id,
+        createdAt: getBusinessGrowthDate(3),
+      },
+    }),
+    prisma.venue.create({
+      data: {
+        name: 'García Salón de Eventos',
+        description: 'Elegante salón para bodas y eventos sociales con capacidad para 500 personas y servicios integrales.',
+        category: VenueType.EVENT_CENTER,
+        address: 'Av. Américas 1633, Col. Providencia',
+        city: 'Guadalajara',
+        state: 'Jalisco',
+        country: 'México',
+        zipCode: '44630',
+        phone: '+52 33 3817 8080',
+        email: 'eventos@garciaevents.mx',
+        website: 'https://garciaevents.mx/salon',
+        latitude: 20.693333,
+        longitude: -103.379167,
+        rating: 4.6,
+        ownerId: businessOwners[3].id,
+        createdAt: getBusinessGrowthDate(2),
+      },
+    }),
+    prisma.venue.create({
+      data: {
+        name: 'García Entertainment Complex',
+        description: 'Complejo de entretenimiento con boliche, karaoke, bar deportivo y área de juegos para eventos corporativos.',
+        category: VenueType.ENTERTAINMENT,
+        address: 'Av. Patria 1891, Col. Puerta de Hierro',
+        city: 'Zapopan',
+        state: 'Jalisco',
+        country: 'México',
+        zipCode: '45116',
+        phone: '+52 33 3640 9090',
+        email: 'entertainment@garciaevents.mx',
+        website: 'https://garciaevents.mx/entertainment',
+        latitude: 20.709722,
+        longitude: -103.423056,
+        rating: 4.2,
+        ownerId: businessOwners[3].id,
+        createdAt: getBusinessGrowthDate(1),
+      },
+    }),
+  ]);
+
+  // Business 5 venues (Tours & Experiences) - 3 venues
+  const tourVenues = await Promise.all([
+    prisma.venue.create({
+      data: {
+        name: 'Rivera Cultural Tours Hub',
+        description: 'Centro de tours culturales por Guadalajara y pueblos mágicos de Jalisco con guías certificados.',
+        category: VenueType.TOUR_OPERATOR,
+        address: 'Av. Chapultepec Norte 134',
+        city: 'Guadalajara',
+        state: 'Jalisco',
+        country: 'México',
+        zipCode: '44600',
+        phone: '+52 33 3625 1010',
+        email: 'cultural@riveraexperiences.com',
+        website: 'https://riveraexperiences.com/cultural',
+        latitude: 20.681944,
+        longitude: -103.363611,
+        rating: 4.5,
+        ownerId: businessOwners[4].id,
+        createdAt: getBusinessGrowthDate(2),
+      },
+    }),
+    prisma.venue.create({
+      data: {
+        name: 'Rivera Adventure Center',
+        description: 'Centro de tours de aventura y ecoturismo en la Sierra de Jalisco con actividades extremas.',
+        category: VenueType.TOUR_OPERATOR,
+        address: 'Carretera a Tapalpa Km 35',
+        city: 'Tapalpa',
+        state: 'Jalisco',
+        country: 'México',
+        zipCode: '49340',
+        phone: '+52 343 432 1111',
+        email: 'adventure@riveraexperiences.com',
+        website: 'https://riveraexperiences.com/adventure',
+        latitude: 19.951944,
+        longitude: -103.769167,
+        rating: 4.7,
+        ownerId: businessOwners[4].id,
+        createdAt: getBusinessGrowthDate(1),
+      },
+    }),
+    prisma.venue.create({
+      data: {
+        name: 'Rivera Gastronomy Tours',
+        description: 'Tours gastronómicos especializados en mercados tradicionales, destilerías de tequila y restaurantes locales.',
+        category: VenueType.TOUR_OPERATOR,
+        address: 'Mercado San Juan de Dios, Local 45',
+        city: 'Guadalajara',
+        state: 'Jalisco',
+        country: 'México',
+        zipCode: '44100',
+        phone: '+52 33 3614 2020',
+        email: 'gastronomy@riveraexperiences.com',
+        website: 'https://riveraexperiences.com/gastronomy',
+        latitude: 20.675833,
+        longitude: -103.342500,
+        rating: 4.6,
+        ownerId: businessOwners[4].id,
+        createdAt: getBusinessGrowthDate(1),
+      },
+    }),
+  ]);
+
+  const allVenues = [...luxuryVenues, ...restaurantVenues, ...spaVenues, ...eventVenues, ...tourVenues];
+  console.log(`✅ Created 15 venues across 5 businesses`);
+
+  console.log('🎯 Creating services for each venue with realistic pricing...');
+
+  const allServices = [];
+
+  // Luxury Hotel Services
+  for (const venue of luxuryVenues) {
+    const hotelServices = await Promise.all([
+      // Accommodation services
+      prisma.service.create({
+        data: {
+          name: 'Suite Ejecutiva',
+          description: 'Suite ejecutiva con vista a la ciudad, sala de estar, área de trabajo y amenidades premium.',
+          category: ServiceType.ACCOMMODATION,
+          subcategory: 'Suite Premium',
+          price: 3500,
+          currency: 'MXN',
+          duration: 1440, // 24 hours
+          capacity: 2,
+          venueId: venue.id,
+          isActive: true,
+          createdAt: venue.createdAt,
+        },
+      }),
+      prisma.service.create({
+        data: {
+          name: 'Habitación Estándar',
+          description: 'Habitación elegante con todas las comodidades, cama king size y baño de mármol.',
+          category: ServiceType.ACCOMMODATION,
+          subcategory: 'Habitación Standard',
+          price: 2200,
+          currency: 'MXN',
+          duration: 1440,
+          capacity: 2,
+          venueId: venue.id,
+          isActive: true,
+          createdAt: venue.createdAt,
+        },
+      }),
+      prisma.service.create({
+        data: {
+          name: 'Spa & Wellness Package',
+          description: 'Paquete completo de spa con masaje relajante, facial y acceso a instalaciones.',
+          category: ServiceType.SPA_WELLNESS,
+          subcategory: 'Paquete Spa',
+          price: 1800,
+          currency: 'MXN',
+          duration: 240,
+          capacity: 1,
+          venueId: venue.id,
+          isActive: true,
+          createdAt: venue.createdAt,
+        },
+      }),
+    ]);
+    allServices.push(...hotelServices);
+  }
 
   // Restaurant Services
-  const restaurantServices = await Promise.all([
-    // Santo Domingo
-    prisma.service.create({
-      data: {
-        amenities: ['Ubicación VIP', 'Servicio personalizado', 'Vista al jardín', 'Mesa reservada'],
+  for (const venue of restaurantVenues) {
+    const restaurantServices = await Promise.all([
+      prisma.service.create({
+        data: {
+          name: 'Cena Degustación',
+          description: 'Menú degustación de 7 tiempos con maridaje de vinos mexicanos y cocina contemporánea.',
+          category: ServiceType.DINING,
+          subcategory: 'Menú Degustación',
+          price: 1200,
+          currency: 'MXN',
+          duration: 180,
+          capacity: 2,
+          venueId: venue.id,
+          isActive: true,
+          createdAt: venue.createdAt,
+        },
+      }),
+      prisma.service.create({
+        data: {
+          name: 'Mesa Privada',
+          description: 'Reservación de mesa privada para grupos hasta 8 personas con servicio personalizado.',
+          category: ServiceType.DINING,
+          subcategory: 'Mesa Privada',
+          price: 800,
+          currency: 'MXN',
+          duration: 150,
+          capacity: 8,
+          venueId: venue.id,
+          isActive: true,
+          createdAt: venue.createdAt,
+        },
+      }),
+    ]);
+    allServices.push(...restaurantServices);
+  }
 
-        cancellationPolicy: 'Cancelación gratuita hasta 2 horas antes.',
-
-        // Costo de reserva
-        capacity: 2,
-
-        category: ServiceType.DINING,
-
-        description:
-          'Mesa íntima en el área VIP del restaurante con vista al jardín interior y servicio personalizado.',
-        duration: 120,
-        name: 'Mesa para 2 personas - Área VIP',
-        price: 200.0,
-        subcategory: 'Mesa VIP',
-        venueId: restauranteSantoDomingo.id,
-      },
-    }),
-    prisma.service.create({
-      data: {
-        amenities: ['Mesa amplia', 'Servicio familiar', 'Área principal'],
-        cancellationPolicy: 'Cancelación gratuita hasta 1 hora antes.',
-        capacity: 4,
-        category: ServiceType.DINING,
-        description:
-          'Mesa familiar en el área principal del restaurante, perfecta para disfrutar en familia.',
-        duration: 120,
-        name: 'Mesa para 4 personas',
-        price: 0.0,
-        subcategory: 'Mesa',
-        venueId: restauranteSantoDomingo.id,
-      },
-    }),
-    prisma.service.create({
-      data: {
-        amenities: [
-          'Birria tradicional',
-          'Consomé',
-          'Quesabirrias',
-          'Tortillas hechas a mano',
-          'Bebida tradicional',
-          'Postres',
-        ],
-        cancellationPolicy: 'Cancelación con cargo del 50% si es menos de 4 horas antes.',
-        capacity: 1,
-        category: ServiceType.DINING,
-        description:
-          'Degustación completa de birria tradicional con maridaje de bebidas típicas, incluye consomé, quesabirrias y postres tradicionales.',
-        duration: 90,
-        name: 'Experiencia Gastronómica Birria Completa',
-        price: 450.0,
-        subcategory: 'Experiencia',
-        venueId: restauranteSantoDomingo.id,
-      },
-    }),
-    prisma.service.create({
-      data: {
-        amenities: [
-          'Menú de 3 tiempos',
-          'Copa de vino incluida',
-          'Ambiente romántico',
-          'Postre especial',
-        ],
-        cancellationPolicy: 'Cancelación con cargo del 100% si es menos de 24 horas antes.',
-        capacity: 2,
-        category: ServiceType.DINING,
-        description:
-          'Menú romántico diseñado especialmente para parejas, incluye entrada, plato fuerte, postre y copa de vino.',
-        duration: 150,
-        name: 'Cena Especial para Parejas',
-        price: 850.0,
-        subcategory: 'Experiencia',
-        venueId: restauranteSantoDomingo.id,
-      },
-    }),
-
-    // Hueso Restaurant
-    prisma.service.create({
-      data: {
-        amenities: [
-          'Vista a cocina abierta',
-          'Interacción con chef',
-          'Menú especial',
-          'Experiencia única',
-        ],
-        cancellationPolicy: 'Cancelación con cargo del 100% si es menos de 48 horas antes.',
-        capacity: 6,
-        category: ServiceType.DINING,
-        description:
-          'Mesa especial frente a la cocina abierta para observar la preparación de los platillos por el chef ejecutivo.',
-        duration: 180,
-        name: "Mesa Chef's Table",
-        price: 500.0,
-        subcategory: "Chef's Table",
-        venueId: restaurantHueso.id,
-      },
-    }),
-    prisma.service.create({
-      data: {
-        amenities: ['7 tiempos', 'Creación del chef', 'Maridaje opcional', 'Experiencia gourmet'],
-        cancellationPolicy: 'Cancelación con cargo del 100% si es menos de 72 horas antes.',
-        capacity: 1,
-        category: ServiceType.DINING,
-        description:
-          'Experiencia culinaria completa con 7 tiempos diseñados por el chef, maridaje de vinos opcional.',
-        duration: 180,
-        name: 'Menú Degustación 7 Tiempos',
-        price: 1200.0,
-        requiresApproval: true,
-        subcategory: 'Degustación',
-        venueId: restaurantHueso.id,
-      },
-    }),
-  ]);
-
-  // Spa Services with comprehensive treatments
-  const spaServices = await Promise.all([
-    // Vitania Spa
-    prisma.service.create({
-      data: {
-        amenities: [
-          'Aceites premium importados',
-          'Aromaterapia personalizada',
-          'Música relajante',
-          'Toallas calientes',
-          'Té de relajación',
-        ],
-        cancellationPolicy:
-          'Cancelación gratuita hasta 4 horas antes. Cancelación tardía con cargo del 50%.',
-        capacity: 1,
-        category: ServiceType.SPA_WELLNESS,
-        description:
-          'Masaje de cuerpo completo con aceites esenciales importados, aromaterapia personalizada y técnicas de relajación profunda.',
-        duration: 90,
-        name: 'Masaje Relajante Completo Premium',
-        price: 1500.0,
-        subcategory: 'Masaje Premium',
-        venueId: spaVitania.id,
-      },
-    }),
-    prisma.service.create({
-      data: {
-        amenities: [
-          'Piedras volcánicas',
-          'Aceites terapéuticos',
-          'Ambiente relajante',
-          'Música zen',
-        ],
-        cancellationPolicy: 'Cancelación gratuita hasta 4 horas antes.',
-        capacity: 1,
-        category: ServiceType.SPA_WELLNESS,
-        description:
-          'Terapia con piedras volcánicas calientes que ayuda a relajar los músculos y mejorar la circulación.',
-        duration: 75,
-        name: 'Masaje de Piedras Calientes',
-        price: 1200.0,
-        subcategory: 'Masaje Terapéutico',
-        venueId: spaVitania.id,
-      },
-    }),
-    prisma.service.create({
-      data: {
-        amenities: [
-          'Productos anti-edad',
-          'Limpieza profunda',
-          'Mascarilla especializada',
-          'Hidratación intensiva',
-          'Masaje facial',
-        ],
-        cancellationPolicy: 'Cancelación gratuita hasta 2 horas antes.',
-        capacity: 1,
-        category: ServiceType.SPA_WELLNESS,
-        description:
-          'Tratamiento facial profundo con productos anti-edad, incluye limpieza, exfoliación, mascarilla y hidratación intensiva.',
-        duration: 75,
-        name: 'Facial Hidratante Premium Anti-Edad',
-        price: 950.0,
-        subcategory: 'Facial Premium',
-        venueId: spaVitania.id,
-      },
-    }),
-    prisma.service.create({
-      data: {
-        amenities: [
-          'Masaje completo',
-          'Facial premium',
-          'Jacuzzi privado',
-          'Sauna',
-          'Área de relajación VIP',
-          'Comida saludable',
-          'Bebidas naturales',
-          'Bata y pantuflas',
-        ],
-        cancellationPolicy: 'Cancelación con cargo del 50% si es menos de 24 horas antes.',
-        capacity: 1,
-        category: ServiceType.SPA_WELLNESS,
-        description:
-          'Experiencia completa de día de spa: masaje completo, facial, acceso a jacuzzi, sauna, área de relajación y comida saludable.',
-        duration: 360,
-        name: 'Paquete Día de Spa Completo VIP',
-        price: 3500.0,
-
-        requiresApproval: true,
-
-        subcategory: 'Paquete VIP',
-        // 6 hours
-        venueId: spaVitania.id,
-      },
-    }),
-    prisma.service.create({
-      data: {
-        amenities: [
-          'Exfoliación corporal',
-          'Envoltura de algas',
-          'Masaje drenante',
-          'Productos detox',
-          'Hidratación corporal',
-        ],
-        cancellationPolicy: 'Cancelación gratuita hasta 4 horas antes.',
-        capacity: 1,
-        category: ServiceType.SPA_WELLNESS,
-        description:
-          'Tratamiento completo de desintoxicación corporal con exfoliación, envoltura de algas y masaje drenante.',
-        duration: 120,
-        name: 'Tratamiento Corporal Detox',
-        price: 1800.0,
-        subcategory: 'Tratamiento Corporal',
-        venueId: spaVitania.id,
-      },
-    }),
-
-    // Grand Fiesta Americana Spa
-    prisma.service.create({
-      data: {
-        amenities: ['Técnica sueca tradicional', 'Aceites relajantes', 'Ambiente tranquilo'],
-        cancellationPolicy: 'Cancelación gratuita hasta 2 horas antes.',
-        capacity: 1,
-        category: ServiceType.SPA_WELLNESS,
-        description:
-          'Masaje tradicional sueco para aliviar tensiones y promover la relajación profunda.',
-        duration: 60,
-        name: 'Masaje Sueco Relajante',
-        price: 980.0,
-        subcategory: 'Masaje',
-        venueId: spaGrandFiesta.id,
-      },
-    }),
-  ]);
-
-  // Tour Services with comprehensive experiences
-  const tourServices = await Promise.all([
-    // Tours Culturales Regionales
-    prisma.service.create({
-      data: {
-        amenities: [
-          'Guía certificado privado',
-          'Transporte privado',
-          'Entrada a museos',
-          'Degustación local',
-          'Agua y snacks',
-          'Seguro incluido',
-        ],
-        cancellationPolicy: 'Cancelación gratuita hasta 24 horas antes.',
-        capacity: 1,
-        category: ServiceType.TOUR_EXPERIENCE,
-        description:
-          'Recorrido guiado VIP por los principales monumentos y sitios históricos de la región con guía certificado y transporte privado.',
-        duration: 240,
-        name: 'Tour Centro Histórico Premium',
-        price: 650.0,
-
-        subcategory: 'Tour Cultural Premium',
-        // 4 hours
-        venueId: toursCentrales.id,
-      },
-    }),
-    prisma.service.create({
-      data: {
-        amenities: [
-          'Guía certificado',
-          'Transporte compartido',
-          'Entrada a museos',
-          'Degustación local',
-        ],
-        cancellationPolicy: 'Cancelación gratuita hasta 12 horas antes.',
-        capacity: 1,
-        category: ServiceType.TOUR_EXPERIENCE,
-        description:
-          'Recorrido guiado grupal por los principales monumentos y sitios históricos de la región.',
-        duration: 180,
-        name: 'Tour Centro Histórico Grupal',
-        price: 350.0,
-        subcategory: 'Tour Cultural',
-        venueId: toursCentrales.id,
-      },
-    }),
-    prisma.service.create({
-      data: {
-        amenities: [
-          'Chef acompañante',
-          'Degustaciones premium',
-          'Transporte privado',
-          'Recetario digital',
-          'Bebidas incluidas',
-        ],
-        cancellationPolicy: 'Cancelación con cargo del 50% si es menos de 48 horas antes.',
-        capacity: 1,
-        category: ServiceType.TOUR_EXPERIENCE,
-        description:
-          'Experiencia culinaria VIP por los mejores restaurantes y mercados de Tlaquepaque con chef acompañante.',
-        duration: 300,
-        name: 'Tour Gastronómico Tlaquepaque Premium',
-        price: 950.0,
-
-        requiresApproval: true,
-
-        subcategory: 'Tour Gastronómico Premium',
-        // 5 hours
-        venueId: toursCentrales.id,
-      },
-    }),
-    prisma.service.create({
-      data: {
-        amenities: ['Guía nocturno', 'Transporte', 'Seguridad incluida', 'Bebida de bienvenida'],
-        cancellationPolicy: 'Cancelación gratuita hasta 6 horas antes.',
-        capacity: 1,
-        category: ServiceType.TOUR_EXPERIENCE,
-        description:
-          'Recorrido nocturno por la ciudad iluminada, incluyendo los principales monumentos y vida nocturna local.',
-        duration: 180,
-        name: 'Tour Nocturno Regional',
-        price: 420.0,
-        subcategory: 'Tour Nocturno',
-        venueId: toursCentrales.id,
-      },
-    }),
-
-    // Mundo Cuervo Tours
-    prisma.service.create({
-      data: {
-        amenities: [
-          'Transporte de lujo',
-          'Cata premium de tequilas',
-          'Comida gourmet',
-          'Mariachi privado',
-          'Guía especializado',
-          'Certificado de degustador',
-        ],
-        cancellationPolicy: 'Cancelación con cargo del 100% si es menos de 72 horas antes.',
-        capacity: 1,
-        category: ServiceType.TOUR_EXPERIENCE,
-        description:
-          'Tour VIP a las destilerías con cata premium de tequilas añejos, comida gourmet y espectáculo de mariachi privado.',
-        duration: 480,
-        name: 'Experiencia Tequila Master Premium',
-        price: 1800.0,
-
-        requiresApproval: true,
-
-        subcategory: 'Experiencia Premium',
-        // 8 hours
-        venueId: toursTequila.id,
-      },
-    }),
-    prisma.service.create({
-      data: {
-        amenities: [
-          'Transporte compartido',
-          'Degustación de tequila',
-          'Comida típica',
-          'Show de mariachi',
-          'Guía bilingüe',
-        ],
-        cancellationPolicy: 'Cancelación gratuita hasta 48 horas antes.',
-        capacity: 1,
-        category: ServiceType.TOUR_EXPERIENCE,
-        description:
-          'Excursión tradicional a destilerías de tequila con degustación, comida típica y espectáculo de mariachi.',
-        duration: 480,
-        name: 'Tour Tequila y Mariachi Tradicional',
-        price: 1200.0,
-        subcategory: 'Tour Tradicional',
-        venueId: toursTequila.id,
-      },
-    }),
-    prisma.service.create({
-      data: {
-        amenities: ['Transporte', 'Degustación básica', 'Comida ligera', 'Guía local'],
-        cancellationPolicy: 'Cancelación gratuita hasta 24 horas antes.',
-        capacity: 1,
-        category: ServiceType.TOUR_EXPERIENCE,
-        description:
-          'Tour rápido de medio día a una destilería local con degustación básica y comida ligera.',
-        duration: 240,
-        name: 'Tour Express Tequila',
-        price: 650.0,
-        subcategory: 'Tour Express',
-        venueId: toursTequila.id,
-      },
-    }),
-  ]);
+  // Spa Services
+  for (const venue of spaVenues) {
+    const spaServices = await Promise.all([
+      prisma.service.create({
+        data: {
+          name: 'Temazcal Ceremonial',
+          description: 'Experiencia de temazcal tradicional con ceremonia ancestral y guía espiritual.',
+          category: ServiceType.SPA_WELLNESS,
+          subcategory: 'Temazcal',
+          price: 950,
+          currency: 'MXN',
+          duration: 120,
+          capacity: 8,
+          venueId: venue.id,
+          isActive: true,
+          createdAt: venue.createdAt,
+        },
+      }),
+      prisma.service.create({
+        data: {
+          name: 'Masaje de Piedras Calientes',
+          description: 'Masaje relajante con piedras volcánicas calientes y aceites esenciales.',
+          category: ServiceType.SPA_WELLNESS,
+          subcategory: 'Masaje Terapéutico',
+          price: 1100,
+          currency: 'MXN',
+          duration: 90,
+          capacity: 1,
+          venueId: venue.id,
+          isActive: true,
+          createdAt: venue.createdAt,
+        },
+      }),
+      prisma.service.create({
+        data: {
+          name: 'Retiro de Yoga y Meditación',
+          description: 'Retiro de fin de semana con sesiones de yoga, meditación y alimentación consciente.',
+          category: ServiceType.SPA_WELLNESS,
+          subcategory: 'Retiro Wellness',
+          price: 2800,
+          currency: 'MXN',
+          duration: 2880, // 48 hours
+          capacity: 15,
+          venueId: venue.id,
+          isActive: true,
+          createdAt: venue.createdAt,
+        },
+      }),
+    ]);
+    allServices.push(...spaServices);
+  }
 
   // Event Services
-  const eventServices = await Promise.all([
-    // Centro de Convenciones Central
-    prisma.service.create({
-      data: {
-        amenities: [
-          'Escenario profesional',
-          'Sistema audiovisual 4K',
-          'Climatización',
-          'Estacionamiento VIP',
-          'Catering disponible',
-          'Soporte técnico',
-        ],
-        cancellationPolicy: 'Cancelación con cargo del 50% si es menos de 30 días antes.',
-        capacity: 800,
-        category: ServiceType.EVENT_MEETING,
-        description:
-          'Auditorio de lujo para conferencias y eventos corporativos hasta 800 personas con tecnología de punta.',
-        duration: 480,
-        name: 'Auditorio Principal Premium',
-        price: 25000.0,
-
-        requiresApproval: true,
-
-        subcategory: 'Auditorio Premium',
-        // 8 hours
-        venueId: centroEventos.id,
-      },
-    }),
-    prisma.service.create({
-      data: {
-        amenities: [
-          'Diseño flexible',
-          'Sistema de audio',
-          'Iluminación profesional',
-          'Aire acondicionado',
-          'Estacionamiento',
-        ],
-        cancellationPolicy: 'Cancelación con cargo del 30% si es menos de 15 días antes.',
-        capacity: 300,
-        category: ServiceType.EVENT_MEETING,
-        description:
-          'Salón versátil para eventos corporativos, bodas y celebraciones hasta 300 personas.',
-        duration: 480,
-        name: 'Salón de Eventos Grande',
-        price: 15000.0,
-        requiresApproval: true,
-        subcategory: 'Salón Grande',
-        venueId: centroEventos.id,
-      },
-    }),
-    prisma.service.create({
-      data: {
-        amenities: [
-          'Ambiente íntimo',
-          'Proyector HD',
-          'Sistema de audio',
-          'WiFi',
-          'Aire acondicionado',
-        ],
-        cancellationPolicy: 'Cancelación gratuita hasta 7 días antes.',
-        capacity: 100,
-        category: ServiceType.EVENT_MEETING,
-        description:
-          'Salón ideal para reuniones corporativas y eventos íntimos hasta 100 personas.',
-        duration: 480,
-        name: 'Salón de Eventos Mediano',
-        price: 8000.0,
-        subcategory: 'Salón Mediano',
-        venueId: centroEventos.id,
-      },
-    }),
-    prisma.service.create({
-      data: {
-        amenities: [
-          'Mesa de juntas premium',
-          'Videoconferencia',
-          'Proyector 4K',
-          'WiFi premium',
-          'Catering ejecutivo',
-          'Servicio personalizado',
-        ],
-        cancellationPolicy: 'Cancelación gratuita hasta 24 horas antes.',
-        capacity: 20,
-        category: ServiceType.EVENT_MEETING,
-        description:
-          'Sala exclusiva para reuniones ejecutivas hasta 20 personas con tecnología avanzada.',
-        duration: 240,
-        name: 'Sala de Juntas Ejecutiva',
-        price: 3500.0,
-        subcategory: 'Sala Ejecutiva',
-        venueId: centroEventos.id,
-      },
-    }),
-
-    // Teatro Degollado
-    prisma.service.create({
-      data: {
-        amenities: [
-          'Teatro histórico completo',
-          'Escenario profesional',
-          'Iluminación teatral',
-          'Sistema de sonido',
-          'Camerinos',
-          'Staff especializado',
-        ],
-        cancellationPolicy: 'Cancelación con cargo del 100% si es menos de 60 días antes.',
-        capacity: 1000,
-        category: ServiceType.ENTERTAINMENT,
-        description:
-          'Alquiler del teatro histórico para eventos culturales especiales, presentaciones y galas.',
-        duration: 240,
-        name: 'Evento Cultural en Teatro Histórico',
-        price: 35000.0,
-        requiresApproval: true,
-        subcategory: 'Teatro Completo',
-        venueId: teatroDegollado.id,
-      },
-    }),
-    prisma.service.create({
-      data: {
-        amenities: [
-          'Palco exclusivo',
-          'Vista premium',
-          'Servicio de mesero',
-          'Bebidas incluidas',
-          'Programa del evento',
-        ],
-        cancellationPolicy: 'Cancelación gratuita hasta 48 horas antes.',
-        capacity: 8,
-        category: ServiceType.ENTERTAINMENT,
-        description:
-          'Palco exclusivo VIP para espectáculos y eventos especiales con servicio premium.',
-        duration: 180,
-        name: 'Palco VIP para Espectáculos',
-        price: 2500.0,
-        subcategory: 'Palco VIP',
-        venueId: teatroDegollado.id,
-      },
-    }),
-  ]);
-
-  console.log('🎯 Created 35+ diverse services with realistic pricing');
-
-  // Create services array for reviews
-  const services = [
-    ...casaSalazarServices,
-    ...moralesVenueServices,
-    ...restaurantServices,
-    ...spaServices,
-    ...tourServices,
-    ...eventServices,
-  ];
-
-  // Create comprehensive reservations covering all scenarios
-  const reservations = await Promise.all([
-    // HAPPY PATH SCENARIOS
-
-    // 1. Successful Service Reservation - Completed Stay
-    prisma.reservation.create({
-      data: {
-        // Suite Junior Colonial
-        checkInDate: new Date('2024-11-15'),
-
-        checkOutDate: new Date('2024-11-17'),
-
-        guests: 2,
-
-        metadata: {
-          checkInTime: '14:30',
-          checkOutTime: '13:15',
-          guestPreferences: ['Almohadas extra suaves', 'Vista al jardín'],
-          satisfactionRating: 5,
-        },
-
-        notes: 'Aniversario de bodas - 5 años',
-
-        serviceId: casaSalazarServices[1].id,
-
-        specialRequests: 'Decoración romántica, champagne de cortesía y late checkout',
-
-        // 2 nights * 2800
-        status: ReservationStatus.CHECKED_OUT,
-
-        totalAmount: 5600.0,
-
-        userId: users[3].id,
-        // Juan Carlos
-        venueId: casaSalazar.id,
-      },
-    }),
-
-    // 2. Confirmed Spa Package - Upcoming
-    prisma.reservation.create({
-      data: {
-        // Paquete Día de Spa Completo VIP
-        checkInDate: new Date('2024-12-20'),
-
-        checkOutDate: new Date('2024-12-20'),
-
-        guests: 1,
-
-        metadata: {
-          allergies: ['Almendra'],
-          birthdayTreat: true,
-          preferredScents: ['Lavanda', 'Eucalipto'],
-        },
-
-        notes: 'Regalo de cumpleaños personal',
-
-        serviceId: spaServices[3].id,
-
-        specialRequests: 'Alérgica a aceites de almendra, preferencia por aromaterapia de lavanda',
-
-        status: ReservationStatus.CONFIRMED,
-
-        totalAmount: 3500.0,
-
-        userId: users[4].id,
-        // María Elena
-        venueId: spaVitania.id,
-      },
-    }),
-
-    // 3. Premium Tour Experience - Confirmed
-    prisma.reservation.create({
-      data: {
-        // Experiencia Tequila Master Premium
-        checkInDate: new Date('2024-12-18'),
-
-        checkOutDate: new Date('2024-12-18'),
-
-        guests: 6,
-
-        metadata: {
-          corporateEvent: true,
-          dietaryRestrictions: ['Vegetarian (2 guests)'],
-          languages: ['Spanish', 'English'],
-          pickupLocation: 'Morales Venue',
-        },
-
-        notes: 'Celebración empresarial con clientes internacionales',
-
-        serviceId: tourServices[4].id,
-
-        specialRequests:
-          'Guía bilingüe inglés-español, menú vegetariano para 2 personas, transporte desde venue',
-
-        // 6 people * 1800
-        status: ReservationStatus.CONFIRMED,
-
-        totalAmount: 10800.0,
-
-        userId: users[5].id,
-        // Carlos Alberto
-        venueId: toursTequila.id,
-      },
-    }),
-
-    // 4. Restaurant Fine Dining - Checked In
-    prisma.reservation.create({
-      data: {
-        // Menú Degustación 7 Tiempos
-        checkInDate: new Date('2024-12-10'),
-
-        checkOutDate: new Date('2024-12-10'),
-
-        guests: 2,
-
-        metadata: {
-          anniversary: true,
-          celebrationReason: '10th wedding anniversary',
-          tablePreference: 'Window view',
-          winepairing: true,
-        },
-
-        notes: 'Cena de aniversario - 10 años de matrimonio',
-
-        serviceId: restaurantServices[5].id,
-
-        specialRequests: 'Mesa con vista, maridaje de vinos, postre especial de aniversario',
-
-        // 2 people * 1200
-        status: ReservationStatus.CHECKED_IN,
-
-        totalAmount: 2400.0,
-
-        userId: users[6].id,
-        // Ana Patricia
-        venueId: restaurantHueso.id,
-      },
-    }),
-
-    // 5. Event Space Corporate - Confirmed
-    prisma.reservation.create({
-      data: {
-        // Sala de Juntas Ejecutiva
-        checkInDate: new Date('2024-12-15'),
-
-        checkOutDate: new Date('2024-12-15'),
-
-        guests: 15,
-
-        metadata: {
-          cateringType: 'Executive',
-          corporateEvent: true,
-          meetingType: 'Board meeting',
-          videoconference: true,
-        },
-
-        notes: 'Junta de consejo directivo trimestral',
-
-        serviceId: eventServices[3].id,
-
-        specialRequests: 'Catering ejecutivo, videoconferencia con oficina matriz, coffee break',
-
-        status: ReservationStatus.CONFIRMED,
-
-        totalAmount: 3500.0,
-
-        userId: users[1].id,
-        // Gerente
-        venueId: centroEventos.id,
-      },
-    }),
-
-    // SAD PATH SCENARIOS
-
-    // 6. Cancelled Service Reservation - Customer Cancellation
-    prisma.reservation.create({
-      data: {
-        // Suite Ejecutiva Histórica
-        checkInDate: new Date('2024-12-25'),
-
-        checkOutDate: new Date('2024-12-27'),
-
-        guests: 2,
-
-        metadata: {
-          cancellationDate: new Date('2024-12-20'),
-          cancellationReason: 'Family emergency',
-          refundAmount: 6400.0,
-          refundStatus: 'processed',
-        },
-
-        notes: 'Cancelado por emergencia familiar',
-
-        serviceId: moralesVenueServices[0].id,
-
-        specialRequests: 'Había solicitado late checkout y decoración navideña',
-
-        // 2 nights * 3200
-        status: ReservationStatus.CANCELLED,
-
-        totalAmount: 6400.0,
-
-        userId: users[7].id,
-        // Roberto García
-        venueId: moralesVenue.id,
-      },
-    }),
-
-    // 7. No Show Spa Appointment
-    prisma.reservation.create({
-      data: {
-        // Masaje Sueco Relajante
-        checkInDate: new Date('2024-12-05'),
-
-        checkOutDate: new Date('2024-12-05'),
-
-        guests: 1,
-
-        metadata: {
-          attemptedContact: true,
-          contactAttempts: 3,
-          noShowTime: '10:15',
-          waitTime: 30,
-        },
-
-        notes: 'Cliente no se presentó a la cita',
-
-        serviceId: spaServices[5].id,
-
-        specialRequests: 'Había solicitado música clásica durante el masaje',
-
-        status: ReservationStatus.NO_SHOW,
-
-        totalAmount: 980.0,
-
-        userId: users[8].id,
-        // Lucía Fernanda
-        venueId: spaGrandFiesta.id,
-      },
-    }),
-
-    // 8. Cancelled Tour - Weather Issues
-    prisma.reservation.create({
-      data: {
-        // Tour Nocturno Regional
-        checkInDate: new Date('2024-12-08'),
-
-        checkOutDate: new Date('2024-12-08'),
-
-        guests: 4,
-
-        metadata: {
-          cancellationInitiator: 'venue',
-          cancellationReason: 'Weather conditions',
-          refundAmount: 1680.0,
-          rescheduleOffered: true,
-          weatherCondition: 'Heavy rain storm',
-        },
-
-        notes: 'Tour cancelado por condiciones climáticas adversas',
-
-        serviceId: tourServices[3].id,
-
-        specialRequests: 'Había solicitado paradas adicionales en mercados locales',
-
-        // 4 people * 420
-        status: ReservationStatus.CANCELLED,
-
-        totalAmount: 1680.0,
-
-        userId: users[9].id,
-        // Diego Alejandro
-        venueId: toursCentrales.id,
-      },
-    }),
-
-    // 9. Pending Large Event - Awaiting Approval
-    prisma.reservation.create({
-      data: {
-        // Evento Cultural en Teatro Histórico
-        checkInDate: new Date('2025-03-15'),
-
-        checkOutDate: new Date('2025-03-15'),
-
-        guests: 800,
-
-        metadata: {
-          approvalRequired: ['Cultural ministry', 'Theater board'],
-          awaitingApproval: true,
-          cateringRequired: true,
-          decorationTheme: 'Classical elegance',
-          eventType: 'Charity gala',
-        },
-
-        notes: 'Gala benéfica anual de la fundación',
-
-        serviceId: eventServices[4].id,
-
-        specialRequests:
-          'Requiere aprobación especial, decoración temática, servicio de catering para 800 personas',
-
-        status: ReservationStatus.PENDING,
-
-        totalAmount: 35000.0,
-
-        userId: users[6].id,
-        // Ana Patricia
-        venueId: teatroDegollado.id,
-      },
-    }),
-
-    // 10. Problematic Reservation - Multiple Changes
-    prisma.reservation.create({
-      data: {
-        // Cena Especial para Parejas
-        checkInDate: new Date('2024-12-14'),
-
-        checkOutDate: new Date('2024-12-14'),
-
-        guests: 2,
-
-        metadata: {
-          dietaryRestrictions: ['Gluten-free (1 guest)'],
-          modificationsCount: 3,
-          originalDate: new Date('2024-12-07'),
-          previousDates: ['2024-12-07', '2024-12-12', '2024-12-13'],
-          specialOccasion: 'Proposal dinner',
-        },
-
-        notes: 'Reservación modificada 3 veces por cambios de fecha del cliente',
-
-        serviceId: restaurantServices[3].id,
-
-        specialRequests:
-          'Mesa en terraza, menú sin gluten para una persona, vino espumoso nacional',
-
-        status: ReservationStatus.CONFIRMED,
-
-        totalAmount: 850.0,
-
-        userId: users[7].id,
-        // Roberto García
-        venueId: restauranteSantoDomingo.id,
-      },
-    }),
-
-    // 11. Successful Multi-Service Experience
-    prisma.reservation.create({
-      data: {
-        // Suite Presidencial Colonial
-        checkInDate: new Date('2024-12-22'),
-
-        checkOutDate: new Date('2024-12-25'),
-
-        guests: 4,
-
-        metadata: {
-          additionalServices: ['Spa treatments', 'Cultural tours', 'Airport transfer'],
-          familyStay: true,
-          guestAges: [35, 38, 12, 9],
-          holidayPackage: true,
-        },
-
-        notes: 'Estancia navideña familiar con servicios adicionales',
-
-        serviceId: casaSalazarServices[0].id,
-
-        specialRequests:
-          'Servicios de spa, tours culturales, cenas especiales, transporte al aeropuerto',
-
-        // 3 nights * 4500
-        status: ReservationStatus.CONFIRMED,
-
-        totalAmount: 13500.0,
-
-        userId: users[4].id,
-        // María Elena
-        venueId: casaSalazar.id,
-      },
-    }),
-
-    // 12. Last Minute Booking - Express Service
-    prisma.reservation.create({
-      data: {
-        // Masaje Relajante Completo Premium
-        checkInDate: new Date('2024-12-12'),
-
-        checkOutDate: new Date('2024-12-12'),
-
-        guests: 1,
-
-        metadata: {
-          bookingTime: '2 hours before service',
-          focusAreas: ['Neck', 'Shoulders'],
-          lastMinuteBooking: true,
-          preferredOils: ['Peppermint', 'Eucalyptus'],
-          stressRelief: true,
-        },
-
-        notes: 'Reservación de último minuto por estrés laboral',
-
-        serviceId: spaServices[0].id,
-
-        specialRequests: 'Terapia enfocada en tensión de cuello y hombros, aceites de menta',
-
-        status: ReservationStatus.CONFIRMED,
-
-        totalAmount: 1500.0,
-
-        userId: users[5].id,
-        // Carlos Alberto
-        venueId: spaVitania.id,
-      },
-    }),
-  ]);
-
-  console.log('📅 Created 12 comprehensive reservations covering all business scenarios');
-
-  // Create comprehensive payment records covering all statuses
-  const payments = await Promise.all([
-    // COMPLETED PAYMENTS - Happy Path
-
-    // 1. Successful Service Payment - Full Amount
-    prisma.payment.create({
-      data: {
-        // Service completed stay
-        amount: 5600.0,
-
-        currency: 'MXN',
-
-        description: 'Pago completo Suite Junior Colonial - 2 noches',
-
-        metadata: {
-          cardBrand: 'visa',
-          cardLast4: '4242',
-          invoiceNumber: 'INV-2024-001',
-          receiptSent: true,
-        },
-
-        paymentMethod: 'STRIPE_CARD',
-        // Juan Carlos
-        reservationId: reservations[0].id,
-        status: PaymentStatus.COMPLETED,
-        stripePaymentId: 'pi_completed_service_001',
-        transactionDate: new Date('2024-11-10'),
-        userId: users[3].id,
-      },
-    }),
-
-    // 2. Successful Spa VIP Package Payment
-    prisma.payment.create({
-      data: {
-        // Spa VIP package
-        amount: 3500.0,
-
-        currency: 'MXN',
-
-        description: 'Pago Paquete Día de Spa Completo VIP',
-
-        metadata: {
-          cardBrand: 'mastercard',
-          cardLast4: '5556',
-          giftMessage: 'Happy Birthday! Enjoy your special day!',
-          invoiceNumber: 'INV-2024-002',
-          receiptSent: true,
-        },
-
-        paymentMethod: 'STRIPE_CARD',
-        // María Elena
-        reservationId: reservations[1].id,
-        status: PaymentStatus.COMPLETED,
-        stripePaymentId: 'pi_completed_spa_001',
-        transactionDate: new Date('2024-12-15'),
-        userId: users[4].id,
-      },
-    }),
-
-    // 3. Corporate Tour Payment - Multiple Guests
-    prisma.payment.create({
-      data: {
-        // Premium tequila tour
-        amount: 10800.0,
-
-        currency: 'MXN',
-
-        description: 'Pago Experiencia Tequila Master Premium - 6 personas',
-
-        metadata: {
-          cardBrand: 'amex',
-          cardLast4: '1234',
-          corporateInvoice: true,
-          invoiceNumber: 'INV-2024-003',
-          receiptSent: true,
-          taxId: 'RFC123456789',
-        },
-
-        paymentMethod: 'STRIPE_CARD',
-        // Carlos Alberto
-        reservationId: reservations[2].id,
-        status: PaymentStatus.COMPLETED,
-        stripePaymentId: 'pi_completed_tour_001',
-        transactionDate: new Date('2024-12-16'),
-        userId: users[5].id,
-      },
-    }),
-
-    // 4. Fine Dining Experience Payment
-    prisma.payment.create({
-      data: {
-        // Restaurant fine dining
-        amount: 2400.0,
-
-        currency: 'MXN',
-
-        description: 'Pago Menú Degustación 7 Tiempos - 2 personas',
-
-        metadata: {
-          cardBrand: 'visa',
-          cardLast4: '9999',
-          invoiceNumber: 'INV-2024-004',
-          receiptSent: true,
-          specialOccasion: 'Anniversary dinner',
-          winepairing: true,
-        },
-
-        paymentMethod: 'STRIPE_CARD',
-        // Ana Patricia
-        reservationId: reservations[3].id,
-        status: PaymentStatus.COMPLETED,
-        stripePaymentId: 'pi_completed_dining_001',
-        transactionDate: new Date('2024-12-09'),
-        userId: users[6].id,
-      },
-    }),
-
-    // 5. Corporate Meeting Space Payment
-    prisma.payment.create({
-      data: {
-        // Corporate meeting
-        amount: 3500.0,
-
-        currency: 'MXN',
-
-        description: 'Pago Sala de Juntas Ejecutiva',
-
-        metadata: {
-          cardBrand: 'visa',
-          cardLast4: '8888',
-          corporateAccount: true,
-          invoiceNumber: 'INV-2024-005',
-          receiptSent: true,
-          taxDeductible: true,
-        },
-
-        paymentMethod: 'STRIPE_CARD',
-        // Gerente
-        reservationId: reservations[4].id,
-        status: PaymentStatus.COMPLETED,
-        stripePaymentId: 'pi_completed_corporate_001',
-        transactionDate: new Date('2024-12-14'),
-        userId: users[1].id,
-      },
-    }),
-
-    // REFUNDED PAYMENTS - Cancellations
-
-    // 6. Refunded Service Cancellation
-    prisma.payment.create({
-      data: {
-        // Cancelled service reservation
-        amount: 6400.0,
-
-        currency: 'MXN',
-
-        description: 'Reembolso Suite Ejecutiva Histórica - Cancelación por emergencia',
-
-        metadata: {
-          cardBrand: 'mastercard',
-          cardLast4: '7777',
-          originalInvoiceNumber: 'INV-2024-006',
-          refundAmount: 6400.0,
-          refundDate: new Date('2024-12-20'),
-          refundReason: 'Family emergency',
-        },
-
-        paymentMethod: 'STRIPE_CARD',
-        // Roberto García
-        reservationId: reservations[5].id,
-        status: PaymentStatus.REFUNDED,
-        stripePaymentId: 'pi_refunded_service_001',
-        transactionDate: new Date('2024-12-18'),
-        userId: users[7].id,
-      },
-    }),
-
-    // 7. Partial Refund - No Show with Policy
-    prisma.payment.create({
-      data: {
-        // No show spa appointment
-        amount: 980.0,
-
-        currency: 'MXN',
-
-        description: 'Pago cancelado - No show Masaje Sueco',
-
-        metadata: {
-          cardBrand: 'visa',
-          cardLast4: '3333',
-          noShowDate: new Date('2024-12-05'),
-          noShowPenalty: true,
-          originalInvoiceNumber: 'INV-2024-007',
-          penaltyAmount: 980.0,
-        },
-
-        paymentMethod: 'STRIPE_CARD',
-        // Lucía Fernanda
-        reservationId: reservations[6].id,
-        status: PaymentStatus.CANCELLED,
-        stripePaymentId: 'pi_cancelled_noshow_001',
-        transactionDate: new Date('2024-12-04'),
-        userId: users[8].id,
-      },
-    }),
-
-    // 8. Weather Cancellation - Full Refund
-    prisma.payment.create({
-      data: {
-        // Cancelled tour - weather
-        amount: 1680.0,
-
-        currency: 'MXN',
-
-        description: 'Reembolso Tour Nocturno - Cancelación por clima',
-
-        metadata: {
-          cardBrand: 'mastercard',
-          cardLast4: '6666',
-          originalInvoiceNumber: 'INV-2024-008',
-          refundAmount: 1680.0,
-          refundDate: new Date('2024-12-08'),
-          refundReason: 'Weather cancellation by venue',
-          venueInitiated: true,
-        },
-
-        paymentMethod: 'STRIPE_CARD',
-        // Diego Alejandro
-        reservationId: reservations[7].id,
-        status: PaymentStatus.REFUNDED,
-        stripePaymentId: 'pi_refunded_weather_001',
-        transactionDate: new Date('2024-12-07'),
-        userId: users[9].id,
-      },
-    }),
-
-    // PENDING/PROCESSING PAYMENTS
-
-    // 9. Processing Payment - Large Event
-    prisma.payment.create({
-      data: {
-        // Pending large event
-        amount: 35000.0,
-
-        currency: 'MXN',
-
-        description: 'Pago en proceso - Evento Cultural Teatro Histórico',
-
-        metadata: {
-          cardBrand: 'visa',
-          cardLast4: '2222',
-          estimatedCompletion: '2024-12-13',
-          largeAmount: true,
-          originalInvoiceNumber: 'INV-2024-009',
-          processingReason: 'Large amount verification',
-          requiresApproval: true,
-        },
-
-        paymentMethod: 'STRIPE_CARD',
-        // Ana Patricia
-        reservationId: reservations[8].id,
-        status: PaymentStatus.PROCESSING,
-        stripePaymentId: 'pi_processing_event_001',
-        transactionDate: new Date('2024-12-11'),
-        userId: users[6].id,
-      },
-    }),
-
-    // 10. Pending Payment - Bank Processing
-    prisma.payment.create({
-      data: {
-        // Problematic reservation
-        amount: 850.0,
-
-        currency: 'MXN',
-
-        description: 'Pago pendiente - Cena Especial para Parejas',
-
-        metadata: {
-          cardBrand: 'visa',
-          cardLast4: '1111',
-          lastRetry: new Date('2024-12-13'),
-          originalInvoiceNumber: 'INV-2024-010',
-          pendingReason: 'Bank verification required',
-          retryAttempts: 2,
-        },
-
-        paymentMethod: 'STRIPE_CARD',
-        // Roberto García
-        reservationId: reservations[9].id,
-        status: PaymentStatus.PENDING,
-        stripePaymentId: 'pi_pending_dinner_001',
-        transactionDate: new Date('2024-12-13'),
-        userId: users[7].id,
-      },
-    }),
-
-    // FAILED PAYMENTS
-
-    // 11. Failed Payment - Insufficient Funds
-    prisma.payment.create({
-      data: {
-        // Multi-service experience
-        amount: 13500.0,
-
-        currency: 'MXN',
-
-        description: 'Pago fallido - Suite Presidencial Colonial - Estancia navideña',
-
-        metadata: {
-          cardBrand: 'visa',
-          cardLast4: '0000',
-          failureCode: 'insufficient_funds',
-          failureReason: 'Insufficient funds',
-          originalInvoiceNumber: 'INV-2024-011',
-          retryAllowed: true,
-          retryAttempts: 0,
-        },
-
-        paymentMethod: 'STRIPE_CARD',
-        // María Elena
-        reservationId: reservations[10].id,
-        status: PaymentStatus.FAILED,
-        stripePaymentId: 'pi_failed_funds_001',
-        transactionDate: new Date('2024-12-21'),
-        userId: users[4].id,
-      },
-    }),
-
-    // 12. Failed Payment - Card Declined
-    prisma.payment.create({
-      data: {
-        // Last minute spa booking
-        amount: 1500.0,
-
-        currency: 'MXN',
-
-        description: 'Pago fallido - Masaje Relajante Premium',
-
-        metadata: {
-          cardBrand: 'visa',
-          cardLast4: '0002',
-          contactBank: true,
-          failureCode: 'card_declined',
-          failureReason: 'Card declined by issuer',
-          originalInvoiceNumber: 'INV-2024-012',
-          retryAllowed: false,
-        },
-
-        paymentMethod: 'STRIPE_CARD',
-        // Carlos Alberto
-        reservationId: reservations[11].id,
-        status: PaymentStatus.FAILED,
-        stripePaymentId: 'pi_failed_declined_001',
-        transactionDate: new Date('2024-12-12'),
-        userId: users[5].id,
-      },
-    }),
-
-    // ADDITIONAL SUCCESSFUL PAYMENTS FOR VARIETY
-
-    // 13. Split Payment - Group Tour
-    prisma.payment.create({
-      data: {
-        // Premium tequila tour (additional payment)
-        amount: 1800.0,
-
-        // Individual portion
-        currency: 'MXN',
-
-        description: 'Pago individual - Experiencia Tequila Master Premium',
-
-        metadata: {
-          cardBrand: 'mastercard',
-          cardLast4: '4567',
-          groupReservation: true,
-          individualPortion: 1,
-          invoiceNumber: 'INV-2024-013',
-          receiptSent: true,
-          splitPayment: true,
-          totalGroupSize: 6,
-        },
-
-        paymentMethod: 'STRIPE_CARD',
-        // Juan Carlos - paying for others
-        reservationId: reservations[2].id,
-        status: PaymentStatus.COMPLETED,
-        stripePaymentId: 'pi_split_payment_001',
-        transactionDate: new Date('2024-12-16'),
-        userId: users[3].id,
-      },
-    }),
-
-    // 14. Tip/Gratuity Payment
-    prisma.payment.create({
-      data: {
-        // Fine dining (additional tip)
-        amount: 480.0,
-
-        // 20% tip
-        currency: 'MXN',
-
-        description: 'Propina - Menú Degustación 7 Tiempos',
-
-        metadata: {
-          cardBrand: 'visa',
-          cardLast4: '9999',
-          invoiceNumber: 'INV-2024-014',
-          originalAmount: 2400.0,
-          receiptSent: true,
-          serviceRating: 5,
-          tipPayment: true,
-          tipPercentage: 20,
-        },
-
-        paymentMethod: 'STRIPE_CARD',
-        // Ana Patricia
-        reservationId: reservations[3].id,
-        status: PaymentStatus.COMPLETED,
-        stripePaymentId: 'pi_tip_payment_001',
-        transactionDate: new Date('2024-12-10'),
-        userId: users[6].id,
-      },
-    }),
-
-    // 15. Upgrade Payment
-    prisma.payment.create({
-      data: {
-        // Spa VIP (upgrade payment)
-        amount: 500.0,
-
-        // Upgrade fee
-        currency: 'MXN',
-
-        description: 'Upgrade a tratamiento VIP - Día de Spa',
-
-        metadata: {
-          cardBrand: 'mastercard',
-          cardLast4: '5556',
-          invoiceNumber: 'INV-2024-015',
-          originalService: 'Standard spa package',
-          receiptSent: true,
-          upgradePayment: true,
-          upgradeType: 'VIP amenities',
-          upgradedService: 'VIP spa package',
-        },
-
-        paymentMethod: 'STRIPE_CARD',
-        // María Elena
-        reservationId: reservations[1].id,
-        status: PaymentStatus.COMPLETED,
-        stripePaymentId: 'pi_upgrade_payment_001',
-        transactionDate: new Date('2024-12-19'),
-        userId: users[4].id,
-      },
-    }),
-  ]);
-
-  console.log('💳 Created 15 comprehensive payments covering all scenarios');
-
-  // Create comprehensive system configuration
-  await prisma.systemConfig.createMany({
-    data: [
-      {
-        key: 'site_settings',
-        value: {
-          address: 'Centro de Servicios Nacional',
-          businessHours: '24/7 Customer Support',
-          contactEmail: 'contacto@reservapp.com',
-          contactPhone: '+52 33 1234 5678',
-          siteDescription: 'Plataforma integral de reservas para servicios premium',
-          siteName: 'ReservaApp',
-          socialMedia: {
-            facebook: 'https://facebook.com/reservapp',
-            instagram: 'https://instagram.com/reservapp_gdl',
-            twitter: 'https://twitter.com/reservapp',
-          },
-        },
-      },
-      {
-        key: 'payment_settings',
-        value: {
-          cancellationFees: {
-            accommodation: { sameDay: 100, within24h: 50, within48h: 0 },
-            events: { within15days: 15, within30days: 0, within7days: 30 },
-            restaurant: { sameDay: 100, within2h: 50, within4h: 0 },
-            spa: { sameDay: 100, within24h: 0, within4h: 50 },
-            tours: { sameDay: 50, within24h: 25, within48h: 0 },
-          },
-
+  for (const venue of eventVenues) {
+    const eventServices = await Promise.all([
+      prisma.service.create({
+        data: {
+          name: 'Evento Corporativo Completo',
+          description: 'Paquete integral para eventos corporativos con salón, catering, audiovisuales y coordinación.',
+          category: ServiceType.EVENT_MEETING,
+          subcategory: 'Evento Corporativo',
+          price: 15000,
           currency: 'MXN',
-
-          maximumAmount: 50000.0,
-
-          // Stripe fee
-          minimumAmount: 100.0,
-
-          // IVA México
-          processingFee: 3.6,
-
-          refundPolicy: 'Refunds processed within 5-10 business days',
-          taxRate: 16,
+          duration: 480,
+          capacity: 200,
+          venueId: venue.id,
+          isActive: true,
+          createdAt: venue.createdAt,
         },
-      },
-      {
-        key: 'business_hours',
-        value: {
-          customerService: {
-            friday: { close: '23:00', open: '08:00' },
-            monday: { close: '22:00', open: '08:00' },
-            saturday: { close: '23:00', open: '09:00' },
-            sunday: { close: '21:00', open: '09:00' },
-            thursday: { close: '22:00', open: '08:00' },
-            tuesday: { close: '22:00', open: '08:00' },
-            wednesday: { close: '22:00', open: '08:00' },
-          },
-          emergencySupport: '24/7',
+      }),
+      prisma.service.create({
+        data: {
+          name: 'Boda Premium',
+          description: 'Paquete completo de boda con decoración, banquete, música en vivo y coordinación total.',
+          category: ServiceType.EVENT_MEETING,
+          subcategory: 'Boda',
+          price: 25000,
+          currency: 'MXN',
+          duration: 600,
+          capacity: 300,
+          venueId: venue.id,
+          isActive: true,
+          createdAt: venue.createdAt,
         },
-      },
-      {
-        key: 'notification_settings',
-        value: {
-          emailNotifications: {
-            bookingConfirmation: true,
-            cancellationNotice: true,
-            paymentConfirmation: true,
-            promotionalEmails: false,
-            reminderEmails: true,
-          },
-          pushNotifications: {
-            bookingUpdates: true,
-            enabled: true,
-            promotionalOffers: false,
-          },
-          smsNotifications: {
-            bookingConfirmation: true,
-            paymentConfirmation: false,
-            reminderSms: true,
-          },
+      }),
+    ]);
+    allServices.push(...eventServices);
+  }
+
+  // Tour Services
+  for (const venue of tourVenues) {
+    const tourServices = await Promise.all([
+      prisma.service.create({
+        data: {
+          name: 'Tour Pueblos Mágicos',
+          description: 'Tour completo por los pueblos mágicos de Jalisco con transportación, guía y comida incluida.',
+          category: ServiceType.TOUR_EXPERIENCE,
+          subcategory: 'Tour Cultural',
+          price: 1500,
+          currency: 'MXN',
+          duration: 600,
+          capacity: 15,
+          venueId: venue.id,
+          isActive: true,
+          createdAt: venue.createdAt,
         },
-      },
-      {
-        key: 'service_categories',
-        value: {
-          accommodation: {
-            averageRating: 4.5,
-            description: 'Suites y alojamiento',
-            icon: 'accommodation',
-            name: 'Hospedaje',
-          },
-          dining: {
-            averageRating: 4.6,
-            description: 'Restaurantes y experiencias culinarias',
-            icon: 'restaurant',
-            name: 'Gastronomía',
-          },
-          entertainment: {
-            averageRating: 4.6,
-            description: 'Espectáculos y eventos culturales',
-            icon: 'theater',
-            name: 'Entretenimiento',
-          },
-          event_meeting: {
-            averageRating: 4.4,
-            description: 'Espacios para eventos corporativos',
-            icon: 'event',
-            name: 'Eventos y Reuniones',
-          },
-          spa_wellness: {
-            averageRating: 4.7,
-            description: 'Tratamientos de spa y relajación',
-            icon: 'spa',
-            name: 'Spa y Bienestar',
-          },
-          tour_experience: {
-            averageRating: 4.8,
-            description: 'Tours culturales y gastronómicos',
-            icon: 'tour',
-            name: 'Tours y Experiencias',
-          },
+      }),
+      prisma.service.create({
+        data: {
+          name: 'Ruta del Tequila',
+          description: 'Tour especializado por las destilerías de tequila con cata, transporte y comida tradicional.',
+          category: ServiceType.TOUR_EXPERIENCE,
+          subcategory: 'Tour Gastronómico',
+          price: 1800,
+          currency: 'MXN',
+          duration: 480,
+          capacity: 12,
+          venueId: venue.id,
+          isActive: true,
+          createdAt: venue.createdAt,
         },
-      },
-      {
-        key: 'pricing_rules',
-        value: {
-          discounts: {
-            earlyBird: { days: 30, discount: 0.15 },
-            groupDiscount: { discount: 0.1, minPeople: 6 },
-            loyalCustomer: { discount: 0.12, minBookings: 5 },
-          },
-          seasonalMultipliers: {
-            highSeason: { months: [12, 1, 7, 8], multiplier: 1.3 },
-            regularSeason: { months: [2, 3, 4, 5, 6, 9, 10, 11], multiplier: 1.0 },
-          },
-          specialDates: {
-            christmas: { date: '2024-12-25', multiplier: 1.5 },
-            motherDay: { date: '2024-05-10', multiplier: 1.2 },
-            newYear: { date: '2024-12-31', multiplier: 1.8 },
-            valentine: { date: '2024-02-14', multiplier: 1.2 },
-          },
-        },
-      },
-      {
-        key: 'quality_metrics',
-        value: {
-          averageRatings: {
-            accommodation: 4.5,
-            dining: 4.7,
-            entertainment: 4.7,
-            events: 4.4,
-            overall: 4.6,
-            spa: 4.8,
-            tours: 4.6,
-          },
-          repeatCustomerRate: 78.2,
-          responseTime: {
-            bookingConfirmation: '5 minutes',
-            emailQueries: '2 hours',
-            phoneSupport: '30 seconds',
-          },
-          satisfactionRate: 94.5,
-        },
-      },
-    ],
-  });
+      }),
+    ]);
+    allServices.push(...tourServices);
+  }
 
-  console.log('⚙️ Created comprehensive system configuration');
+  console.log(`✅ Created ${allServices.length} services across all venues`);
 
-  // Create realistic reviews for venues and services
-  const reviewsData = [
-    // Casa Salazar (luxury accommodation) - Reviews
-    {
-      comment:
-        'Casa Salazar superó todas mis expectativas. El servicio es impecable, las instalaciones de lujo y la atención personalizada es extraordinaria. Definitivamente regresaré para una ocasión especial.',
-      isVerified: true,
-      isVisible: true,
-      metadata: { roomType: 'Suite Premium', stayDuration: '3 nights' },
+  console.log('📅 Creating historical reservations with realistic patterns...');
 
-      rating: 5,
+  // All users for reservations (excluding admins)
+  const allUsers = [demoUser, ...regularUsers];
 
-      // Casa Salazar
-      reservationId: reservations[0].id,
+  // Create reservations over 6 months with growth patterns
+  const allReservations = [];
 
-      title: 'Experiencia inolvidable',
+  // Generate reservations for each month with realistic growth pattern
+  // Note: Today is August 14, so we need data through current month
+  for (let monthsAgo = 6; monthsAgo >= 0; monthsAgo--) {
+    let baseReservationsThisMonth;
 
-      userId: users[3].id,
-      // María García
-      venueId: venues[0].id,
-    },
-    {
-      comment:
-        'Hotel hermoso con excelente ubicación. El personal muy amable y las habitaciones cómodas. Solo mejoraría el wifi que a veces era lento.',
-      isVerified: true,
-      isVisible: true,
-      // Casa Salazar
-      metadata: { highlight: 'breakfast', stayDuration: '2 nights' },
+    if (monthsAgo === 0) {
+      // August (current month, only 14 days) - 28 reservations for full month, so ~14 for half
+      baseReservationsThisMonth = 14;
+    } else if (monthsAgo === 1) {
+      // July - Peak season, more than June (55 reservations)
+      baseReservationsThisMonth = 55;
+    } else {
+      // Feb to June - Original growth pattern (10 to 50)
+      baseReservationsThisMonth = Math.floor(10 + (6 - monthsAgo) * 8);
+    }
 
-      rating: 4,
+    for (let i = 0; i < baseReservationsThisMonth; i++) {
+      // Random user for this reservation
+      const randomUser = allUsers[Math.floor(Math.random() * allUsers.length)];
 
-      title: 'Muy buena estadía',
+      // Random service (and its venue)
+      const randomService = allServices[Math.floor(Math.random() * allServices.length)];
+      const venue = allVenues.find(v => v.id === randomService.venueId);
 
-      userId: users[4].id,
-      // Carlos López
-      venueId: venues[0].id,
-    },
-    {
-      comment:
-        'Elegimos Casa Salazar para nuestra luna de miel y fue la decisión perfecta. Cada detalle estaba cuidado, desde la decoración hasta el servicio de habitación. ¡Altamente recomendado!',
-      isVerified: false,
-      isVisible: true,
-      // Casa Salazar
-      metadata: { occasion: 'honeymoon', specialRequest: 'romantic setup' },
+      // Generate realistic dates
+      const reservationDate = getBusinessGrowthDate(monthsAgo);
 
-      rating: 5,
+      // Check-in date (1-30 days after reservation)
+      const checkInDate = new Date(reservationDate);
+      checkInDate.setDate(checkInDate.getDate() + Math.floor(Math.random() * 30) + 1);
 
-      title: 'Perfecto para luna de miel',
-
-      userId: users[5].id,
-      // Ana Martínez
-      venueId: venues[0].id,
-    },
-
-    // Santo Domingo (restaurant) - Reviews
-    {
-      comment:
-        'Santo Domingo ofrece una experiencia culinaria única. Cada platillo es una obra de arte, los sabores son increíbles y el ambiente muy sofisticado. El chef realmente sabe lo que hace.',
-      isVerified: true,
-      isVisible: true,
-      metadata: { partySize: 4, specialDiet: 'vegetarian options' },
-
-      rating: 5,
-
-      // Santo Domingo
-      reservationId: reservations[2].id,
-
-      title: 'Cocina excepcional',
-
-      userId: users[6].id,
-      // Diego Rodríguez
-      venueId: venues[2].id,
-    },
-    {
-      comment:
-        'Celebramos nuestro aniversario aquí y fue espectacular. La comida deliciosa, el servicio atento y el ambiente muy romántico. Los precios son altos pero vale la pena.',
-      isVerified: true,
-      isVisible: true,
-      // Santo Domingo
-      metadata: { favoritedish: 'risotto', occasion: 'anniversary' },
-
-      rating: 4,
-
-      title: 'Excelente para celebraciones',
-
-      userId: users[7].id,
-      // Sofía Hernández
-      venueId: venues[2].id,
-    },
-    {
-      comment:
-        'La comida está rica y la presentación es muy buena, pero considero que los precios están muy elevados para la porción que sirven. El servicio es correcto.',
-      isVerified: false,
-      isVisible: true,
-      // Santo Domingo
-      metadata: { pricePoint: 'expensive', serviceRating: 4 },
-
-      rating: 3,
-
-      title: 'Bueno pero caro',
-
-      userId: users[8].id,
-      // Roberto Jiménez
-      venueId: venues[2].id,
-    },
-
-    // Vitania Spa - Reviews
-    {
-      comment:
-        'El masaje relajante en Vitania fue exactamente lo que necesitaba. Las instalaciones son hermosas, muy limpias y el personal altamente profesional. Me sentí renovada completamente.',
-      isVerified: true,
-      isVisible: true,
-      metadata: { duration: '90 minutes', treatment: 'Swedish massage' },
-      rating: 5,
-
-      reservationId: reservations[4].id,
-
-      // Patricia Morales
-      serviceId: services.find((s) => s.name.includes('Masaje'))?.id,
-
-      title: 'Relajación total',
-      userId: users[9].id,
-    },
-    {
-      comment:
-        'Excellent spa experience. Las terapistas saben lo que hacen y el ambiente es muy tranquilo. Solo sugeriría mejorar la música de relajación.',
-      isVerified: true,
-      isVisible: true,
-      metadata: { improvement: 'background music', therapist: 'Ana' },
-      rating: 4,
-
-      // María García
-      serviceId: services.find((s) => s.name.includes('Masaje'))?.id,
-
-      title: 'Muy recomendable',
-      userId: users[3].id,
-    },
-
-    // Tour Cultural - Reviews
-    {
-      comment:
-        'El tour cultural por Guadalajara fue fascinante. El guía muy conocedor de la historia local, visitamos lugares increíbles y aprendí mucho sobre la cultura tapatía. Totalmente recomendado.',
-      isVerified: true,
-      isVisible: true,
-      metadata: { groupSize: 12, highlights: ['Teatro Degollado', 'Centro Histórico'] },
-      rating: 5,
-
-      reservationId: reservations[5].id,
-
-      // Carlos López
-      serviceId: services.find((s) => s.name.includes('Tour Cultural'))?.id,
-
-      title: 'Tour increíble',
-      userId: users[4].id,
-    },
-    {
-      comment:
-        'Tour muy completo y educativo. El guía explicó muy bien la historia de cada lugar. Solo que el grupo era un poco grande y a veces costaba trabajo escuchar.',
-      isVerified: true,
-      isVisible: true,
-      metadata: { groupSize: 15, suggestion: 'smaller groups' },
-      rating: 4,
-
-      // Ana Martínez
-      serviceId: services.find((s) => s.name.includes('Tour Cultural'))?.id,
-
-      title: 'Muy educativo',
-      userId: users[5].id,
-    },
-
-    // Event Center Expo - Reviews
-    {
-      comment:
-        'Organizamos la conferencia anual de nuestra empresa en Expo y todo salió perfecto. Las instalaciones son modernas, el equipo técnico funciona bien y el staff muy profesional.',
-      isVerified: true,
-      isVisible: true,
-      metadata: { attendees: 150, eventType: 'corporate conference' },
-
-      rating: 4,
-
-      // Expo Guadalajara
-      reservationId: reservations[6].id,
-
-      title: 'Excelente para eventos',
-
-      userId: users[6].id,
-      // Diego Rodríguez
-      venueId: venues[8].id,
-    },
-
-    // Additional reviews for better distribution
-    {
-      comment:
-        'No puedo decir más que cosas positivas. Desde la reservación hasta el check-out, todo fue perfecto. El personal siempre dispuesto a ayudar y las instalaciones impecables.',
-      isVerified: false,
-      isVisible: true,
-      // Hotel Morales
-      metadata: { cleanliness: 5, serviceHighlight: 'concierge' },
-
-      rating: 5,
-
-      title: 'Servicio excepcional',
-
-      userId: users[7].id,
-      // Sofía Hernández
-      venueId: venues[1].id,
-    },
-    {
-      comment:
-        'La ubicación es buena pero las instalaciones necesitan mantenimiento. El aire acondicionado no funcionaba bien y el servicio fue lento. Esperaba más por el precio.',
-      isVerified: true,
-      isVisible: true,
-      // Hotel Morales
-      metadata: { issues: ['AC problems', 'slow service'], needsImprovement: true },
-
-      rating: 2,
-
-      title: 'Podría mejorar',
-
-      userId: users[8].id,
-      // Roberto Jiménez
-      venueId: venues[1].id,
-    },
-    {
-      comment:
-        'Hueso tiene un concepto muy interesante y la comida mexicana contemporánea está deliciosa. Ambiente único y creativo. Los cocteles también están muy buenos.',
-      isVerified: true,
-      isVisible: true,
-      // Hueso
-      metadata: { cuisine: 'contemporary Mexican', favoriteItem: 'cocktails' },
-
-      rating: 4,
-
-      title: 'Rica comida mexicana',
-
-      userId: users[9].id,
-      // Patricia Morales
-      venueId: venues[3].id,
-    },
-  ];
-
-  // Create reviews with error handling
-  const reviews = [];
-  for (const reviewData of reviewsData) {
-    try {
-      if (reviewData.userId && (reviewData.venueId || reviewData.serviceId)) {
-        const review = await prisma.review.create({
-          data: {
-            comment: reviewData.comment,
-            // Add some variation in creation dates (last 6 months)
-            createdAt: new Date(Date.now() - Math.random() * 180 * 24 * 60 * 60 * 1000),
-
-            isVerified: reviewData.isVerified,
-
-            isVisible: reviewData.isVisible,
-
-            metadata: reviewData.metadata || null,
-
-            rating: reviewData.rating,
-
-            reservationId: reviewData.reservationId || null,
-
-            serviceId: reviewData.serviceId || null,
-
-            title: reviewData.title,
-
-            userId: reviewData.userId,
-
-            venueId: reviewData.venueId || null,
-          },
-        });
-        reviews.push(review);
+      // Check-out date (1-7 days after check-in for accommodation, same day for others)
+      const checkOutDate = new Date(checkInDate);
+      if (randomService.category === ServiceType.ACCOMMODATION) {
+        checkOutDate.setDate(checkOutDate.getDate() + Math.floor(Math.random() * 7) + 1);
+      } else {
+        checkOutDate.setHours(checkInDate.getHours() + Math.floor(randomService.duration / 60));
       }
-    } catch (error) {
-      console.warn(
-        `⚠️ Skipped review creation:`,
-        error instanceof Error ? error.message : 'Unknown error'
-      );
+
+      // Realistic guest count
+      const guests = Math.min(Math.floor(Math.random() * randomService.capacity) + 1, randomService.capacity);
+
+      // Calculate total amount with some variation
+      const baseAmount = getRealisticAmount(randomService.category, monthsAgo);
+      const totalAmount = baseAmount * guests;
+
+      // Status distribution (older reservations more likely completed)
+      const statusOptions = monthsAgo > 3 
+        ? [ReservationStatus.COMPLETED, ReservationStatus.COMPLETED, ReservationStatus.CANCELLED]
+        : monthsAgo > 1
+        ? [ReservationStatus.COMPLETED, ReservationStatus.CONFIRMED, ReservationStatus.CANCELLED]
+        : [ReservationStatus.CONFIRMED, ReservationStatus.PENDING, ReservationStatus.IN_PROGRESS];
+      
+      const status = statusOptions[Math.floor(Math.random() * statusOptions.length)];
+      
+      const reservation = await prisma.reservation.create({
+        data: {
+          status,
+          checkInDate,
+          checkOutDate,
+          guests,
+          totalAmount,
+          currency: 'MXN',
+          notes: `Reservación automática generada para ${venue?.name}`,
+          userId: randomUser.id,
+          venueId: randomService.venueId,
+          serviceId: randomService.id,
+          createdAt: reservationDate,
+          updatedAt: reservationDate,
+        },
+      });
+      
+      allReservations.push(reservation);
     }
   }
 
-  console.log(`⭐ Created ${reviews.length} realistic reviews with ratings and comments`);
-  console.log('🎉 Comprehensive database seeding completed successfully!');
+  console.log(`✅ Created ${allReservations.length} reservations across 6 months with growth pattern`);
 
-  // Print detailed summary
-  console.log('\n📊 COMPREHENSIVE SEEDING SUMMARY:');
-  console.log('=====================================');
-  console.log(`👥 Users: ${users.length} (Admin: 3, Customers: 7)`);
-  console.log(`🏢 Venues: 10 diverse locations across various cities`);
-  console.log(`   - Accommodation Venues: 2 (Casa Salazar, Morales)`);
-  console.log(`   - Restaurants: 2 (Santo Domingo, Hueso)`);
-  console.log(`   - Spas: 2 (Vitania, Grand Fiesta)`);
-  console.log(`   - Tours: 2 (Cultural, Tequila)`);
-  console.log(`   - Events: 2 (Expo, Teatro Degollado)`);
-  console.log(`🎯 Services: 35+ with realistic MXN pricing`);
-  console.log(`   - Accommodation: $1,200 - $4,500 MXN/night`);
-  console.log(`   - Dining: $0 - $1,200 MXN/person`);
-  console.log(`   - Spa: $950 - $3,500 MXN/treatment`);
-  console.log(`   - Tours: $350 - $1,800 MXN/person`);
-  console.log(`   - Events: $3,500 - $35,000 MXN/event`);
-  console.log(`📅 Reservations: ${reservations.length} covering all scenarios`);
-  console.log(`   - ✅ Happy Path: 7 (confirmed, completed, checked-in)`);
-  console.log(`   - ❌ Sad Path: 5 (cancelled, no-show, pending issues)`);
-  console.log(`💳 Payments: ${payments.length} comprehensive payment scenarios`);
-  console.log(`   - ✅ Completed: 9 ($85,330 MXN total)`);
-  console.log(`   - 🔄 Refunded: 2 ($8,080 MXN refunded)`);
-  console.log(`   - ⏳ Processing: 2 ($35,850 MXN processing)`);
-  console.log(`   - ❌ Failed: 2 ($15,000 MXN failed)`);
-  console.log(`   - 🎯 Special: 2 (tips, upgrades)`);
-  console.log(`⭐ Reviews: ${reviews.length} authentic customer reviews`);
-  console.log(`   - ⭐⭐⭐⭐⭐ 5-star: ${reviews.filter((r) => r.rating === 5).length}`);
-  console.log(`   - ⭐⭐⭐⭐ 4-star: ${reviews.filter((r) => r.rating === 4).length}`);
-  console.log(`   - ⭐⭐⭐ 3-star: ${reviews.filter((r) => r.rating === 3).length}`);
-  console.log(`   - ⭐⭐ 2-star: ${reviews.filter((r) => r.rating === 2).length}`);
-  console.log(`   - ✅ Verified: ${reviews.filter((r) => r.isVerified).length} reviews`);
-  console.log(`   - 💬 With Comments: ${reviews.filter((r) => r.comment).length} reviews`);
-  console.log(`⚙️ System Configuration: 7 comprehensive settings`);
-  console.log(`\n🌮 GUADALAJARA FOCUS:`);
-  console.log(`   - Real venues with GPS coordinates`);
-  console.log(`   - Authentic Mexican pricing in MXN`);
-  console.log(`   - Local business scenarios`);
-  console.log(`   - Cultural context and preferences`);
+  console.log('💰 Creating payment records for reservations...');
 
-  console.log(`\n🎯 BUSINESS SCENARIOS COVERED:`);
-  console.log(`   ✅ Successful bookings and payments`);
-  console.log(`   ❌ Cancellations (customer & venue initiated)`);
-  console.log(`   ⚠️  No-shows with penalties`);
-  console.log(`   🔄 Refunds and processing delays`);
-  console.log(`   💳 Payment failures and retries`);
-  console.log(`   🎉 Special occasions and celebrations`);
-  console.log(`   🏢 Corporate events and group bookings`);
-  console.log(`   ⭐ Premium services and upgrades`);
-  console.log(`   📊 Quality metrics and ratings`);
+  const allPayments = [];
+  
+  for (const reservation of allReservations) {
+    // Only create payments for confirmed/completed reservations
+    if ([ReservationStatus.CONFIRMED, ReservationStatus.COMPLETED, ReservationStatus.IN_PROGRESS, ReservationStatus.CHECKED_OUT].includes(reservation.status)) {
+      
+      // Payment status based on reservation status
+      let paymentStatus: PaymentStatus = PaymentStatus.PENDING;
+      if (reservation.status === ReservationStatus.COMPLETED) {
+        paymentStatus = PaymentStatus.COMPLETED;
+      } else if (reservation.status === ReservationStatus.CONFIRMED) {
+        paymentStatus = Math.random() > 0.3 ? PaymentStatus.COMPLETED : PaymentStatus.PENDING;
+      }
+      
+      // Transaction date (same day as reservation or slightly later)
+      const transactionDate = new Date(reservation.createdAt);
+      if (paymentStatus === PaymentStatus.COMPLETED) {
+        transactionDate.setHours(transactionDate.getHours() + Math.floor(Math.random() * 24));
+      }
+      
+      const payment = await prisma.payment.create({
+        data: {
+          amount: reservation.totalAmount,
+          currency: reservation.currency,
+          status: paymentStatus,
+          paymentMethod: 'stripe',
+          transactionDate: paymentStatus === PaymentStatus.COMPLETED ? transactionDate : null,
+          description: `Pago para reservación ${reservation.confirmationId}`,
+          stripePaymentId: paymentStatus === PaymentStatus.COMPLETED ? `pi_${Math.random().toString(36).substr(2, 9)}` : null,
+          userId: reservation.userId,
+          reservationId: reservation.id,
+          createdAt: reservation.createdAt,
+          updatedAt: transactionDate,
+        },
+      });
+      
+      allPayments.push(payment);
+      
+      // Create receipts for completed payments
+      if (paymentStatus === PaymentStatus.COMPLETED) {
+        // Convert Decimal to number for calculations
+        const amountNum = Number(payment.amount);
+        await prisma.receipt.create({
+          data: {
+            type: ReceiptType.PAYMENT,
+            status: ReceiptStatus.VERIFIED,
+            amount: payment.amount,
+            currency: payment.currency,
+            issueDate: transactionDate,
+            paidDate: transactionDate,
+            taxAmount: amountNum * 0.16, // 16% IVA
+            subtotalAmount: amountNum * 0.84,
+            isVerified: true,
+            verifiedAt: transactionDate,
+            paymentId: payment.id,
+            userId: payment.userId,
+            createdAt: transactionDate,
+          },
+        });
+      }
+    }
+  }
+
+  console.log(`✅ Created ${allPayments.length} payments with realistic status distribution`);
+
+  console.log('🏦 Creating payment history for businesses...');
+
+  // Create payment histories for completed payments (business deposits)
+  const completedPayments = allPayments.filter(p => p.status === PaymentStatus.COMPLETED);
+  
+  for (const payment of completedPayments) {
+    const reservation = allReservations.find(r => r.id === payment.reservationId);
+    const service = allServices.find(s => s.id === reservation?.serviceId);
+    const venue = allVenues.find(v => v.id === service?.venueId);
+    const businessAccount = businessAccounts.find(ba => ba.ownerId === venue?.ownerId);
+    const bankAccount = bankAccounts.find(ba => ba.businessAccountId === businessAccount?.id);
+    
+    if (businessAccount && bankAccount) {
+      // Calculate deposit amount (90% of payment, 10% platform fee)
+      const depositAmount = Number(payment.amount) * 0.9;
+      
+      // Deposit date (1-3 days after payment)
+      const depositDate = new Date(payment.transactionDate || payment.createdAt);
+      depositDate.setDate(depositDate.getDate() + Math.floor(Math.random() * 3) + 1);
+      
+      await prisma.paymentHistory.create({
+        data: {
+          amount: depositAmount,
+          currency: payment.currency,
+          status: DepositStatus.COMPLETED,
+          transactionRef: `dep_${Math.random().toString(36).substr(2, 9)}`,
+          description: `Depósito por reservación ${reservation?.confirmationId}`,
+          depositDate,
+          processedDate: depositDate,
+          businessAccountId: businessAccount.id,
+          bankAccountId: bankAccount.id,
+          reservationId: reservation!.id,
+          createdAt: payment.createdAt,
+        },
+      });
+    }
+  }
+
+  console.log('✅ Created payment history records for business deposits');
+
+  console.log('📞 Creating contact forms...');
+
+  const contactForms = await Promise.all([
+    prisma.contactForm.create({
+      data: {
+        name: 'Carlos Mendoza',
+        email: 'carlos.mendoza@empresarial.com',
+        phone: '+52 33 1234 5678',
+        subject: 'Consulta sobre eventos corporativos',
+        message: 'Hola, estoy interesado en organizar un evento corporativo para 150 personas. Me gustaría saber sobre disponibilidad y precios para el próximo mes.',
+        status: ContactFormStatus.PENDING,
+        createdAt: getBusinessGrowthDate(1),
+      },
+    }),
+    prisma.contactForm.create({
+      data: {
+        name: 'María Elena Vázquez',
+        email: 'maria.vazquez@hotmail.com',
+        phone: '+52 33 9876 5432',
+        subject: 'Información sobre paquetes de boda',
+        message: 'Buenos días, estoy planeando mi boda para diciembre y me interesa conocer sus paquetes completos. ¿Podrían enviarme información detallada?',
+        status: ContactFormStatus.IN_PROGRESS,
+        notes: 'Se envió cotización por email. Pendiente respuesta.',
+        createdAt: getBusinessGrowthDate(2),
+        updatedAt: getBusinessGrowthDate(1),
+      },
+    }),
+    prisma.contactForm.create({
+      data: {
+        name: 'Roberto Silva',
+        email: 'roberto.silva@gmail.com',
+        phone: '+52 33 5555 7777',
+        subject: 'Problema con reservación',
+        message: 'Tengo un problema con mi reservación #RES123456. No puedo modificar las fechas desde la plataforma y necesito ayuda urgente.',
+        status: ContactFormStatus.RESOLVED,
+        notes: 'Problema resuelto. Se modificó la reservación directamente en el sistema.',
+        createdAt: getBusinessGrowthDate(3),
+        updatedAt: getBusinessGrowthDate(2),
+      },
+    }),
+    prisma.contactForm.create({
+      data: {
+        name: 'Ana Lucía Torres',
+        email: 'ana.torres@universidad.edu.mx',
+        phone: '+52 33 2222 8888',
+        subject: 'Alianza comercial universidades',
+        message: 'Representamos a un grupo de universidades y nos interesa establecer una alianza comercial para eventos académicos y estancias. ¿Podríamos agendar una reunión?',
+        status: ContactFormStatus.IN_PROGRESS,
+        notes: 'Reunión programada para próxima semana con equipo comercial.',
+        createdAt: getBusinessGrowthDate(2),
+        updatedAt: getBusinessGrowthDate(1),
+      },
+    }),
+    prisma.contactForm.create({
+      data: {
+        name: 'Fernando Jiménez',
+        email: 'fernando.jimenez@turismo.gob.mx',
+        phone: '+52 33 3333 4444',
+        subject: 'Colaboración sector turístico',
+        message: 'Desde la Secretaría de Turismo estamos interesados en incluir su plataforma en nuestros programas de promoción turística regional.',
+        status: ContactFormStatus.ARCHIVED,
+        notes: 'Propuesta evaluada. Se decidió no proceder por el momento.',
+        createdAt: getBusinessGrowthDate(4),
+        updatedAt: getBusinessGrowthDate(3),
+      },
+    }),
+  ]);
+
+  console.log(`✅ Created ${contactForms.length} contact forms with different statuses`);
+
+  console.log('🔔 Creating notifications for users...');
+
+  // Create notifications for recent reservations
+  const recentReservations = allReservations.filter(r => {
+    const monthsAgo = Math.floor((new Date().getTime() - r.createdAt.getTime()) / (1000 * 60 * 60 * 24 * 30));
+    return monthsAgo <= 2;
+  });
+
+  const notifications = [];
+  for (const reservation of recentReservations.slice(0, 30)) { // Limit to 30 notifications
+    const service = allServices.find(s => s.id === reservation.serviceId);
+    
+    const notification = await prisma.notification.create({
+      data: {
+        type: NotificationType.RESERVATION_CONFIRMATION,
+        title: 'Reservación Confirmada',
+        message: `Tu reservación para ${service?.name} ha sido confirmada. Confirmación: ${reservation.confirmationId}`,
+        isRead: Math.random() > 0.7, // 30% read
+        userId: reservation.userId,
+        createdAt: reservation.createdAt,
+      },
+    });
+    notifications.push(notification);
+  }
+
+  console.log(`✅ Created ${notifications.length} notifications for recent reservations`);
+
+  console.log('🌟 Creating reviews for venues and services...');
+
+  // Create reviews for completed reservations
+  const completedReservations = allReservations.filter(r => r.status === ReservationStatus.COMPLETED);
+  
+  const reviewTexts = [
+    { rating: 5, title: "Excelente experiencia", comment: "Todo fue perfecto, el servicio excepcional y las instalaciones de primera calidad. Definitivamente regresaré." },
+    { rating: 5, title: "Superó mis expectativas", comment: "Una experiencia increíble, el personal muy atento y el lugar hermoso. Altamente recomendado." },
+    { rating: 4, title: "Muy buena opción", comment: "En general una muy buena experiencia, algunas pequeñas cosas por mejorar pero muy satisfecho." },
+    { rating: 4, title: "Recomendable", comment: "Buen servicio y buenas instalaciones, la comida estuvo deliciosa y el ambiente muy agradable." },
+    { rating: 3, title: "Experiencia promedio", comment: "Estuvo bien, cumple con lo básico pero creo que se puede mejorar en varios aspectos." },
+    { rating: 2, title: "Expectativas no cumplidas", comment: "Esperaba más por el precio pagado, el servicio fue lento y algunas instalaciones necesitan mantenimiento." },
+  ];
+
+  for (const reservation of completedReservations.slice(0, 40)) { // Limit to 40 reviews
+    if (Math.random() > 0.4) { // 60% of completed reservations have reviews
+      const randomReview = reviewTexts[Math.floor(Math.random() * reviewTexts.length)];
+      
+      await prisma.review.create({
+        data: {
+          rating: randomReview.rating,
+          title: randomReview.title,
+          comment: randomReview.comment,
+          isVerified: true,
+          userId: reservation.userId,
+          venueId: reservation.venueId,
+          serviceId: reservation.serviceId,
+          reservationId: reservation.id,
+          createdAt: new Date(reservation.checkOutDate.getTime() + Math.random() * 7 * 24 * 60 * 60 * 1000), // Within a week of checkout
+        },
+      });
+    }
+  }
+
+  console.log('✅ Created reviews for completed reservations');
+
+  console.log('⚙️ Creating system configuration...');
+
+  await Promise.all([
+    prisma.systemConfig.create({
+      data: {
+        key: 'platform_commission',
+        value: { percentage: 10, description: 'Platform commission percentage' },
+      },
+    }),
+    prisma.systemConfig.create({
+      data: {
+        key: 'payment_methods',
+        value: { 
+          enabled: ['stripe', 'paypal'], 
+          default: 'stripe',
+          currencies: ['MXN', 'USD']
+        },
+      },
+    }),
+    prisma.systemConfig.create({
+      data: {
+        key: 'notification_settings',
+        value: {
+          email_enabled: true,
+          sms_enabled: false,
+          push_enabled: true
+        },
+      },
+    }),
+    prisma.systemConfig.create({
+      data: {
+        key: 'business_verification',
+        value: {
+          required_documents: ['tax_id', 'business_license'],
+          auto_approve_threshold: 1000
+        },
+      },
+    }),
+  ]);
+
+  console.log('✅ Created system configuration');
+
+  // Summary statistics
+  const userCount = await prisma.user.count();
+  const venueCount = await prisma.venue.count();
+  const serviceCount = await prisma.service.count();
+  const reservationCount = await prisma.reservation.count();
+  const paymentCount = await prisma.payment.count();
+  const contactFormCount = await prisma.contactForm.count();
+
+  console.log(`
+  📊 SEEDING COMPLETED - 6-Month Historical Data Generated
+  
+  👥 Users: ${userCount}
+  🏢 Venues: ${venueCount}
+  🎯 Services: ${serviceCount}
+  📅 Reservations: ${reservationCount}
+  💰 Payments: ${paymentCount}
+  📞 Contact Forms: ${contactFormCount}
+  
+  🎯 Key Features:
+  ✅ 5 diverse business accounts with realistic operation patterns
+  ✅ 15 venues distributed across different business types
+  ✅ 6-month historical data with growth patterns
+  ✅ Realistic seasonal variations in pricing and bookings
+  ✅ Complete payment flow with business deposits
+  ✅ Contact forms with different statuses
+  ✅ Reviews and notifications for user engagement
+  
+  🚀 Dashboard will show realistic trends over the past 6 months!
+  `);
 }
 
 main()
   .catch((e) => {
-    console.error('❌ Error during comprehensive seeding:', e);
+    console.error('❌ Seeding failed:');
+    console.error(e);
     process.exit(1);
   })
   .finally(async () => {
     await prisma.$disconnect();
+    console.log('✅ Database connection closed');
   });

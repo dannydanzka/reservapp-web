@@ -1,9 +1,3 @@
-import { RegisterPage } from '@mod-auth/presentation/components/RegisterPage';
+import { BusinessRegisterPage } from '@mod-auth/presentation/components';
 
-/**
- * Registration page route.
- * Handles new user registration.
- */
-export default function Register() {
-  return <RegisterPage />;
-}
+export default BusinessRegisterPage;

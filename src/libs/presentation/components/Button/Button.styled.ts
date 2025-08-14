@@ -27,11 +27,17 @@ const getVariantStyles = (variant: string, color: string, theme: any) => {
         &:hover:not(:disabled) {
           background-color: ${colorPalette[700]};
           border-color: ${colorPalette[700]};
+          box-shadow: ${theme.shadows.md};
+          color: ${theme.colors.white};
+          transform: translateY(-1px);
         }
 
         &:active:not(:disabled) {
           background-color: ${colorPalette[800]};
           border-color: ${colorPalette[800]};
+          box-shadow: ${theme.shadows.sm};
+          color: ${theme.colors.white};
+          transform: translateY(0);
         }
       `;
 
@@ -42,13 +48,19 @@ const getVariantStyles = (variant: string, color: string, theme: any) => {
         color: ${colorPalette[600]};
 
         &:hover:not(:disabled) {
-          background-color: ${colorPalette[50]};
-          border-color: ${colorPalette[700]};
-          color: ${colorPalette[700]};
+          background-color: ${colorPalette[600]};
+          border-color: ${colorPalette[600]};
+          box-shadow: ${theme.shadows.md};
+          color: ${theme.colors.white};
+          transform: translateY(-1px);
         }
 
         &:active:not(:disabled) {
-          background-color: ${colorPalette[100]};
+          background-color: ${colorPalette[700]};
+          border-color: ${colorPalette[700]};
+          box-shadow: ${theme.shadows.sm};
+          color: ${theme.colors.white};
+          transform: translateY(0);
         }
       `;
 
@@ -61,11 +73,13 @@ const getVariantStyles = (variant: string, color: string, theme: any) => {
 
         &:hover:not(:disabled) {
           background-color: ${colorPalette[50]};
+          border-color: ${colorPalette[200]};
           color: ${colorPalette[700]};
         }
 
         &:active:not(:disabled) {
           background-color: ${colorPalette[100]};
+          color: ${colorPalette[800]};
         }
       `;
   }
@@ -97,7 +111,9 @@ const getSizeStyles = (size: string, theme: any) => {
   }
 };
 
-export const StyledButton = styled.button<ButtonStyledProps>`
+export const StyledButton = styled.button.withConfig({
+  shouldForwardProp: (prop) => !['variant', 'color', 'size', 'fullWidth', 'loading'].includes(prop),
+})<ButtonStyledProps>`
   align-items: center;
   border-radius: ${({ theme }) => theme.borderRadius.base};
   cursor: pointer;
@@ -128,9 +144,11 @@ export const StyledButton = styled.button<ButtonStyledProps>`
   }
 
   &:disabled {
+    box-shadow: none;
     cursor: not-allowed;
     opacity: 0.6;
     pointer-events: none;
+    transform: none;
   }
 
   ${({ loading }) =>
@@ -138,6 +156,7 @@ export const StyledButton = styled.button<ButtonStyledProps>`
     css`
       opacity: 0.8;
       pointer-events: none;
+      transform: none;
     `}
 `;
 

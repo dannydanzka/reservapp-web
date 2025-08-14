@@ -270,13 +270,13 @@ export function useUsers(): UseUsersReturn {
 
     error,
 
-    goToNextPage,
-
     filters,
 
-    hasActiveFilters,
+    goToNextPage,
 
     goToPreviousPage,
+
+    hasActiveFilters,
     hasNextPage,
 
     hasPreviousPage,
@@ -296,9 +296,10 @@ export function useUsers(): UseUsersReturn {
 
     totalPages,
 
+    totalUsers,
+
+    updateUser,
     // State
     users,
-    totalUsers,
-    updateUser,
   };
 }

@@ -80,15 +80,19 @@ const nextConfig: NextConfig = {
       '@core': path.resolve(__dirname, 'src/libs/core'),
       '@data': path.resolve(__dirname, 'src/libs/data'),
       '@domain': path.resolve(__dirname, 'src/libs/domain'),
+      '@hooks': path.resolve(__dirname, 'src/libs/presentation/hooks'),
+      '@i18n': path.resolve(__dirname, 'src/libs/i18n'),
+      '@layouts': path.resolve(__dirname, 'src/libs/presentation/layouts'),
       '@libs': path.resolve(__dirname, 'src/libs'),
       '@mod-admin': path.resolve(__dirname, 'src/modules/mod-admin'),
       '@mod-auth': path.resolve(__dirname, 'src/modules/mod-auth'),
       '@mod-landing': path.resolve(__dirname, 'src/modules/mod-landing'),
       '@modules': path.resolve(__dirname, 'src/modules'),
       '@presentation': path.resolve(__dirname, 'src/libs/presentation'),
+      '@providers': path.resolve(__dirname, 'src/libs/presentation/providers'),
       '@services': path.resolve(__dirname, 'src/libs/services'),
       '@types': path.resolve(__dirname, 'src/libs/types'),
-      '@ui': path.resolve(__dirname, 'src/libs/ui'),
+      '@ui': path.resolve(__dirname, 'src/libs/presentation/components'),
     };
 
     // Tree shaking optimizations

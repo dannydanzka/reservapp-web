@@ -3,7 +3,9 @@
 import React, { useEffect, useState } from 'react';
 
 import { LoadingSpinner } from '@ui/LoadingSpinner';
+import { usePermissions } from '@presentation/hooks/usePermissions';
 import { User, UserFilters } from '@services/core/api/usersApiService';
+import { useTranslation } from '@i18n/index';
 import { useUsers } from '@presentation/hooks/useUsers';
 
 import { UserFormModal } from '../UserFormModal';
@@ -40,6 +42,10 @@ export const UsersManagement: React.FC<UsersManagementProps> = () => {
     updateUser,
     users,
   } = useUsers();
+
+  const { hasRole } = usePermissions();
+  const { t } = useTranslation();
+  const isSuperAdmin = hasRole('SUPER_ADMIN');
 
   // Local UI state for filters
   const [localFilters, setLocalFilters] = useState<UserFilters>({
@@ -321,9 +327,25 @@ export const UsersManagement: React.FC<UsersManagementProps> = () => {
 
                   <S.UserDetails>
                     <S.DetailRow>
-                      <S.DetailLabel>Rol:</S.DetailLabel>
+                      <S.DetailLabel>{t('admin.users.table.role')}:</S.DetailLabel>
                       <S.RoleBadge $role={user.role}>{getRoleInSpanish(user.role)}</S.RoleBadge>
                     </S.DetailRow>
+
+                    {/* Show business information for SUPER_ADMIN */}
+                    {isSuperAdmin && user.businessAccount && (
+                      <S.DetailRow>
+                        <S.DetailLabel>{t('admin.users.table.businessInfo')}:</S.DetailLabel>
+                        <S.DetailValue>
+                          <div>
+                            <strong>{user.businessAccount.businessName}</strong>
+                            <div style={{ color: '#6b7280', fontSize: '0.75rem' }}>
+                              {user.businessAccount.businessType}
+                              {user.businessAccount.isVerified ? ' ✓ Verificado' : ' • Pendiente'}
+                            </div>
+                          </div>
+                        </S.DetailValue>
+                      </S.DetailRow>
+                    )}
 
                     <S.DetailRow>
                       <S.DetailLabel>ID:</S.DetailLabel>
@@ -331,7 +353,7 @@ export const UsersManagement: React.FC<UsersManagementProps> = () => {
                     </S.DetailRow>
 
                     <S.DetailRow>
-                      <S.DetailLabel>Registrado:</S.DetailLabel>
+                      <S.DetailLabel>{t('admin.users.table.registered')}:</S.DetailLabel>
                       <S.DetailValue>{formatDate(user.createdAt)}</S.DetailValue>
                     </S.DetailRow>
 

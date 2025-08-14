@@ -1,8 +1,7 @@
 export { UserRegisterPage } from './UserRegisterPage';
 export type {
   UserRegisterPageProps,
-  UserRegisterPageState,
-  ButtonProps,
-  PlanInfoProps,
-  PlanPriceProps,
+  UserRegisterFormData,
+  RegisterApiRequest,
+  RegisterApiResponse,
 } from './UserRegisterPage.interfaces';

@@ -2,7 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 
-import { PrismaClient } from '@prisma/client';
+import { PrismaClient, UserRoleEnum } from '@prisma/client';
+import { ResendService } from '@libs/infrastructure/services/core/email/resendService';
 
 const prisma = new PrismaClient();
 
@@ -10,7 +11,7 @@ export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
 
-    const { email, firstName, lastName, password, phone } = body;
+    const { businessData, email, firstName, lastName, password, phone } = body;
 
     // Validate required fields
     if (!email || !password || !firstName || !lastName) {
@@ -35,18 +36,45 @@ export async function POST(request: NextRequest) {
     // Hash password
     const hashedPassword = await bcrypt.hash(password, 12);
 
-    // Create user
-    const user = await prisma.user.create({
-      data: {
-        email,
-        firstName,
-        isActive: true,
-        lastName,
-        password: hashedPassword,
-        phone,
-        role: 'USER',
-      },
-    });
+    // Determine role based on business data
+    const userRole = businessData ? UserRoleEnum.ADMIN : UserRoleEnum.USER;
+
+    // Create user (and business account if business data provided)
+    const userData = {
+      email,
+      firstName,
+      isActive: true,
+      lastName,
+      password: hashedPassword,
+      phone,
+      role: userRole,
+    };
+
+    let user;
+    if (businessData && userRole === UserRoleEnum.ADMIN) {
+      // Create user with business account in a transaction
+      user = await prisma.user.create({
+        data: {
+          ...userData,
+          businessAccount: {
+            create: {
+              businessName: businessData.businessName,
+              businessType: businessData.businessType,
+              contactEmail: email,
+              contactPhone: phone,
+            },
+          },
+        },
+        include: {
+          businessAccount: true,
+        },
+      });
+    } else {
+      // Create regular user
+      user = await prisma.user.create({
+        data: userData,
+      });
+    }
 
     // Generate JWT token
     const token = jwt.sign(
@@ -58,6 +86,28 @@ export async function POST(request: NextRequest) {
       process.env.JWT_SECRET || 'fallback-secret',
       { expiresIn: '7d' }
     );
+
+    // Enviar email de bienvenida
+    try {
+      // Determinar si es registro de negocio o usuario
+      const isBusinessRegistration = body.businessName && body.businessName.trim() !== '';
+
+      await ResendService.sendWelcomeEmail({
+        businessName: isBusinessRegistration ? body.businessName : undefined,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        userEmail: user.email,
+        userName: isBusinessRegistration ? body.businessName : `${user.firstName} ${user.lastName}`,
+        userType: isBusinessRegistration ? 'BUSINESS' : 'USER',
+      });
+
+      console.log(
+        `Email de bienvenida ${isBusinessRegistration ? 'de negocio' : 'de usuario'} enviado a ${user.email}`
+      );
+    } catch (emailError) {
+      console.error('Error enviando email de bienvenida:', emailError);
+      // No fallar el registro si el email falla
+    }
 
     // Return success with user data and token
     return NextResponse.json({

@@ -6,6 +6,7 @@ import { Smartphone } from 'lucide-react';
 
 import { Button } from '@ui/Button';
 import { TextField } from '@ui/TextField';
+import { useContactForm } from '@libs/presentation/hooks/useContact';
 import { useTranslation } from '@i18n/index';
 
 import { ContactPageProps, FormData } from './ContactPage.interfaces';
@@ -38,6 +39,8 @@ import {
 
 export const ContactPage: React.FC<ContactPageProps> = () => {
   const { t } = useTranslation();
+  const { error, loading, submitContactForm, success } = useContactForm();
+
   const [formData, setFormData] = useState<FormData>({
     email: '',
     message: '',
@@ -45,9 +48,6 @@ export const ContactPage: React.FC<ContactPageProps> = () => {
     phone: '',
     subject: '',
   });
-  const [loading, setLoading] = useState(false);
-  const [success, setSuccess] = useState(false);
-  const [error, setError] = useState('');
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
@@ -56,17 +56,17 @@ export const ContactPage: React.FC<ContactPageProps> = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setLoading(true);
-    setError('');
-    setSuccess(false);
 
-    try {
-      // Simulate API call - replace with actual implementation
-      await new Promise((resolve) => {
-        setTimeout(resolve, 1000);
-      });
+    const isSuccess = await submitContactForm({
+      email: formData.email,
+      message: formData.message,
+      name: formData.name,
+      phone: formData.phone || undefined,
+      subject: formData.subject,
+    });
 
-      setSuccess(true);
+    if (isSuccess) {
+      // Clear form on success
       setFormData({
         email: '',
         message: '',
@@ -74,10 +74,6 @@ export const ContactPage: React.FC<ContactPageProps> = () => {
         phone: '',
         subject: '',
       });
-    } catch (_err) {
-      setError(t('contact.form.error'));
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -99,6 +95,7 @@ export const ContactPage: React.FC<ContactPageProps> = () => {
           <FormGroup>
             <FormLabel htmlFor='name'>{t('contact.form.name')} *</FormLabel>
             <TextField
+              fullWidth
               id='name'
               name='name'
               placeholder={t('contact.form.namePlaceholder')}
@@ -111,6 +108,7 @@ export const ContactPage: React.FC<ContactPageProps> = () => {
           <FormGroup>
             <FormLabel htmlFor='email'>{t('contact.form.email')} *</FormLabel>
             <TextField
+              fullWidth
               id='email'
               name='email'
               placeholder={t('contact.form.emailPlaceholder')}
@@ -124,6 +122,7 @@ export const ContactPage: React.FC<ContactPageProps> = () => {
           <FormGroup>
             <FormLabel htmlFor='phone'>{t('contact.form.phone')}</FormLabel>
             <TextField
+              fullWidth
               id='phone'
               name='phone'
               placeholder={t('contact.form.phonePlaceholder')}
@@ -136,6 +135,7 @@ export const ContactPage: React.FC<ContactPageProps> = () => {
           <FormGroup>
             <FormLabel htmlFor='subject'>{t('contact.form.subject')} *</FormLabel>
             <TextField
+              fullWidth
               id='subject'
               name='subject'
               placeholder={t('contact.form.subjectPlaceholder')}

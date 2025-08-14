@@ -271,13 +271,13 @@ export function useReservations(): UseReservationsReturn {
 
     error,
 
-    goToNextPage,
-
     filters,
 
-    hasActiveFilters,
+    goToNextPage,
 
     goToPreviousPage,
+
+    hasActiveFilters,
     hasNextPage,
 
     hasPreviousPage,

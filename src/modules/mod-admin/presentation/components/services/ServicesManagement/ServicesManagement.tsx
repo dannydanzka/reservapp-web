@@ -5,7 +5,9 @@ import React, { useEffect, useState } from 'react';
 import { LoadingSpinner } from '@ui/LoadingSpinner';
 import { Service, ServiceFilters } from '@services/core/api';
 import { useAuth } from '@providers/AuthProvider';
+import { usePermissions } from '@presentation/hooks/usePermissions';
 import { useServices } from '@presentation/hooks/useServices';
+import { useTranslation } from '@i18n/index';
 
 import type {
   LocalFilters,
@@ -41,7 +43,10 @@ export const ServicesManagement: React.FC<ServicesManagementProps> = () => {
   } = useServices();
 
   const { user: currentUser } = useAuth();
+  const { hasRole } = usePermissions();
+  const { t } = useTranslation();
   const isBusinessUser = currentUser?.role === 'admin' && currentUser?.businessName;
+  const isSuperAdmin = hasRole('SUPER_ADMIN');
 
   const [localFilters, setLocalFilters] = useState<LocalFilters>({
     category: undefined,
@@ -260,12 +265,16 @@ export const ServicesManagement: React.FC<ServicesManagementProps> = () => {
           <S.Table>
             <S.TableHeader>
               <S.TableRow>
-                <S.TableHeaderCell>Servicio</S.TableHeaderCell>
-                <S.TableHeaderCell>Categoría</S.TableHeaderCell>
-                <S.TableHeaderCell>Precio</S.TableHeaderCell>
-                <S.TableHeaderCell>Capacidad</S.TableHeaderCell>
-                <S.TableHeaderCell>Estado</S.TableHeaderCell>
-                <S.TableHeaderCell>Acciones</S.TableHeaderCell>
+                <S.TableHeaderCell>{t('admin.services.table.name')}</S.TableHeaderCell>
+                <S.TableHeaderCell>{t('admin.services.table.category')}</S.TableHeaderCell>
+                <S.TableHeaderCell>{t('admin.services.table.venue')}</S.TableHeaderCell>
+                {isSuperAdmin && (
+                  <S.TableHeaderCell>{t('admin.services.table.businessOwner')}</S.TableHeaderCell>
+                )}
+                <S.TableHeaderCell>{t('admin.services.table.price')}</S.TableHeaderCell>
+                <S.TableHeaderCell>{t('admin.services.table.capacity')}</S.TableHeaderCell>
+                <S.TableHeaderCell>{t('admin.services.table.status')}</S.TableHeaderCell>
+                <S.TableHeaderCell>{t('admin.services.table.actions')}</S.TableHeaderCell>
               </S.TableRow>
             </S.TableHeader>
             <tbody>
@@ -296,6 +305,34 @@ export const ServicesManagement: React.FC<ServicesManagementProps> = () => {
                       {getCategoryLabel(service.category)}
                     </S.CategoryBadge>
                   </S.TableCell>
+                  <S.TableCell>
+                    <div>
+                      <strong>{service.venue?.name || 'Sin venue'}</strong>
+                      {service.venue?.category && (
+                        <div style={{ color: '#6b7280', fontSize: '12px' }}>
+                          {getCategoryLabel(service.venue.category)}
+                        </div>
+                      )}
+                    </div>
+                  </S.TableCell>
+                  {isSuperAdmin && (
+                    <S.TableCell>
+                      {service.venue?.owner ? (
+                        <div>
+                          <strong>
+                            {service.venue.owner.firstName} {service.venue.owner.lastName}
+                          </strong>
+                          {service.venue.owner.businessAccount?.businessName && (
+                            <div style={{ color: '#6b7280', fontSize: '12px' }}>
+                              {service.venue.owner.businessAccount.businessName}
+                            </div>
+                          )}
+                        </div>
+                      ) : (
+                        <span style={{ color: '#9ca3af' }}>Sin propietario</span>
+                      )}
+                    </S.TableCell>
+                  )}
                   <S.TableCell>{formatPrice(service.price, service.currency)}</S.TableCell>
                   <S.TableCell>{service.capacity} personas</S.TableCell>
                   <S.TableCell>

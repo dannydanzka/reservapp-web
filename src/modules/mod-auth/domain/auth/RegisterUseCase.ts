@@ -27,7 +27,6 @@ export class RegisterUseCase implements IRegisterUseCase {
     // Additional validation for business registration
     if (this.isBusinessRegistration(data)) {
       this.validateBusinessData(data);
-      await this.validatePayment(data);
     }
 
     try {
@@ -110,7 +109,7 @@ export class RegisterUseCase implements IRegisterUseCase {
   private isBusinessRegistration(
     data: RegisterData | BusinessRegistrationData
   ): data is BusinessRegistrationData {
-    return 'businessName' in data && 'subscriptionPlan' in data;
+    return 'businessName' in data && 'businessType' in data;
   }
 
   /**
@@ -128,53 +127,16 @@ export class RegisterUseCase implements IRegisterUseCase {
       throw new Error('Valid phone number is required');
     }
 
-    if (!data.address || data.address.trim().length < 10) {
-      throw new Error('Complete business address is required');
+    if (!data.businessType) {
+      throw new Error('Business type is required');
     }
 
-    if (!data.subscriptionPlan) {
-      throw new Error('Subscription plan is required');
-    }
-  }
-
-  /**
-   * Validates payment for business registration.
-   *
-   * @param {BusinessRegistrationData} data - Business registration data
-   * @throws {Error} When payment validation fails
-   */
-  private async validatePayment(data: BusinessRegistrationData): Promise<void> {
-    if (!data.paymentIntentId) {
-      throw new Error('Payment validation is required for business registration');
+    if (!data.firstName || data.firstName.trim().length < 2) {
+      throw new Error('First name is required');
     }
 
-    try {
-      // Import Stripe service directly to avoid self-fetch issues
-      const { StripeService } = await import('@infrastructure/services/core/stripe/stripeService');
-
-      console.log('Validating payment intent:', data.paymentIntentId);
-
-      // Retrieve payment intent directly from Stripe
-      const paymentIntent = await StripeService.retrievePaymentIntent(data.paymentIntentId);
-
-      if (!paymentIntent) {
-        throw new Error('Payment intent not found');
-      }
-
-      // In production, we would verify payment is succeeded
-      // For demo/testing, we accept requires_payment_method or succeeded
-      const validStatuses = ['succeeded', 'requires_payment_method', 'requires_confirmation'];
-      if (!validStatuses.includes(paymentIntent?.status)) {
-        throw new Error(`Payment intent is not in a valid state: ${paymentIntent?.status}`);
-      }
-
-      console.log('Payment validation successful:', paymentIntent?.status);
-    } catch (error) {
-      console.error('Payment validation error:', error);
-      if (error instanceof Error) {
-        throw new Error(`Payment validation failed: ${error.message}`);
-      }
-      throw new Error('Payment validation failed');
+    if (!data.lastName || data.lastName.trim().length < 2) {
+      throw new Error('Last name is required');
     }
   }
 }
