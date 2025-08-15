@@ -334,8 +334,8 @@ export const PaginationActions = styled.div`
 export const ModalOverlay = styled.div`
   align-items: center;
   background: rgb(0 0 0 / 0.5);
-  inset: 0;
   display: flex;
+  inset: 0;
   justify-content: center;
   padding: 1rem;
   position: fixed;

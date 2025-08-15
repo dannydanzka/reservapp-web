@@ -32,6 +32,7 @@ model User {
   receipts     Receipt[]     @relation("UserReceipts")
   adminActions AdminAuditLog[] @relation("AdminActions")
   systemLogs   SystemLog[]     @relation("SystemLogs")
+  favorites    Favorite[]      @relation("UserFavorites")
   // Venues owned by this admin (empty for regular users)
   ownedVenues  Venue[]                 @relation("VenueOwner")
   // Business account for ADMIN users
@@ -196,6 +197,7 @@ model Venue {
   services     Service[]
   reservations Reservation[]
   reviews      Review[]
+  favorites    Favorite[]    @relation("VenueFavorites")
   // Owner relationship (admin who manages this venue)
   ownerId      String?
   owner        User?         @relation("VenueOwner", fields: [ownerId], references: [id])
@@ -590,6 +592,22 @@ enum SystemLogCategory {
   PERFORMANCE        // Performance monitoring
   ADMIN_ACTION       // Administrative actions
   AUDIT_TRAIL        // Compliance and audit events
+}
+
+// User Favorites Management
+model Favorite {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now())
+
+  // Relations
+  user      User     @relation("UserFavorites", fields: [userId], references: [id], onDelete: Cascade)
+  userId    String
+  venue     Venue    @relation("VenueFavorites", fields: [venueId], references: [id], onDelete: Cascade)
+  venueId   String
+
+  // Prevent duplicate favorites
+  @@unique([userId, venueId])
+  @@map("favorites")
 }
 
 // Simplified for MVP - Complex role system removed

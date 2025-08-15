@@ -1404,6 +1404,250 @@ async function main() {
 
   console.log('✅ Created reviews for completed reservations');
 
+  console.log('💖 Creating favorite venues for demo user Juan Pérez...');
+
+  // Find Juan Pérez user
+  const juanUser = regularUsers.find(u => u.email === 'juan.perez@gmail.com');
+  
+  if (juanUser) {
+    // Add 5 favorite venues for Juan (variety across different business types)
+    const favoriteVenueIds = [
+      luxuryVenues[0].id, // Casa Salazar Centro Histórico
+      restaurantVenues[0].id, // Morales Cocina Mexicana
+      spaVenues[0].id, // Zentro Wellness Spa
+      eventVenues[1].id, // García Salón de Eventos
+      tourVenues[0].id, // Rivera Cultural Tours Hub
+    ];
+
+    for (const venueId of favoriteVenueIds) {
+      await prisma.favorite.create({
+        data: {
+          userId: juanUser.id,
+          venueId: venueId,
+          createdAt: getBusinessGrowthDate(Math.floor(Math.random() * 4) + 1), // Random between 1-4 months ago
+        },
+      });
+    }
+
+    console.log('✅ Created 5 favorite venues for Juan Pérez');
+
+    console.log('📅 Creating additional reservations for demo user Juan Pérez...');
+
+    // Create 8 additional realistic reservations for Juan across different periods
+    const juanReservations = [
+      // Completed reservations (past)
+      {
+        service: allServices.find(s => s.venueId === luxuryVenues[0].id && s.category === ServiceType.ACCOMMODATION),
+        status: ReservationStatus.COMPLETED,
+        monthsAgo: 5,
+        guests: 2,
+        notes: 'Luna de miel - experiencia perfecta',
+      },
+      {
+        service: allServices.find(s => s.venueId === restaurantVenues[0].id && s.category === ServiceType.DINING),
+        status: ReservationStatus.COMPLETED,
+        monthsAgo: 4,
+        guests: 4,
+        notes: 'Cena familiar por aniversario',
+      },
+      {
+        service: allServices.find(s => s.venueId === spaVenues[0].id && s.name.includes('Temazcal')),
+        status: ReservationStatus.COMPLETED,
+        monthsAgo: 3,
+        guests: 1,
+        notes: 'Experiencia de relajación',
+      },
+      {
+        service: allServices.find(s => s.venueId === tourVenues[0].id && s.name.includes('Pueblos Mágicos')),
+        status: ReservationStatus.COMPLETED,
+        monthsAgo: 2,
+        guests: 2,
+        notes: 'Tour con mi pareja',
+      },
+      // Upcoming reservations
+      {
+        service: allServices.find(s => s.venueId === luxuryVenues[1].id && s.category === ServiceType.ACCOMMODATION),
+        status: ReservationStatus.CONFIRMED,
+        monthsAgo: 0,
+        guests: 2,
+        notes: 'Fin de semana especial',
+        futureDays: 15, // 15 days from now
+      },
+      {
+        service: allServices.find(s => s.venueId === spaVenues[1].id && s.name.includes('Retiro')),
+        status: ReservationStatus.CONFIRMED,
+        monthsAgo: 0,
+        guests: 1,
+        notes: 'Retiro de bienestar personal',
+        futureDays: 30, // 30 days from now
+      },
+      // Recent reservations
+      {
+        service: allServices.find(s => s.venueId === restaurantVenues[1].id && s.category === ServiceType.DINING),
+        status: ReservationStatus.COMPLETED,
+        monthsAgo: 1,
+        guests: 2,
+        notes: 'Cena romántica en el rooftop',
+      },
+      {
+        service: allServices.find(s => s.venueId === tourVenues[1].id && s.name.includes('Tequila')),
+        status: ReservationStatus.COMPLETED,
+        monthsAgo: 1,
+        guests: 3,
+        notes: 'Tour con amigos visitantes',
+      },
+    ];
+
+    for (const reservationData of juanReservations) {
+      if (!reservationData.service) continue;
+
+      // Calculate dates
+      let reservationDate, checkInDate, checkOutDate;
+      
+      if (reservationData.futureDays) {
+        // Future reservation
+        reservationDate = new Date();
+        reservationDate.setDate(reservationDate.getDate() - 5); // Booked 5 days ago
+        
+        checkInDate = new Date();
+        checkInDate.setDate(checkInDate.getDate() + reservationData.futureDays);
+        
+        checkOutDate = new Date(checkInDate);
+        if (reservationData.service.category === ServiceType.ACCOMMODATION) {
+          checkOutDate.setDate(checkOutDate.getDate() + 2); // 2 nights
+        } else {
+          checkOutDate.setHours(checkInDate.getHours() + Math.floor(reservationData.service.duration / 60));
+        }
+      } else {
+        // Past reservation
+        reservationDate = getBusinessGrowthDate(reservationData.monthsAgo);
+        
+        checkInDate = new Date(reservationDate);
+        checkInDate.setDate(checkInDate.getDate() + Math.floor(Math.random() * 15) + 1);
+        
+        checkOutDate = new Date(checkInDate);
+        if (reservationData.service.category === ServiceType.ACCOMMODATION) {
+          checkOutDate.setDate(checkOutDate.getDate() + Math.floor(Math.random() * 3) + 1);
+        } else {
+          checkOutDate.setHours(checkInDate.getHours() + Math.floor(reservationData.service.duration / 60));
+        }
+      }
+
+      // Calculate amount
+      const baseAmount = getRealisticAmount(reservationData.service.category, reservationData.monthsAgo);
+      const totalAmount = baseAmount * reservationData.guests;
+
+      // Create reservation
+      const reservation = await prisma.reservation.create({
+        data: {
+          status: reservationData.status,
+          checkInDate,
+          checkOutDate,
+          guests: reservationData.guests,
+          totalAmount,
+          currency: 'MXN',
+          notes: reservationData.notes,
+          userId: juanUser.id,
+          venueId: reservationData.service.venueId,
+          serviceId: reservationData.service.id,
+          createdAt: reservationDate,
+          updatedAt: reservationDate,
+        },
+      });
+
+      // Create payment for confirmed/completed reservations
+      if ([ReservationStatus.CONFIRMED, ReservationStatus.COMPLETED].includes(reservationData.status)) {
+        const paymentStatus = reservationData.status === ReservationStatus.COMPLETED ? PaymentStatus.COMPLETED : PaymentStatus.COMPLETED;
+        
+        const transactionDate = new Date(reservationDate);
+        transactionDate.setHours(transactionDate.getHours() + 2);
+
+        const payment = await prisma.payment.create({
+          data: {
+            amount: totalAmount,
+            currency: 'MXN',
+            status: paymentStatus,
+            paymentMethod: 'stripe',
+            transactionDate,
+            description: `Pago para reservación ${reservation.confirmationId}`,
+            stripePaymentId: `pi_juan_${Math.random().toString(36).substr(2, 9)}`,
+            userId: juanUser.id,
+            reservationId: reservation.id,
+            createdAt: reservationDate,
+            updatedAt: transactionDate,
+          },
+        });
+
+        // Create receipt for completed payment
+        if (paymentStatus === PaymentStatus.COMPLETED) {
+          const amountNum = Number(totalAmount);
+          await prisma.receipt.create({
+            data: {
+              type: ReceiptType.PAYMENT,
+              status: ReceiptStatus.VERIFIED,
+              amount: totalAmount,
+              currency: 'MXN',
+              issueDate: transactionDate,
+              paidDate: transactionDate,
+              taxAmount: amountNum * 0.16,
+              subtotalAmount: amountNum * 0.84,
+              isVerified: true,
+              verifiedAt: transactionDate,
+              paymentId: payment.id,
+              userId: juanUser.id,
+              createdAt: transactionDate,
+            },
+          });
+        }
+      }
+    }
+
+    console.log('✅ Created 8 additional reservations for Juan Pérez with realistic patterns');
+
+    // Create notifications for Juan's recent activities
+    const juanNotifications = [
+      {
+        type: NotificationType.RESERVATION_CONFIRMATION,
+        title: 'Reservación Próxima',
+        message: 'Tu reservación en Casa Salazar Chapultepec está próxima. ¡Prepárate para una experiencia increíble!',
+        isRead: false,
+        daysAgo: 1,
+      },
+      {
+        type: NotificationType.PROMOTION,
+        title: 'Oferta Especial Spa',
+        message: 'Como usuario frecuente, tienes 20% de descuento en tu próxima reservación de spa en Zentro Wellness.',
+        isRead: false,
+        daysAgo: 3,
+      },
+      {
+        type: NotificationType.PAYMENT_CONFIRMATION,
+        title: 'Pago Confirmado',
+        message: 'Tu pago de $2,800 MXN ha sido procesado exitosamente. Gracias por elegirnos.',
+        isRead: true,
+        daysAgo: 5,
+      },
+    ];
+
+    for (const notifData of juanNotifications) {
+      const notifDate = new Date();
+      notifDate.setDate(notifDate.getDate() - notifData.daysAgo);
+
+      await prisma.notification.create({
+        data: {
+          type: notifData.type,
+          title: notifData.title,
+          message: notifData.message,
+          isRead: notifData.isRead,
+          userId: juanUser.id,
+          createdAt: notifDate,
+        },
+      });
+    }
+
+    console.log('✅ Created 3 notifications for Juan Pérez');
+  }
+
   console.log('⚙️ Creating system configuration...');
 
   await Promise.all([
