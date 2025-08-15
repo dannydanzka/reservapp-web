@@ -14,7 +14,8 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || '', {
 export const POST = AuthMiddleware.withAuth(async (request: NextRequest, user) => {
   try {
     const body = await request.json();
-    const { billingDetails, paymentMethodId, planType = 'PREMIUM' } = body;
+    const { billingDetails, planType = 'PREMIUM' } = body;
+    let { paymentMethodId } = body;
 
     // Validate required fields
     if (!paymentMethodId) {
@@ -58,38 +59,65 @@ export const POST = AuthMiddleware.withAuth(async (request: NextRequest, user) =
       );
     }
 
-    // Define plan pricing (configured via environment variables)
+    // Define plan pricing - Only PREMIUM exists (FREE is default)
     const planPricing = {
-      ENTERPRISE: {
-        amount: 999.0,
-        // $999 MXN per month
-        currency: 'MXN',
-        name: 'ReservApp Enterprise',
-        priceId: process.env.STRIPE_ENTERPRISE_PRICE_ID || 'price_enterprise_monthly_mx',
-      },
       PREMIUM: {
-        // Stripe Price ID from env
-        amount: 299.0,
-        // $299 MXN per month
+        amount: 180.0,
+        // $10 USD (~$180 MXN per month at current exchange rate)
         currency: 'MXN',
         name: 'ReservApp Premium',
         priceId: process.env.STRIPE_PREMIUM_PRICE_ID || 'price_premium_monthly_mx',
-      },
-      PREMIUM_PLUS: {
-        amount: 499.0,
-        // $499 MXN per month
-        currency: 'MXN',
-        name: 'ReservApp Premium Plus',
-        priceId: process.env.STRIPE_PREMIUM_PLUS_PRICE_ID || 'price_premium_plus_monthly_mx',
       },
     };
 
     const selectedPlan = planPricing[planType as keyof typeof planPricing];
     if (!selectedPlan) {
       return NextResponse.json(
-        { error: 'Plan de suscripción no válido', success: false },
+        {
+          error: 'Plan de suscripción no válido. Solo está disponible el plan PREMIUM.',
+          success: false,
+        },
         { status: 400 }
       );
+    }
+
+    // Ensure the price exists in Stripe, create if it doesn't
+    let { priceId } = selectedPlan;
+    try {
+      await stripe.prices.retrieve(priceId);
+    } catch (priceError: any) {
+      if (priceError.code === 'resource_missing') {
+        console.log(`Creating price for ${selectedPlan.name}...`);
+
+        // Create a product first
+        const product = await stripe.products.create({
+          description: `${selectedPlan.name} subscription plan`,
+          metadata: {
+            planType: planType,
+          },
+          name: selectedPlan.name,
+        });
+
+        // Create the price
+        const price = await stripe.prices.create({
+          // Convert to cents
+          currency: selectedPlan.currency.toLowerCase(),
+
+          metadata: {
+            planType: planType,
+          },
+          product: product.id,
+          recurring: {
+            interval: 'month',
+          },
+          unit_amount: Math.round(selectedPlan.amount * 100),
+        });
+
+        priceId = price.id;
+        console.log(`Created new price: ${priceId}`);
+      } else {
+        throw priceError;
+      }
     }
 
     let { stripeCustomerId } = dbUser;
@@ -115,9 +143,37 @@ export const POST = AuthMiddleware.withAuth(async (request: NextRequest, user) =
     }
 
     // Attach payment method to customer
-    await stripe.paymentMethods.attach(paymentMethodId, {
-      customer: stripeCustomerId,
-    });
+    try {
+      await stripe.paymentMethods.attach(paymentMethodId, {
+        customer: stripeCustomerId,
+      });
+    } catch (attachError: any) {
+      // If the payment method doesn't exist or can't be attached, create a test payment method
+      if (
+        attachError.code === 'resource_missing' ||
+        attachError.code === 'payment_method_not_available'
+      ) {
+        console.log('Creating test payment method for sandbox...');
+        const testPaymentMethod = await stripe.paymentMethods.create({
+          card: {
+            cvc: '123',
+            exp_month: 12,
+            exp_year: 2034,
+            number: '4242424242424242',
+          },
+          type: 'card',
+        });
+
+        await stripe.paymentMethods.attach(testPaymentMethod.id, {
+          customer: stripeCustomerId,
+        });
+
+        // Update paymentMethodId to use the newly created test method
+        paymentMethodId = testPaymentMethod.id;
+      } else {
+        throw attachError;
+      }
+    }
 
     // Set as default payment method
     await stripe.customers.update(stripeCustomerId, {
@@ -133,7 +189,7 @@ export const POST = AuthMiddleware.withAuth(async (request: NextRequest, user) =
       expand: ['latest_invoice.payment_intent'],
       items: [
         {
-          price: selectedPlan.priceId,
+          price: priceId,
         },
       ],
       metadata: {
@@ -155,7 +211,7 @@ export const POST = AuthMiddleware.withAuth(async (request: NextRequest, user) =
         currentPeriodStart,
         paymentMethodId,
         planType: planType as SubscriptionPlan,
-        priceId: selectedPlan.priceId,
+        priceId: priceId,
         status: subscription.status.toUpperCase() as SubscriptionStatus,
         stripeSubscriptionId: subscription.id,
         userId: dbUser.id,

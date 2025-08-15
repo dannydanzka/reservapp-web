@@ -1,0 +1,1 @@
+export { NotificationsManagement } from './NotificationsManagement';

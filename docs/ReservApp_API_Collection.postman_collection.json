@@ -1,11 +1,11 @@
 {
   "info": {
     "name": "ReservApp API - Complete Collection 2025",
-    "description": "Colección completa de la API de ReservApp con todos los endpoints actuales\n\n🌐 **ReservApp** es una plataforma de gestión de reservas para hoteles, spas, restaurantes, tours y eventos con dashboard administrativo completo.\n\n## 🆕 Nuevas Funcionalidades (Enero 2025)\n📱 **Dashboard Móvil**: Endpoint optimizado para apps móviles con estadísticas completas, favoritos y reservaciones en una sola llamada.\n❌ **Cancelaciones**: Sistema completo de cancelación con reembolsos automáticos basados en política de tiempo y emails de confirmación.\n⭐ **Premium**: Upgrade a suscripción premium con integración real de Stripe (sandbox), beneficios exclusivos y templates de email.\n🔧 **Perfil Mejorado**: Endpoint de perfil ahora incluye estado `isPremium` para identificar usuarios premium.\n💳 **Pagos Reales**: Creación de reservas ahora procesa pagos realmente en Stripe con Payment Intents, clientes automáticos y registros completos.\n🔔 **Notificaciones Completas**: Sistema de notificaciones en tiempo real con filtrado, paginación, estados de lectura y creación automática en reservas/pagos.\n👨‍💼 **Admin Notificaciones**: Panel administrativo para ver TODOS los emails enviados. SUPER_ADMIN ve todo, ADMIN solo ve emails de sus venues. Incluye estadísticas completas, filtros avanzados y seguimiento de templates.\n💰 **Sistema Completo de Pagos y Facturas**: APIs completas para usuarios y admins con historial de pagos, generación de facturas Stripe, descargas PDF, permisos diferenciados por rol y datos de ejemplo realistas para Juan Pérez.\n\n## 🔑 Autenticación\nLa mayoría de endpoints requieren autenticación JWT. Incluye el token en el header:\n```\nAuthorization: Bearer tu-jwt-token\n```\n\n## 🌐 Servidores\n- **Producción**: https://reservapp-web.vercel.app/api (URL por defecto)\n- **Desarrollo**: http://localhost:3000/api\n\n## 👤 Cuentas de Prueba\n- **Super Admin**: admin@reservapp.com (password: password123)\n- **Admin Hotel**: admin.salazar@reservapp.com (password: password123)\n- **Admin Restaurante**: admin.restaurant@reservapp.com (password: password123)\n- **Usuario Final**: juan.perez@gmail.com (password: password123) ⭐ **Con datos completos para mobile**\n\n## 💳 Stripe Testing (Sandbox)\nPara pruebas de suscripción premium:\n- **Visa**: `4242424242424242`\n- **Mastercard**: `5555555555554444`\n- **CVC**: `123`\n- **Fecha**: Cualquier fecha futura\n\n## 📧 Email Templates\nSistema completo de emails automáticos:\n- ✅ Cancelación de reservas con detalles de reembolso\n- ✅ Bienvenida premium con beneficios y facturación\n- ✅ Confirmación de reservas y pagos\n- ✅ Recordatorios de check-in\n\n## 📚 Documentación\n- **API Docs**: https://reservapp-web.vercel.app/api/swagger\n- **Health Check**: https://reservapp-web.vercel.app/api/health",
+    "description": "Colección completa de la API de ReservApp con todos los endpoints actuales\n\n🌐 **ReservApp** es una plataforma de gestión de reservas para hoteles, spas, restaurantes, tours y eventos con dashboard administrativo completo.\n\n## 🆕 Nuevas Funcionalidades (Enero 2025)\n📱 **Dashboard Móvil**: Endpoint optimizado para apps móviles con estadísticas completas, favoritos y reservaciones en una sola llamada.\n❌ **Cancelaciones**: Sistema completo de cancelación con reembolsos automáticos basados en política de tiempo y emails de confirmación.\n⭐ **Premium**: Upgrade a suscripción premium con integración real de Stripe (sandbox), beneficios exclusivos y templates de email.\n🔧 **Perfil Mejorado**: Endpoint de perfil ahora incluye estado `isPremium` para identificar usuarios premium.\n💳 **Pagos Reales**: Creación de reservas ahora procesa pagos realmente en Stripe con Payment Intents, clientes automáticos y registros completos.\n🔔 **Notificaciones Completas**: Sistema de notificaciones en tiempo real con filtrado, paginación, estados de lectura y creación automática en reservas/pagos.\n👨‍💼 **Admin Notificaciones**: Panel administrativo para ver TODOS los emails enviados. SUPER_ADMIN ve todo, ADMIN solo ve emails de sus venues. Incluye estadísticas completas, filtros avanzados y seguimiento de templates.\n💰 **Sistema Completo de Pagos y Facturas**: APIs completas para usuarios y admins con historial de pagos, generación de facturas Stripe, descargas PDF, permisos diferenciados por rol y datos de ejemplo realistas para Juan Pérez.\n🧾 **Gestión de Recibos**: Sistema completo de recibos y facturas con generación de PDFs, tipos múltiples (PAYMENT, INVOICE, REFUND, CREDIT_NOTE) y descarga directa.\n🔧 **Panel Admin Avanzado**: Gestión administrativa de pagos con filtros avanzados, reembolsos, estadísticas y generación de facturas Stripe.\n\n## 🔑 Autenticación\nLa mayoría de endpoints requieren autenticación JWT. Incluye el token en el header:\n```\nAuthorization: Bearer tu-jwt-token\n```\n\n## 🌐 Servidores\n- **Producción**: https://reservapp-web.vercel.app/api (URL por defecto)\n- **Desarrollo**: http://localhost:3000/api\n\n## 👤 Cuentas de Prueba\n- **Super Admin**: admin@reservapp.com (password: password123)\n- **Admin Hotel**: admin.salazar@reservapp.com (password: password123)\n- **Admin Restaurante**: admin.restaurant@reservapp.com (password: password123)\n- **Usuario Final**: juan.perez@gmail.com (password: password123) ⭐ **Con datos completos para mobile**\n\n## 💳 Stripe Testing (Sandbox)\nPara pruebas de suscripción premium:\n- **Visa**: `4242424242424242`\n- **Mastercard**: `5555555555554444`\n- **CVC**: `123`\n- **Fecha**: Cualquier fecha futura\n\n## 📧 Email Templates\nSistema completo de emails automáticos:\n- ✅ Cancelación de reservas con detalles de reembolso\n- ✅ Bienvenida premium con beneficios y facturación\n- ✅ Confirmación de reservas y pagos\n- ✅ Recordatorios de check-in\n\n## 📚 Documentación\n- **API Docs**: https://reservapp-web.vercel.app/api/swagger\n- **Health Check**: https://reservapp-web.vercel.app/api/health\n\n## 🆕 Nuevos Endpoints en esta Colección\n- 💰 **Payments & Receipts (Users)**: Gestión completa de pagos y recibos para usuarios\n- 🔧 **Admin Payments & Invoices**: Panel administrativo de pagos con facturas Stripe",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
     "version": {
       "major": 3,
-      "minor": 6,
+      "minor": 7,
       "patch": 0
     }
   },
@@ -51,6 +51,24 @@
       "value": "reservation_123",
       "type": "string",
       "description": "ID de reservación para testing"
+    },
+    {
+      "key": "payment_id",
+      "value": "payment_456",
+      "type": "string",
+      "description": "ID de pago para testing"
+    },
+    {
+      "key": "receipt_id",
+      "value": "receipt_789",
+      "type": "string",
+      "description": "ID de recibo para testing"
+    },
+    {
+      "key": "notification_id",
+      "value": "notification_abc",
+      "type": "string",
+      "description": "ID de notificación para testing"
     }
   ],
   "auth": {
@@ -1010,7 +1028,7 @@
                 }
               ]
             },
-            "description": "Obtener estadísticas completas de notificaciones: totales, por tipo, por día, usuarios más activos, tipos de email. SUPER_ADMIN ve todo, ADMIN solo sus venues."
+            "description": "🆕 Obtener estadísticas completas de notificaciones: totales, por tipo, por día, usuarios más activos, tipos de email. SUPER_ADMIN ve todo, ADMIN solo sus venues. Compatible con el nuevo módulo de gestión de notificaciones implementado."
           }
         }
       ],
@@ -1252,7 +1270,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\\n  \\\"reason\\\": \\\"Cambio de planes por emergencia familiar\\\"\\n}"
+              "raw": "{\n  \"reason\": \"Cambio de planes por emergencia familiar\"\n}"
             },
             "url": {
               "raw": "{{base_url}}/reservations/{{reservation_id}}/cancel",
@@ -1320,7 +1338,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\\n  \\\"planType\\\": \\\"PREMIUM\\\",\\n  \\\"paymentMethodId\\\": \\\"pm_card_visa\\\",\\n  \\\"billingDetails\\\": {\\n    \\\"name\\\": \\\"Juan Pérez\\\",\\n    \\\"email\\\": \\\"juan.perez@gmail.com\\\",\\n    \\\"phone\\\": \\\"+52 33 1234 5678\\\"\\n  }\\n}"
+              "raw": "{\n  \"planType\": \"PREMIUM\",\n  \"paymentMethodId\": \"pm_card_visa\",\n  \"billingDetails\": {\n    \"name\": \"Juan Pérez\",\n    \"email\": \"juan.perez@gmail.com\",\n    \"phone\": \"+52 33 1234 5678\"\n  }\n}"
             },
             "url": {
               "raw": "{{base_url}}/users/upgrade-premium",
@@ -1370,6 +1388,337 @@
         }
       ],
       "description": "Herramientas de monitoreo y documentación del sistema"
+    },
+    {
+      "name": "💰 Payments & Receipts (Users)",
+      "item": [
+        {
+          "name": "Get User Payments",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/payments?page=1&limit=20&status=COMPLETED&type=reservation",
+              "host": ["{{base_url}}"],
+              "path": ["payments"],
+              "query": [
+                {"key": "page", "value": "1", "description": "Page number"},
+                {"key": "limit", "value": "20", "description": "Items per page (max 50)"},
+                {"key": "status", "value": "COMPLETED", "description": "Filter by status: PENDING, COMPLETED, FAILED, REFUNDED"},
+                {"key": "type", "value": "reservation", "description": "reservation, subscription, business"},
+                {"key": "startDate", "value": "2025-01-01", "disabled": true, "description": "Start date filter"},
+                {"key": "endDate", "value": "2025-01-31", "disabled": true, "description": "End date filter"}
+              ]
+            },
+            "description": "🆕 Obtener historial de pagos del usuario autenticado con filtros avanzados:\n\n**Funcionalidades:**\n- ✅ Paginación completa\n- ✅ Filtros por estado, tipo y fechas\n- ✅ Información detallada de cada pago\n- ✅ Integración con Stripe\n- ✅ Historial completo de transacciones\n\n**Tipos de Pago:**\n- `reservation`: Pagos por reservaciones\n- `subscription`: Pagos por suscripciones premium\n- `business`: Pagos empresariales\n\n**Estados:**\n- `PENDING`: Pago pendiente\n- `COMPLETED`: Pago completado\n- `FAILED`: Pago fallido\n- `REFUNDED`: Pago reembolsado\n\n**Respuesta incluye:**\n- Detalles del pago con Stripe ID\n- Información de la reserva asociada\n- Estado del reembolso si aplica\n- Método de pago utilizado"
+          }
+        },
+        {
+          "name": "Get Payment Details",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/payments/{{payment_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["payments", "{{payment_id}}"]
+            },
+            "description": "Obtener detalles completos de un pago específico del usuario autenticado"
+          }
+        },
+        {
+          "name": "Cancel Payment",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"action\": \"cancel\",\n  \"reason\": \"User cancellation - change of plans\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/payments/{{payment_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["payments", "{{payment_id}}"]
+            },
+            "description": "Cancelar un pago específico (solo pagos en estado PENDING)"
+          }
+        },
+        {
+          "name": "Get User Receipts",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/receipts?page=1&limit=20&type=PAYMENT&status=VERIFIED",
+              "host": ["{{base_url}}"],
+              "path": ["receipts"],
+              "query": [
+                {"key": "page", "value": "1", "description": "Page number"},
+                {"key": "limit", "value": "20", "description": "Items per page"},
+                {"key": "type", "value": "PAYMENT", "description": "PAYMENT, INVOICE, REFUND, CREDIT_NOTE"},
+                {"key": "status", "value": "VERIFIED", "description": "PENDING, VERIFIED, REJECTED"},
+                {"key": "paymentId", "value": "payment_123", "disabled": true, "description": "Filter by payment ID"}
+              ]
+            },
+            "description": "🆕 Obtener recibos y facturas del usuario:\n\n**Tipos de Recibo:**\n- `PAYMENT`: Recibos de pago\n- `INVOICE`: Facturas generadas\n- `REFUND`: Comprobantes de reembolso\n- `CREDIT_NOTE`: Notas de crédito\n\n**Estados:**\n- `PENDING`: En procesamiento\n- `VERIFIED`: Verificado y válido\n- `REJECTED`: Rechazado\n\n**Funcionalidades:**\n- ✅ Filtrado por tipo y estado\n- ✅ Paginación completa\n- ✅ Descarga de PDFs\n- ✅ Información fiscal completa"
+          }
+        },
+        {
+          "name": "Get Receipt Details",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/receipts/{{receipt_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["receipts", "{{receipt_id}}"]
+            },
+            "description": "Obtener detalles completos de un recibo específico"
+          }
+        },
+        {
+          "name": "Download Receipt PDF",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/receipts/{{receipt_id}}/download",
+              "host": ["{{base_url}}"],
+              "path": ["receipts", "{{receipt_id}}", "download"]
+            },
+            "description": "🆕 Descargar recibo en formato PDF:\n\n**Características:**\n- ✅ Generación automática de PDF\n- ✅ Información fiscal completa\n- ✅ Datos de Stripe integrados\n- ✅ Formato profesional\n- ✅ Descarga directa\n\n**Contenido del PDF:**\n- Datos del usuario y empresa\n- Detalles del pago\n- Información fiscal\n- Códigos QR para verificación\n- Logo de ReservApp"
+          }
+        },
+        {
+          "name": "Request New Receipt",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"paymentId\": \"{{payment_id}}\",\n  \"type\": \"PAYMENT\",\n  \"metadata\": {\n    \"requestReason\": \"Tax purposes - annual filing\"\n  }\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/receipts",
+              "host": ["{{base_url}}"],
+              "path": ["receipts"]
+            },
+            "description": "Solicitar la generación de un nuevo recibo para un pago existente"
+          }
+        }
+      ],
+      "description": "🆕 Sistema completo de gestión de pagos y recibos para usuarios finales con integración Stripe"
+    },
+    {
+      "name": "🔧 Admin Payments & Invoices",
+      "item": [
+        {
+          "name": "Get All Payments (Admin)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/admin/payments?page=1&limit=20&status=ALL&search=juan",
+              "host": ["{{base_url}}"],
+              "path": ["admin", "payments"],
+              "query": [
+                {"key": "page", "value": "1", "description": "Page number"},
+                {"key": "limit", "value": "20", "description": "Items per page"},
+                {"key": "status", "value": "ALL", "description": "COMPLETED, PENDING, FAILED, etc."},
+                {"key": "search", "value": "juan", "description": "Search by user name/email"},
+                {"key": "venueId", "value": "venue_123", "disabled": true, "description": "Filter by venue"},
+                {"key": "startDate", "value": "2025-01-01", "disabled": true, "description": "Start date"},
+                {"key": "endDate", "value": "2025-01-31", "disabled": true, "description": "End date"}
+              ]
+            },
+            "description": "🆕 Panel administrativo de pagos con funcionalidades avanzadas:\n\n**Permisos por Rol:**\n- **SUPER_ADMIN**: Ve todos los pagos del sistema\n- **ADMIN**: Solo pagos de sus venues\n\n**Filtros Avanzados:**\n- ✅ Búsqueda por nombre/email de usuario\n- ✅ Filtro por estado de pago\n- ✅ Filtro por venue específico\n- ✅ Filtro por rango de fechas\n- ✅ Paginación optimizada\n\n**Información Detallada:**\n- Datos completos del usuario\n- Información de la reserva\n- Estado del pago en Stripe\n- Detalles del venue y servicio\n- Historial de reembolsos"
+          }
+        },
+        {
+          "name": "Get Payment Statistics (Admin)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"action\": \"getStats\",\n  \"filters\": {\n    \"startDate\": \"2025-01-01\",\n    \"endDate\": \"2025-01-31\",\n    \"venueId\": \"venue_123\"\n  }\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/admin/payments",
+              "host": ["{{base_url}}"],
+              "path": ["admin", "payments"]
+            },
+            "description": "Obtener estadísticas detalladas de pagos para dashboard administrativo"
+          }
+        },
+        {
+          "name": "Refund Payment (Admin)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"action\": \"refund\",\n  \"paymentId\": \"{{payment_id}}\",\n  \"amount\": 100.00,\n  \"reason\": \"Customer request - unsatisfactory service\",\n  \"notes\": \"Processed by admin due to customer complaint\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/admin/payments/actions",
+              "host": ["{{base_url}}"],
+              "path": ["admin", "payments", "actions"]
+            },
+            "description": "🆕 Procesar reembolsos administrativos:\n\n**Características:**\n- ✅ Reembolso parcial o total\n- ✅ Integración real con Stripe\n- ✅ Notas administrativas\n- ✅ Registro de auditoría\n- ✅ Notificación automática al usuario\n\n**Validaciones:**\n- Solo pagos completados pueden reembolsarse\n- Monto no puede exceder el pago original\n- Requiere permisos administrativos\n- Genera registro en sistema de logs"
+          }
+        },
+        {
+          "name": "Generate Stripe Invoice",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"description\": \"Factura por servicios premium - ReservApp\",\n  \"dueDate\": \"2025-02-15T00:00:00.000Z\",\n  \"autoFinalize\": true,\n  \"metadata\": {\n    \"invoiceType\": \"service_charge\",\n    \"departmentCode\": \"premium_services\"\n  }\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/admin/payments/{{payment_id}}/invoice",
+              "host": ["{{base_url}}"],
+              "path": ["admin", "payments", "{{payment_id}}", "invoice"]
+            },
+            "description": "🆕 Generar facturas oficiales con Stripe:\n\n**Funcionalidades:**\n- ✅ Generación automática en Stripe\n- ✅ Información fiscal completa\n- ✅ Descarga en PDF\n- ✅ Envío automático por email\n- ✅ Cumplimiento fiscal mexicano\n\n**Casos de Uso:**\n- Facturas para empresas\n- Comprobantes fiscales\n- Documentos para contabilidad\n- Reportes financieros"
+          }
+        },
+        {
+          "name": "Get Stripe Invoice",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/admin/payments/{{payment_id}}/invoice",
+              "host": ["{{base_url}}"],
+              "path": ["admin", "payments", "{{payment_id}}", "invoice"]
+            },
+            "description": "Obtener detalles de una factura generada en Stripe"
+          }
+        },
+        {
+          "name": "Get Venues for Filtering",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/admin/venues?simple=true",
+              "host": ["{{base_url}}"],
+              "path": ["admin", "venues"],
+              "query": [
+                {"key": "simple", "value": "true", "description": "Return simplified venue list for filters"}
+              ]
+            },
+            "description": "Obtener lista simplificada de venues para filtros en dashboard administrativo"
+          }
+        }
+      ],
+      "description": "🆕 Panel administrativo completo para gestión de pagos, facturas y estadísticas financieras"
     }
   ],
   "event": [
@@ -1524,332 +1873,6 @@
           "console.log(`${statusEmoji} Request completed: ${pm.response.code} ${pm.response.status} in ${pm.response.responseTime}ms`);"
         ]
       }
-    },
-    {
-      "name": "💰 Payments & Receipts (Users)",
-      "item": [
-        {
-          "name": "Get User Payments",
-          "request": {
-            "method": "GET",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{jwt_token}}",
-                "type": "text"
-              }
-            ],
-            "url": {
-              "raw": "{{base_url}}/payments?page=1&limit=20&status=COMPLETED&type=reservation",
-              "host": ["{{base_url}}"],
-              "path": ["payments"],
-              "query": [
-                {"key": "page", "value": "1", "description": "Page number"},
-                {"key": "limit", "value": "20", "description": "Items per page (max 50)"},
-                {"key": "status", "value": "COMPLETED", "description": "Filter by status"},
-                {"key": "type", "value": "reservation", "description": "reservation, subscription, business"},
-                {"key": "startDate", "value": "2025-01-01", "disabled": true},
-                {"key": "endDate", "value": "2025-01-31", "disabled": true}
-              ]
-            }
-          },
-          "response": []
-        },
-        {
-          "name": "Get Payment Details",
-          "request": {
-            "method": "GET",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{jwt_token}}",
-                "type": "text"
-              }
-            ],
-            "url": {
-              "raw": "{{base_url}}/payments/{{payment_id}}",
-              "host": ["{{base_url}}"],
-              "path": ["payments", "{{payment_id}}"]
-            }
-          },
-          "response": []
-        },
-        {
-          "name": "Cancel Payment",
-          "request": {
-            "method": "PATCH",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{jwt_token}}",
-                "type": "text"
-              },
-              {
-                "key": "Content-Type",
-                "value": "application/json",
-                "type": "text"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"action\": \"cancel\",\n  \"reason\": \"User cancellation\"\n}"
-            },
-            "url": {
-              "raw": "{{base_url}}/payments/{{payment_id}}",
-              "host": ["{{base_url}}"],
-              "path": ["payments", "{{payment_id}}"]
-            }
-          },
-          "response": []
-        },
-        {
-          "name": "Get User Receipts",
-          "request": {
-            "method": "GET",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{jwt_token}}",
-                "type": "text"
-              }
-            ],
-            "url": {
-              "raw": "{{base_url}}/receipts?page=1&limit=20&type=PAYMENT&status=VERIFIED",
-              "host": ["{{base_url}}"],
-              "path": ["receipts"],
-              "query": [
-                {"key": "page", "value": "1"},
-                {"key": "limit", "value": "20"},
-                {"key": "type", "value": "PAYMENT", "description": "PAYMENT, INVOICE, REFUND, CREDIT_NOTE"},
-                {"key": "status", "value": "VERIFIED", "description": "PENDING, VERIFIED, REJECTED"},
-                {"key": "paymentId", "value": "payment_123", "disabled": true}
-              ]
-            }
-          },
-          "response": []
-        },
-        {
-          "name": "Get Receipt Details",
-          "request": {
-            "method": "GET",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{jwt_token}}",
-                "type": "text"
-              }
-            ],
-            "url": {
-              "raw": "{{base_url}}/receipts/{{receipt_id}}",
-              "host": ["{{base_url}}"],
-              "path": ["receipts", "{{receipt_id}}"]
-            }
-          },
-          "response": []
-        },
-        {
-          "name": "Download Receipt PDF",
-          "request": {
-            "method": "GET",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{jwt_token}}",
-                "type": "text"
-              }
-            ],
-            "url": {
-              "raw": "{{base_url}}/receipts/{{receipt_id}}/download",
-              "host": ["{{base_url}}"],
-              "path": ["receipts", "{{receipt_id}}", "download"]
-            }
-          },
-          "response": []
-        },
-        {
-          "name": "Request New Receipt",
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{jwt_token}}",
-                "type": "text"
-              },
-              {
-                "key": "Content-Type",
-                "value": "application/json",
-                "type": "text"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"paymentId\": \"{{payment_id}}\",\n  \"type\": \"PAYMENT\",\n  \"metadata\": {\n    \"requestReason\": \"Tax purposes\"\n  }\n}"
-            },
-            "url": {
-              "raw": "{{base_url}}/receipts",
-              "host": ["{{base_url}}"],
-              "path": ["receipts"]
-            }
-          },
-          "response": []
-        }
-      ]
-    },
-    {
-      "name": "🔧 Admin Payments & Invoices",
-      "item": [
-        {
-          "name": "Get All Payments (Admin)",
-          "request": {
-            "method": "GET",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{jwt_token}}",
-                "type": "text"
-              }
-            ],
-            "url": {
-              "raw": "{{base_url}}/admin/payments?page=1&limit=20&status=ALL&search=juan",
-              "host": ["{{base_url}}"],
-              "path": ["admin", "payments"],
-              "query": [
-                {"key": "page", "value": "1"},
-                {"key": "limit", "value": "20"},
-                {"key": "status", "value": "ALL", "description": "COMPLETED, PENDING, FAILED, etc."},
-                {"key": "search", "value": "juan", "description": "Search by user name/email"},
-                {"key": "venueId", "value": "venue_123", "disabled": true},
-                {"key": "startDate", "value": "2025-01-01", "disabled": true},
-                {"key": "endDate", "value": "2025-01-31", "disabled": true}
-              ]
-            }
-          },
-          "response": []
-        },
-        {
-          "name": "Get Payment Statistics (Admin)",
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{jwt_token}}",
-                "type": "text"
-              },
-              {
-                "key": "Content-Type",
-                "value": "application/json",
-                "type": "text"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"action\": \"getStats\",\n  \"filters\": {\n    \"startDate\": \"2025-01-01\",\n    \"endDate\": \"2025-01-31\"\n  }\n}"
-            },
-            "url": {
-              "raw": "{{base_url}}/admin/payments",
-              "host": ["{{base_url}}"],
-              "path": ["admin", "payments"]
-            }
-          },
-          "response": []
-        },
-        {
-          "name": "Refund Payment (Admin)",
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{jwt_token}}",
-                "type": "text"
-              },
-              {
-                "key": "Content-Type",
-                "value": "application/json",
-                "type": "text"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"action\": \"refund\",\n  \"paymentId\": \"{{payment_id}}\",\n  \"amount\": 100.00,\n  \"reason\": \"Customer request - unsatisfactory service\",\n  \"notes\": \"Processed by admin due to customer complaint\"\n}"
-            },
-            "url": {
-              "raw": "{{base_url}}/admin/payments/actions",
-              "host": ["{{base_url}}"],
-              "path": ["admin", "payments", "actions"]
-            }
-          },
-          "response": []
-        },
-        {
-          "name": "Generate Stripe Invoice",
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{jwt_token}}",
-                "type": "text"
-              },
-              {
-                "key": "Content-Type",
-                "value": "application/json",
-                "type": "text"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"description\": \"Factura por servicios premium - ReservApp\",\n  \"dueDate\": \"2025-02-15T00:00:00.000Z\",\n  \"autoFinalize\": true,\n  \"metadata\": {\n    \"invoiceType\": \"service_charge\",\n    \"departmentCode\": \"premium_services\"\n  }\n}"
-            },
-            "url": {
-              "raw": "{{base_url}}/admin/payments/{{payment_id}}/invoice",
-              "host": ["{{base_url}}"],
-              "path": ["admin", "payments", "{{payment_id}}", "invoice"]
-            }
-          },
-          "response": []
-        },
-        {
-          "name": "Get Stripe Invoice",
-          "request": {
-            "method": "GET",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{jwt_token}}",
-                "type": "text"
-              }
-            ],
-            "url": {
-              "raw": "{{base_url}}/admin/payments/{{payment_id}}/invoice",
-              "host": ["{{base_url}}"],
-              "path": ["admin", "payments", "{{payment_id}}", "invoice"]
-            }
-          },
-          "response": []
-        },
-        {
-          "name": "Get Venues for Filtering",
-          "request": {
-            "method": "GET",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{jwt_token}}",
-                "type": "text"
-              }
-            ],
-            "url": {
-              "raw": "{{base_url}}/admin/payments/actions",
-              "host": ["{{base_url}}"],
-              "path": ["admin", "payments", "actions"]
-            }
-          },
-          "response": []
-        }
-      ]
     }
   ]
 }

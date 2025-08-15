@@ -5,6 +5,8 @@
 
 import { useCallback, useEffect, useState } from 'react';
 
+import { authFetch } from '@libs/infrastructure/services/core/http/authInterceptor';
+
 import { Review } from '../../../domain/review/entities/Review';
 
 // Define ReviewStatus locally as it's not exported
@@ -150,7 +152,7 @@ export const useReviewManagement = (): UseReviewManagementReturn => {
           queryParams.append('hasResponse', activeFilters.hasResponse.toString());
         }
 
-        const response = await fetch(`/api/admin/reviews?${queryParams}`);
+        const response = await authFetch(`/api/admin/reviews?${queryParams}`);
 
         if (!response.ok) {
           throw new Error('Failed to fetch reviews');
@@ -174,7 +176,7 @@ export const useReviewManagement = (): UseReviewManagementReturn => {
     try {
       setError(null);
 
-      const response = await fetch(`/api/admin/reviews/${id}`);
+      const response = await authFetch(`/api/admin/reviews/${id}`);
 
       if (!response.ok) {
         throw new Error('Failed to fetch review');
@@ -193,7 +195,7 @@ export const useReviewManagement = (): UseReviewManagementReturn => {
       try {
         setError(null);
 
-        const response = await fetch(`/api/admin/reviews/${id}/status`, {
+        const response = await authFetch(`/api/admin/reviews/${id}/status`, {
           body: JSON.stringify({ status }),
           headers: {
             'Content-Type': 'application/json',
@@ -223,7 +225,7 @@ export const useReviewManagement = (): UseReviewManagementReturn => {
     try {
       setError(null);
 
-      const response = await fetch(`/api/admin/reviews/${id}/flag`, {
+      const response = await authFetch(`/api/admin/reviews/${id}/flag`, {
         body: JSON.stringify({ reason }),
         headers: {
           'Content-Type': 'application/json',
@@ -260,7 +262,7 @@ export const useReviewManagement = (): UseReviewManagementReturn => {
     try {
       setError(null);
 
-      const response = await fetch(`/api/admin/reviews/${id}/reject`, {
+      const response = await authFetch(`/api/admin/reviews/${id}/reject`, {
         body: JSON.stringify({ reason }),
         headers: {
           'Content-Type': 'application/json',
@@ -290,7 +292,7 @@ export const useReviewManagement = (): UseReviewManagementReturn => {
     try {
       setError(null);
 
-      const apiResponse = await fetch(`/api/admin/reviews/${id}/response`, {
+      const apiResponse = await authFetch(`/api/admin/reviews/${id}/response`, {
         body: JSON.stringify({ response }),
         headers: {
           'Content-Type': 'application/json',
@@ -321,7 +323,7 @@ export const useReviewManagement = (): UseReviewManagementReturn => {
     try {
       setError(null);
 
-      const response = await fetch(`/api/admin/reviews/${id}`, {
+      const response = await authFetch(`/api/admin/reviews/${id}`, {
         method: 'DELETE',
       });
 
@@ -344,7 +346,7 @@ export const useReviewManagement = (): UseReviewManagementReturn => {
       try {
         setError(null);
 
-        const response = await fetch('/api/admin/reviews/bulk/status', {
+        const response = await authFetch('/api/admin/reviews/bulk/status', {
           body: JSON.stringify({ reviewIds, status }),
           headers: {
             'Content-Type': 'application/json',
@@ -394,7 +396,7 @@ export const useReviewManagement = (): UseReviewManagementReturn => {
       if (venueId) queryParams.append('venueId', venueId);
       if (serviceId) queryParams.append('serviceId', serviceId);
 
-      const response = await fetch(`/api/admin/reviews/analytics?${queryParams}`);
+      const response = await authFetch(`/api/admin/reviews/analytics?${queryParams}`);
 
       if (!response.ok) {
         throw new Error('Failed to fetch review analytics');
@@ -427,7 +429,7 @@ export const useReviewManagement = (): UseReviewManagementReturn => {
           }
         });
 
-        const response = await fetch(`/api/admin/reviews/export?${queryParams}`);
+        const response = await authFetch(`/api/admin/reviews/export?${queryParams}`);
 
         if (!response.ok) {
           throw new Error('Failed to export reviews');

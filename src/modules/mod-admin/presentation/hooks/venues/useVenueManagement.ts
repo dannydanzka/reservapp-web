@@ -78,11 +78,27 @@ export const useVenueManagement = (): UseVenueManagementReturn => {
     total: 0,
   });
 
+  /**
+   * Get auth token from localStorage (same pattern as users)
+   */
+  const getAuthToken = useCallback((): string => {
+    let token = typeof window !== 'undefined' ? localStorage.getItem('auth_token') : null;
+
+    if (!token) {
+      throw new Error('No se encontró token de autenticación');
+    }
+
+    // Remove quotes if present (localStorage sometimes stores with quotes)
+    return token.replace(/^"(.*)"$/, '$1');
+  }, []);
+
   const fetchVenues = useCallback(
     async (newFilters?: VenueFilters) => {
       try {
         setLoading(true);
         setError(null);
+
+        const token = getAuthToken();
 
         const queryParams = new URLSearchParams();
         queryParams.append('page', pagination.page.toString());
@@ -122,7 +138,13 @@ export const useVenueManagement = (): UseVenueManagementReturn => {
           queryParams.append('search', activeFilters.searchQuery);
         }
 
-        const response = await fetch(`/api/admin/venues?${queryParams}`);
+        const response = await fetch(`/api/admin/venues?${queryParams}`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'application/json',
+          },
+          method: 'GET',
+        });
 
         if (!response.ok) {
           throw new Error('Failed to fetch venues');
@@ -142,92 +164,118 @@ export const useVenueManagement = (): UseVenueManagementReturn => {
     [filters, pagination.page, pagination.limit]
   );
 
-  const fetchVenueById = useCallback(async (id: string): Promise<Venue | null> => {
-    try {
-      setError(null);
+  const fetchVenueById = useCallback(
+    async (id: string): Promise<Venue | null> => {
+      try {
+        setError(null);
 
-      const response = await fetch(`/api/admin/venues/${id}`);
+        const token = getAuthToken();
 
-      if (!response.ok) {
-        throw new Error('Failed to fetch venue');
+        const response = await fetch(`/api/admin/venues/${id}`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'application/json',
+          },
+          method: 'GET',
+        });
+
+        if (!response.ok) {
+          throw new Error('Failed to fetch venue');
+        }
+
+        const data = await response.json();
+        return data.venue;
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'Failed to fetch venue');
+        return null;
       }
+    },
+    [getAuthToken]
+  );
 
-      const data = await response.json();
-      return data.venue;
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to fetch venue');
-      return null;
-    }
-  }, []);
+  const createVenue = useCallback(
+    async (venueData: Partial<Venue>): Promise<Venue | null> => {
+      try {
+        setError(null);
 
-  const createVenue = useCallback(async (venueData: Partial<Venue>): Promise<Venue | null> => {
-    try {
-      setError(null);
+        const token = getAuthToken();
 
-      const response = await fetch('/api/admin/venues', {
-        body: JSON.stringify(venueData),
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        method: 'POST',
-      });
+        const response = await fetch('/api/admin/venues', {
+          body: JSON.stringify(venueData),
+          headers: {
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'application/json',
+          },
+          method: 'POST',
+        });
 
-      if (!response.ok) {
-        throw new Error('Failed to create venue');
+        if (!response.ok) {
+          throw new Error('Failed to create venue');
+        }
+
+        const data = await response.json();
+        const newVenue = data.venue;
+
+        // Add to local state
+        setVenues((prev) => [newVenue, ...prev]);
+
+        return newVenue;
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'Failed to create venue');
+        return null;
       }
+    },
+    [getAuthToken]
+  );
 
-      const data = await response.json();
-      const newVenue = data.venue;
+  const updateVenue = useCallback(
+    async (id: string, updates: Partial<Venue>): Promise<boolean> => {
+      try {
+        setError(null);
 
-      // Add to local state
-      setVenues((prev) => [newVenue, ...prev]);
+        const token = getAuthToken();
 
-      return newVenue;
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to create venue');
-      return null;
-    }
-  }, []);
+        const response = await fetch(`/api/admin/venues/${id}`, {
+          body: JSON.stringify(updates),
+          headers: {
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'application/json',
+          },
+          method: 'PATCH',
+        });
 
-  const updateVenue = useCallback(async (id: string, updates: Partial<Venue>): Promise<boolean> => {
-    try {
-      setError(null);
+        if (!response.ok) {
+          throw new Error('Failed to update venue');
+        }
 
-      const response = await fetch(`/api/admin/venues/${id}`, {
-        body: JSON.stringify(updates),
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        method: 'PATCH',
-      });
+        const data = await response.json();
+        const updatedVenue = data.venue;
 
-      if (!response.ok) {
-        throw new Error('Failed to update venue');
+        // Update local state
+        setVenues((prevVenues) =>
+          prevVenues.map((venue) => (venue.id === id ? updatedVenue : venue))
+        );
+
+        return true;
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'Failed to update venue');
+        return false;
       }
-
-      const data = await response.json();
-      const updatedVenue = data.venue;
-
-      // Update local state
-      setVenues((prevVenues) =>
-        prevVenues.map((venue) => (venue.id === id ? updatedVenue : venue))
-      );
-
-      return true;
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to update venue');
-      return false;
-    }
-  }, []);
+    },
+    [getAuthToken]
+  );
 
   const updateVenueStatus = useCallback(
     async (id: string, status: VenueStatus): Promise<boolean> => {
       try {
         setError(null);
 
+        const token = getAuthToken();
+
         const response = await fetch(`/api/admin/venues/${id}/status`, {
           body: JSON.stringify({ status }),
           headers: {
+            Authorization: `Bearer ${token}`,
             'Content-Type': 'application/json',
           },
           method: 'PATCH',
@@ -251,149 +299,199 @@ export const useVenueManagement = (): UseVenueManagementReturn => {
     []
   );
 
-  const deleteVenue = useCallback(async (id: string): Promise<boolean> => {
-    try {
-      setError(null);
+  const deleteVenue = useCallback(
+    async (id: string): Promise<boolean> => {
+      try {
+        setError(null);
 
-      const response = await fetch(`/api/admin/venues/${id}`, {
-        method: 'DELETE',
-      });
+        const token = getAuthToken();
 
-      if (!response.ok) {
-        throw new Error('Failed to delete venue');
+        const response = await fetch(`/api/admin/venues/${id}`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'application/json',
+          },
+          method: 'DELETE',
+        });
+
+        if (!response.ok) {
+          throw new Error('Failed to delete venue');
+        }
+
+        // Remove from local state
+        setVenues((prevVenues) => prevVenues.filter((venue) => venue.id !== id));
+
+        return true;
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'Failed to delete venue');
+        return false;
       }
+    },
+    [getAuthToken]
+  );
 
-      // Remove from local state
-      setVenues((prevVenues) => prevVenues.filter((venue) => venue.id !== id));
+  const uploadVenueImage = useCallback(
+    async (id: string, file: File): Promise<string | null> => {
+      try {
+        setError(null);
 
-      return true;
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to delete venue');
-      return false;
-    }
-  }, []);
+        const formData = new FormData();
+        formData.append('image', file);
 
-  const uploadVenueImage = useCallback(async (id: string, file: File): Promise<string | null> => {
-    try {
-      setError(null);
+        const token = getAuthToken();
 
-      const formData = new FormData();
-      formData.append('image', file);
+        const response = await fetch(`/api/admin/venues/${id}/images`, {
+          body: formData,
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+          method: 'POST',
+        });
 
-      const response = await fetch(`/api/admin/venues/${id}/images`, {
-        body: formData,
-        method: 'POST',
-      });
+        if (!response.ok) {
+          throw new Error('Failed to upload venue image');
+        }
 
-      if (!response.ok) {
-        throw new Error('Failed to upload venue image');
+        const data = await response.json();
+        const { imageUrl } = data;
+
+        // Update local state
+        setVenues((prevVenues) =>
+          prevVenues.map((venue) =>
+            venue.id === id ? { ...venue, images: [...venue.images, imageUrl] } : venue
+          )
+        );
+
+        return imageUrl;
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'Failed to upload venue image');
+        return null;
       }
+    },
+    [getAuthToken]
+  );
 
-      const data = await response.json();
-      const { imageUrl } = data;
+  const removeVenueImage = useCallback(
+    async (id: string, imageUrl: string): Promise<boolean> => {
+      try {
+        setError(null);
 
-      // Update local state
-      setVenues((prevVenues) =>
-        prevVenues.map((venue) =>
-          venue.id === id ? { ...venue, images: [...venue.images, imageUrl] } : venue
-        )
-      );
+        const token = getAuthToken();
 
-      return imageUrl;
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to upload venue image');
-      return null;
-    }
-  }, []);
+        const response = await fetch(`/api/admin/venues/${id}/images`, {
+          body: JSON.stringify({ imageUrl }),
+          headers: {
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'application/json',
+          },
+          method: 'DELETE',
+        });
 
-  const removeVenueImage = useCallback(async (id: string, imageUrl: string): Promise<boolean> => {
-    try {
-      setError(null);
+        if (!response.ok) {
+          throw new Error('Failed to remove venue image');
+        }
 
-      const response = await fetch(`/api/admin/venues/${id}/images`, {
-        body: JSON.stringify({ imageUrl }),
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        method: 'DELETE',
-      });
+        // Update local state
+        setVenues((prevVenues) =>
+          prevVenues.map((venue) =>
+            venue.id === id
+              ? { ...venue, images: venue.images.filter((img) => (img as any) !== imageUrl) }
+              : venue
+          )
+        );
 
-      if (!response.ok) {
-        throw new Error('Failed to remove venue image');
+        return true;
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'Failed to remove venue image');
+        return false;
       }
+    },
+    [getAuthToken]
+  );
 
-      // Update local state
-      setVenues((prevVenues) =>
-        prevVenues.map((venue) =>
-          venue.id === id
-            ? { ...venue, images: venue.images.filter((img) => (img as any) !== imageUrl) }
-            : venue
-        )
-      );
+  const searchNearbyVenues = useCallback(
+    async (lat: number, lng: number, radius: number) => {
+      try {
+        setLoading(true);
+        setError(null);
 
-      return true;
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to remove venue image');
-      return false;
-    }
-  }, []);
+        const token = getAuthToken();
 
-  const searchNearbyVenues = useCallback(async (lat: number, lng: number, radius: number) => {
-    try {
-      setLoading(true);
-      setError(null);
+        const response = await fetch(
+          `/api/admin/venues/nearby?lat=${lat}&lng=${lng}&radius=${radius}`,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+              'Content-Type': 'application/json',
+            },
+            method: 'GET',
+          }
+        );
 
-      const response = await fetch(
-        `/api/admin/venues/nearby?lat=${lat}&lng=${lng}&radius=${radius}`
-      );
+        if (!response.ok) {
+          throw new Error('Failed to search nearby venues');
+        }
 
-      if (!response.ok) {
-        throw new Error('Failed to search nearby venues');
+        const data = await response.json();
+        setVenues(data.venues);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'Failed to search nearby venues');
+      } finally {
+        setLoading(false);
       }
+    },
+    [getAuthToken]
+  );
 
-      const data = await response.json();
-      setVenues(data.venues);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to search nearby venues');
-    } finally {
-      setLoading(false);
-    }
-  }, []);
+  const validateVenueAddress = useCallback(
+    async (address: string): Promise<boolean> => {
+      try {
+        const token = getAuthToken();
 
-  const validateVenueAddress = useCallback(async (address: string): Promise<boolean> => {
-    try {
-      const response = await fetch('/api/admin/venues/validate-address', {
-        body: JSON.stringify({ address }),
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        method: 'POST',
-      });
+        const response = await fetch('/api/admin/venues/validate-address', {
+          body: JSON.stringify({ address }),
+          headers: {
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'application/json',
+          },
+          method: 'POST',
+        });
 
-      return response.ok;
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to validate address');
-      return false;
-    }
-  }, []);
+        return response.ok;
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'Failed to validate address');
+        return false;
+      }
+    },
+    [getAuthToken]
+  );
 
-  const handleSetFilters = useCallback((newFilters: VenueFilters) => {
-    setFilters(newFilters);
-    setPagination((prev) => ({ ...prev, page: 1 }));
-  }, []);
+  const handleSetFilters = useCallback(
+    (newFilters: VenueFilters) => {
+      setFilters(newFilters);
+      setPagination((prev) => ({ ...prev, page: 1 }));
+    },
+    [getAuthToken]
+  );
 
-  const handleSetPage = useCallback((page: number) => {
-    setPagination((prev) => ({ ...prev, page }));
-  }, []);
+  const handleSetPage = useCallback(
+    (page: number) => {
+      setPagination((prev) => ({ ...prev, page }));
+    },
+    [getAuthToken]
+  );
 
-  const handleSetLimit = useCallback((limit: number) => {
-    setPagination((prev) => ({ ...prev, limit, page: 1 }));
-  }, []);
+  const handleSetLimit = useCallback(
+    (limit: number) => {
+      setPagination((prev) => ({ ...prev, limit, page: 1 }));
+    },
+    [getAuthToken]
+  );
 
   const clearFilters = useCallback(() => {
     setFilters({});
     setPagination((prev) => ({ ...prev, page: 1 }));
-  }, []);
+  }, [getAuthToken]);
 
   // Load venues on mount and when filters/pagination change
   useEffect(() => {

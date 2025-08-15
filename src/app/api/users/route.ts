@@ -1,16 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server';
 import jwt from 'jsonwebtoken';
 
-import { PrismaClient } from '@prisma/client';
-
-const prisma = new PrismaClient();
+import { prisma } from '@libs/infrastructure/services/core/database/prismaService';
 
 /**
  * Get users (Admin only)
  */
 export async function GET(request: NextRequest) {
   try {
-    // Get auth token
+    // Get auth token (same pattern as /api/admin/stats)
     const authHeader = request.headers.get('authorization');
     if (!authHeader?.startsWith('Bearer ')) {
       return NextResponse.json(
@@ -22,8 +20,20 @@ export async function GET(request: NextRequest) {
     const token = authHeader.substring(7);
     const decoded = jwt.verify(token, process.env.JWT_SECRET || 'fallback-secret') as any;
 
+    // Get user from database
+    const currentUser = await prisma.user.findUnique({
+      where: { id: decoded.userId },
+    });
+
+    if (!currentUser) {
+      return NextResponse.json(
+        { message: 'Usuario no encontrado', success: false },
+        { status: 401 }
+      );
+    }
+
     // Check if user is admin or super admin
-    if (decoded.role !== 'ADMIN' && decoded.role !== 'SUPER_ADMIN') {
+    if (currentUser.role !== 'ADMIN' && currentUser.role !== 'SUPER_ADMIN') {
       return NextResponse.json(
         { message: 'Acceso denegado. Se requiere rol de administrador', success: false },
         { status: 403 }
@@ -55,7 +65,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Build select clause based on user role
-    const includeBusinessInfo = decoded.role === 'SUPER_ADMIN';
+    const includeBusinessInfo = currentUser.role === 'SUPER_ADMIN';
 
     // Get users
     const [users, total] = await Promise.all([
@@ -104,14 +114,18 @@ export async function GET(request: NextRequest) {
       },
       success: true,
     });
-  } catch (error) {
+  } catch (error: any) {
     console.error('Get users error:', error);
+
+    // Handle authentication errors
+    if (error.message?.includes('Token') || error.message?.includes('autorización')) {
+      return NextResponse.json({ message: error.message, success: false }, { status: 401 });
+    }
+
     return NextResponse.json(
       { message: 'Error interno del servidor', success: false },
       { status: 500 }
     );
-  } finally {
-    await prisma.$disconnect();
   }
 }
 
@@ -120,7 +134,7 @@ export async function GET(request: NextRequest) {
  */
 export async function POST(request: NextRequest) {
   try {
-    // Get auth token
+    // Get auth token (same pattern as /api/admin/stats)
     const authHeader = request.headers.get('authorization');
     if (!authHeader?.startsWith('Bearer ')) {
       return NextResponse.json(
@@ -132,8 +146,20 @@ export async function POST(request: NextRequest) {
     const token = authHeader.substring(7);
     const decoded = jwt.verify(token, process.env.JWT_SECRET || 'fallback-secret') as any;
 
+    // Get user from database
+    const currentUser = await prisma.user.findUnique({
+      where: { id: decoded.userId },
+    });
+
+    if (!currentUser) {
+      return NextResponse.json(
+        { message: 'Usuario no encontrado', success: false },
+        { status: 401 }
+      );
+    }
+
     // Check if user is admin
-    if (decoded.role !== 'ADMIN') {
+    if (currentUser.role !== 'ADMIN' && currentUser.role !== 'SUPER_ADMIN') {
       return NextResponse.json(
         { message: 'Acceso denegado. Se requiere rol de administrador', success: false },
         { status: 403 }
@@ -199,7 +225,5 @@ export async function POST(request: NextRequest) {
       { message: 'Error interno del servidor', success: false },
       { status: 500 }
     );
-  } finally {
-    await prisma.$disconnect();
   }
 }

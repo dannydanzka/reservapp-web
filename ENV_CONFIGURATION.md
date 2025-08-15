@@ -58,7 +58,7 @@ STRIPE_WEBHOOK_SECRET=
 ```bash
 RESEND_API_KEY=re_PKBg8gJW_LqcYNaMBQnBbLUxWsriF3VdE
 RESEND_FROM_EMAIL=onboarding@resend.dev
-RESEND_FROM_NAME=ReservApp - Casa Salazar
+RESEND_FROM_NAME=ReservApp
 RESEND_TARGET_EMAIL=danny.danzka21@gmail.com
 ```
 

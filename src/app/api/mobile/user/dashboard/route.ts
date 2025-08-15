@@ -28,10 +28,11 @@ export const GET = AuthMiddleware.withAuth(async (request: NextRequest, user) =>
 
     // Get upcoming reservations (confirmed or in progress)
     const upcomingReservations = reservationsStats
-      .filter((stat) => 
-        stat.status === ReservationStatus.CONFIRMED ||
-        stat.status === ReservationStatus.IN_PROGRESS ||
-        stat.status === ReservationStatus.CHECKED_IN
+      .filter(
+        (stat) =>
+          stat.status === ReservationStatus.CONFIRMED ||
+          stat.status === ReservationStatus.IN_PROGRESS ||
+          stat.status === ReservationStatus.CHECKED_IN
       )
       .reduce((sum, stat) => sum + stat._count.id, 0);
 
@@ -98,7 +99,11 @@ export const GET = AuthMiddleware.withAuth(async (request: NextRequest, user) =>
           gte: new Date(),
         },
         status: {
-          in: [ReservationStatus.CONFIRMED, ReservationStatus.IN_PROGRESS, ReservationStatus.CHECKED_IN],
+          in: [
+            ReservationStatus.CONFIRMED,
+            ReservationStatus.IN_PROGRESS,
+            ReservationStatus.CHECKED_IN,
+          ],
         },
         userId: userId,
       },
@@ -152,6 +157,7 @@ export const GET = AuthMiddleware.withAuth(async (request: NextRequest, user) =>
         email: true,
         firstName: true,
         id: true,
+        isPremium: true,
         lastName: true,
       },
       where: { id: userId },

@@ -1,17 +1,17 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { AuthMiddleware } from '@libs/infrastructure/services/core/auth/authMiddleware';
-import { PrismaClient, NotificationType } from '@prisma/client';
+import jwt from 'jsonwebtoken';
 
-const prisma = new PrismaClient();
+import { NotificationType } from '@prisma/client';
+import { prisma } from '@libs/infrastructure/services/core/database/prismaService';
 
 /**
  * GET /api/admin/notifications/stats
  * Get notification statistics for admin dashboard
- * 
+ *
  * Permissions:
  * - SUPER_ADMIN: Statistics for ALL notifications
  * - ADMIN: Statistics for notifications related to their venues/services only
- * 
+ *
  * Query Parameters:
  * - period: 'today', 'week', 'month', 'year' (default: 'month')
  * - startDate: Custom start date (ISO string)
@@ -19,21 +19,45 @@ const prisma = new PrismaClient();
  */
 export async function GET(request: NextRequest) {
   try {
-    // Validate authentication and admin role
-    const authResult = await AuthMiddleware.validateRequest(request);
-    if (!authResult.success || !authResult.user) {
+    // Get auth token (same pattern as /api/admin/stats)
+    const authHeader = request.headers.get('authorization');
+    if (!authHeader?.startsWith('Bearer ')) {
       return NextResponse.json(
-        { success: false, error: 'Authentication required' },
+        { message: 'Token de autorización requerido', success: false },
         { status: 401 }
       );
     }
 
-    const { user } = authResult;
+    const token = authHeader.substring(7);
+
+    // Validate JWT_SECRET
+    const jwtSecret = process.env.JWT_SECRET;
+    if (!jwtSecret) {
+      console.error('JWT_SECRET is not configured');
+      return NextResponse.json(
+        { message: 'Configuración del servidor incorrecta', success: false },
+        { status: 500 }
+      );
+    }
+
+    const decoded = jwt.verify(token, jwtSecret) as any;
+
+    // Get user from database
+    const user = await prisma.user.findUnique({
+      where: { id: decoded.userId },
+    });
+
+    if (!user) {
+      return NextResponse.json(
+        { message: 'Usuario no encontrado', success: false },
+        { status: 401 }
+      );
+    }
 
     // Check if user has admin privileges
     if (!['ADMIN', 'SUPER_ADMIN'].includes(user.role)) {
       return NextResponse.json(
-        { success: false, error: 'Admin access required' },
+        { message: 'Admin access required', success: false },
         { status: 403 }
       );
     }
@@ -80,39 +104,39 @@ export async function GET(request: NextRequest) {
 
     // Get admin venues if needed
     let adminVenues: { id: string }[] = [];
-    
+
     // Role-based filtering
     if (user.role === 'ADMIN') {
       // ADMIN can only see notifications related to their venues/services
       adminVenues = await prisma.venue.findMany({
+        select: { id: true },
         where: { ownerId: user.id },
-        select: { id: true }
       });
 
-      const venueIds = adminVenues.map(venue => venue.id);
+      const venueIds = adminVenues.map((venue) => venue.id);
 
       if (venueIds.length === 0) {
         // Admin has no venues, return empty statistics
         return NextResponse.json({
-          success: true,
           data: {
-            period,
-            dateRange: { startDate, endDate },
-            overview: {
-              totalNotifications: 0,
-              emailNotifications: 0,
-              systemNotifications: 0,
-              unreadCount: 0,
-              readCount: 0,
-            },
-            byType: {},
-            byDay: [],
-            topUsers: [],
-            recentActivity: [],
-            emailTypes: {},
-            userRole: user.role,
             adminVenuesCount: 0,
+            byDay: [],
+            byType: {},
+            dateRange: { endDate, startDate },
+            emailTypes: {},
+            overview: {
+              emailNotifications: 0,
+              readCount: 0,
+              systemNotifications: 0,
+              totalNotifications: 0,
+              unreadCount: 0,
+            },
+            period,
+            recentActivity: [],
+            topUsers: [],
+            userRole: user.role,
           },
+          success: true,
         });
       }
 
@@ -155,27 +179,26 @@ export async function GET(request: NextRequest) {
 
       // Notifications by type
       prisma.notification.groupBy({
-        by: ['type'],
-        where: baseWhereClause,
         _count: {
           type: true,
         },
+        by: ['type'],
         orderBy: {
           _count: {
             type: 'desc',
           },
         },
+        where: baseWhereClause,
       }),
 
       // Recent activity (last 10 notifications)
       prisma.notification.findMany({
-        where: baseWhereClause,
         include: {
           user: {
             select: {
-              id: true,
               email: true,
               firstName: true,
+              id: true,
               lastName: true,
             },
           },
@@ -188,138 +211,162 @@ export async function GET(request: NextRequest) {
         },
         orderBy: { createdAt: 'desc' },
         take: 10,
+        where: baseWhereClause,
       }),
 
       // Top users by notification count
       prisma.notification.groupBy({
-        by: ['userId'],
-        where: baseWhereClause,
         _count: {
           userId: true,
         },
+        by: ['userId'],
         orderBy: {
           _count: {
             userId: 'desc',
           },
         },
         take: 10,
+        where: baseWhereClause,
       }),
     ]);
 
     // Get user details for top users
-    const topUserIds = topUsers.map(item => item.userId);
+    const topUserIds = topUsers.map((item) => item.userId);
     const topUsersDetails = await prisma.user.findMany({
-      where: { id: { in: topUserIds } },
       select: {
-        id: true,
         email: true,
         firstName: true,
+        id: true,
         lastName: true,
         role: true,
       },
+      where: { id: { in: topUserIds } },
     });
 
     // Map user details to top users
-    const enrichedTopUsers = topUsers.map(item => {
-      const userDetail = topUsersDetails.find(user => user.id === item.userId);
+    const enrichedTopUsers = topUsers.map((item) => {
+      const userDetail = topUsersDetails.find((user) => user.id === item.userId);
       return {
-        userId: item.userId,
         notificationCount: item._count.userId,
         user: userDetail,
+        userId: item.userId,
       };
     });
 
     // Get daily breakdown for the period (using aggregation instead of raw SQL for safety)
     const notifications = await prisma.notification.findMany({
-      where: baseWhereClause,
       select: {
         createdAt: true,
         emailSent: true,
         isRead: true,
       },
+      where: baseWhereClause,
     });
 
     // Group by date in JavaScript
-    const dailyMap = new Map<string, { date: string; count: number; emailCount: number; systemCount: number; unreadCount: number }>();
-    
-    notifications.forEach(notification => {
+    const dailyMap = new Map<
+      string,
+      { date: string; count: number; emailCount: number; systemCount: number; unreadCount: number }
+    >();
+
+    notifications.forEach((notification) => {
       const date = notification.createdAt.toISOString().split('T')[0];
-      const existing = dailyMap.get(date) || { date, count: 0, emailCount: 0, systemCount: 0, unreadCount: 0 };
-      
+      const existing = dailyMap.get(date) || {
+        count: 0,
+        date,
+        emailCount: 0,
+        systemCount: 0,
+        unreadCount: 0,
+      };
+
       existing.count++;
       if (notification.emailSent) existing.emailCount++;
       else existing.systemCount++;
       if (!notification.isRead) existing.unreadCount++;
-      
+
       dailyMap.set(date, existing);
     });
-    
-    const dailyBreakdown = Array.from(dailyMap.values()).sort((a, b) => b.date.localeCompare(a.date)).slice(0, 30);
+
+    const dailyBreakdown = Array.from(dailyMap.values())
+      .sort((a, b) => b.date.localeCompare(a.date))
+      .slice(0, 30);
 
     // Get email types breakdown
     const emailTypesBreakdown = await prisma.notification.groupBy({
-      by: ['emailType'],
-      where: { ...baseWhereClause, emailSent: true, emailType: { not: null } },
       _count: {
         emailType: true,
       },
+      by: ['emailType'],
       orderBy: {
         _count: {
           emailType: 'desc',
         },
       },
+      where: { ...baseWhereClause, emailSent: true, emailType: { not: null } },
     });
 
     // Format statistics
-    const byType = notificationsByType.reduce((acc, item) => {
-      acc[item.type] = item._count.type;
-      return acc;
-    }, {} as Record<NotificationType, number>);
+    const byType = notificationsByType.reduce(
+      (acc, item) => {
+        acc[item.type] = item._count.type;
+        return acc;
+      },
+      {} as Record<NotificationType, number>
+    );
 
-    const emailTypes = emailTypesBreakdown.reduce((acc, item) => {
-      if (item.emailType) {
-        acc[item.emailType] = item._count.emailType;
-      }
-      return acc;
-    }, {} as Record<string, number>);
+    const emailTypes = emailTypesBreakdown.reduce(
+      (acc, item) => {
+        if (item.emailType) {
+          acc[item.emailType] = item._count.emailType;
+        }
+        return acc;
+      },
+      {} as Record<string, number>
+    );
 
     return NextResponse.json({
-      success: true,
       data: {
-        period,
-        dateRange: { startDate, endDate },
-        overview: {
-          totalNotifications,
-          emailNotifications,
-          systemNotifications,
-          unreadCount,
-          readCount: totalNotifications - unreadCount,
-        },
-        byType,
+        adminVenuesCount: user.role === 'ADMIN' ? adminVenues?.length || 0 : null,
         byDay: dailyBreakdown,
-        topUsers: enrichedTopUsers,
-        recentActivity: recentActivity.map(notification => ({
-          id: notification.id,
-          type: notification.type,
-          title: notification.title,
-          isRead: notification.isRead,
-          emailSent: notification.emailSent,
+        byType,
+        dateRange: { endDate, startDate },
+        emailTypes,
+        overview: {
+          emailNotifications,
+          readCount: totalNotifications - unreadCount,
+          systemNotifications,
+          totalNotifications,
+          unreadCount,
+        },
+        period,
+        recentActivity: recentActivity.map((notification) => ({
           createdAt: notification.createdAt,
+          emailSent: notification.emailSent,
+          id: notification.id,
+          isRead: notification.isRead,
+          title: notification.title,
+          type: notification.type,
           user: notification.user,
           venue: notification.venue,
         })),
-        emailTypes,
+        topUsers: enrichedTopUsers,
         userRole: user.role,
-        adminVenuesCount: user.role === 'ADMIN' ? adminVenues?.length || 0 : null,
       },
+      success: true,
     });
-  } catch (error) {
+  } catch (error: any) {
     console.error('Error fetching notification statistics:', error);
+
+    // Handle authentication errors
+    if (error.message?.includes('Token') || error.message?.includes('autorización')) {
+      return NextResponse.json({ message: error.message, success: false }, { status: 401 });
+    }
+
     return NextResponse.json(
       {
-        success: false,
-        error: 'Internal server error',
         details: error instanceof Error ? error.message : 'Unknown error',
+        error: 'Internal server error',
+        success: false,
       },
       { status: 500 }
     );

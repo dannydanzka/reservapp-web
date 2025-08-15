@@ -369,16 +369,6 @@ export const ReportsDashboard = ({ className }: ReportsDashboardProps) => {
 
                   <S.ActionsCell>
                     <S.ActionsContainer>
-                      {report?.status === 'COMPLETED' && report.fileUrl && (
-                        <S.ActionButton
-                          variant='primary'
-                          onClick={() => handleDownloadReport(report.fileUrl)}
-                        >
-                          <Download />
-                          Descargar
-                        </S.ActionButton>
-                      )}
-
                       {report?.status === 'COMPLETED' && (
                         <S.ActionButton variant='secondary'>
                           <Mail />

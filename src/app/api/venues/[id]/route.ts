@@ -65,8 +65,8 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
     const token = authHeader.substring(7);
     const decoded = jwt.verify(token, process.env.JWT_SECRET || 'fallback-secret') as any;
 
-    // Check if user is admin
-    if (decoded.role !== 'ADMIN') {
+    // Check if user is admin or super admin
+    if (decoded.role !== 'ADMIN' && decoded.role !== 'SUPER_ADMIN') {
       return NextResponse.json(
         { message: 'Acceso denegado. Se requiere rol de administrador', success: false },
         { status: 403 }
@@ -142,8 +142,8 @@ export async function DELETE(
     const token = authHeader.substring(7);
     const decoded = jwt.verify(token, process.env.JWT_SECRET || 'fallback-secret') as any;
 
-    // Check if user is admin
-    if (decoded.role !== 'ADMIN') {
+    // Check if user is admin or super admin
+    if (decoded.role !== 'ADMIN' && decoded.role !== 'SUPER_ADMIN') {
       return NextResponse.json(
         { message: 'Acceso denegado. Se requiere rol de administrador', success: false },
         { status: 403 }

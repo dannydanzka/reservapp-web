@@ -1,6 +1,6 @@
 export const EMAIL_CONFIG = {
   FROM_EMAIL: 'noreply@reservapp.com',
-  FROM_NAME: 'ReservApp - Casa Salazar',
+  FROM_NAME: 'ReservApp',
   MAX_ATTACHMENT_SIZE: 10 * 1024 * 1024,
   MAX_RECIPIENTS: 50,
   REPLY_TO: 'support@reservapp.com', // 10MB

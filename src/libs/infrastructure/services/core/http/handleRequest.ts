@@ -42,11 +42,11 @@ export const handleRequest = async ({
     }
 
     // Validation
-    if (!url) throw new Error('No se especificó la url');
     if (!endpoint) throw new Error('No se especificó el endpoint');
 
     // Build the complete URL
-    const URL = buildURL({ endpoint, extraCustomQuery, params, query, url });
+    // If url is not provided, assume endpoint is already a complete URL
+    const URL = url ? buildURL({ endpoint, extraCustomQuery, params, query, url }) : endpoint;
 
     // Handle file uploads
     let formData: FormData;

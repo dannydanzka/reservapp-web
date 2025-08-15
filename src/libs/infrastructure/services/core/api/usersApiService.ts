@@ -95,9 +95,9 @@ export class UsersApiService {
     if (filters.role) queryParams.set('role', filters.role);
     if (filters.isActive !== undefined) queryParams.set('isActive', filters.isActive.toString());
 
-    const url = `${this.baseUrl}?${queryParams.toString()}`;
+    const endpoint = `${this.baseUrl}?${queryParams.toString()}`;
     return await handleRequest({
-      endpoint: url,
+      endpoint,
       method: 'GET',
     });
   }

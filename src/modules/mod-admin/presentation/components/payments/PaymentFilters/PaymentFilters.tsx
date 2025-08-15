@@ -63,13 +63,13 @@ export const PaymentFilters = ({ filters, onFiltersChange, venues }: PaymentFilt
         <S.FilterField className='flex-1' minWidth='16rem'>
           <S.FilterLabel>
             <Building />
-            {t('admin.payments.filters.venue')}
+            Venue
           </S.FilterLabel>
           <S.FilterSelect
             value={localFilters.venueId || ''}
             onChange={(e) => updateFilter('venueId', e.target.value || undefined)}
           >
-            <option value=''>{t('admin.payments.filters.allVenues')}</option>
+            <option value=''>Todos los venues</option>
             {venues.map((venue) => (
               <option key={venue.value} value={venue.value}>
                 {venue.label}
@@ -80,12 +80,12 @@ export const PaymentFilters = ({ filters, onFiltersChange, venues }: PaymentFilt
 
         {/* Status Filter */}
         <S.FilterField minWidth='12rem'>
-          <S.FilterLabel>{t('admin.payments.filters?.status')}</S.FilterLabel>
+          <S.FilterLabel>Estado</S.FilterLabel>
           <S.FilterSelect
             value={localFilters?.status || ''}
             onChange={(e) => updateFilter('status', (e.target.value as PaymentStatus) || undefined)}
           >
-            <option value=''>{t('admin.payments.filters.allStatuses')}</option>
+            <option value=''>Todos los estados</option>
             {PAYMENT_STATUSES.map((status) => (
               <option key={status} value={status}>
                 {STATUS_LABELS[status]}
@@ -98,7 +98,7 @@ export const PaymentFilters = ({ filters, onFiltersChange, venues }: PaymentFilt
         <S.FilterField minWidth='16rem'>
           <S.FilterLabel>
             <Search />
-            {t('admin.payments.filters.search')}
+            Buscar
           </S.FilterLabel>
           <S.FilterInput
             placeholder='Usuario, email, descripción...'
@@ -111,7 +111,7 @@ export const PaymentFilters = ({ filters, onFiltersChange, venues }: PaymentFilt
         {/* Expand/Collapse Button */}
         <S.ExpandButtonContainer>
           <Button variant='outlined' onClick={() => setIsExpanded(!isExpanded)}>
-            {t('admin.payments.filters.advanced')}
+            Avanzado
           </Button>
         </S.ExpandButtonContainer>
       </S.QuickFilters>
@@ -125,7 +125,7 @@ export const PaymentFilters = ({ filters, onFiltersChange, venues }: PaymentFilt
               <S.FilterField>
                 <S.FilterLabel>
                   <Calendar />
-                  {t('admin.payments.filters.dateFrom')}
+                  Fecha desde
                 </S.FilterLabel>
                 <S.FilterInput
                   type='date'
@@ -138,7 +138,7 @@ export const PaymentFilters = ({ filters, onFiltersChange, venues }: PaymentFilt
               <S.FilterField>
                 <S.FilterLabel>
                   <Calendar />
-                  {t('admin.payments.filters.dateTo')}
+                  Fecha hasta
                 </S.FilterLabel>
                 <S.FilterInput
                   type='date'
@@ -151,7 +151,7 @@ export const PaymentFilters = ({ filters, onFiltersChange, venues }: PaymentFilt
               <S.FilterField>
                 <S.FilterLabel>
                   <DollarSign />
-                  {t('admin.payments.filters.minAmount')}
+                  Monto mínimo
                 </S.FilterLabel>
                 <S.FilterInput
                   min='0'
@@ -172,7 +172,7 @@ export const PaymentFilters = ({ filters, onFiltersChange, venues }: PaymentFilt
               <S.FilterField>
                 <S.FilterLabel>
                   <DollarSign />
-                  {t('admin.payments.filters.maxAmount')}
+                  Monto máximo
                 </S.FilterLabel>
                 <S.FilterInput
                   min='0'
@@ -191,7 +191,7 @@ export const PaymentFilters = ({ filters, onFiltersChange, venues }: PaymentFilt
 
               {/* User ID */}
               <S.FilterField>
-                <S.FilterLabel>{t('admin.payments.filters.userId')}</S.FilterLabel>
+                <S.FilterLabel>ID Usuario</S.FilterLabel>
                 <S.FilterInput
                   placeholder='user_123456'
                   type='text'
@@ -207,11 +207,11 @@ export const PaymentFilters = ({ filters, onFiltersChange, venues }: PaymentFilt
       {/* Action Buttons */}
       <S.ActionsContainer>
         <S.ActionsLeft>
-          <Button onClick={handleApplyFilters}>{t('common.apply')}</Button>
+          <Button onClick={handleApplyFilters}>Aplicar</Button>
 
           {hasActiveFilters && (
             <Button variant='outlined' onClick={handleClearFilters}>
-              {t('common.clear')}
+              Limpiar
             </Button>
           )}
         </S.ActionsLeft>
@@ -220,7 +220,7 @@ export const PaymentFilters = ({ filters, onFiltersChange, venues }: PaymentFilt
           {hasActiveFilters && (
             <S.ActiveFiltersIndicator>
               <Filter />
-              {t('admin.payments.filters.active')}
+              filtros activos
             </S.ActiveFiltersIndicator>
           )}
         </S.ActionsRight>

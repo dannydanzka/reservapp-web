@@ -2,12 +2,21 @@
 
 import React, { useEffect } from 'react';
 
-import { Building, Calendar, CreditCard, FileText, LayoutDashboard, Users } from 'lucide-react';
+import {
+  Bell,
+  Building,
+  Calendar,
+  CreditCard,
+  FileText,
+  LayoutDashboard,
+  Users,
+} from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import styled from 'styled-components';
 
 import { AdminHeader, AdminSidebar, LoadingSpinner } from '../components';
 import { useAuth } from '../providers/AuthProvider';
+import { useAuthInterceptor } from '../hooks/useAuthInterceptor';
 
 interface AdminLayoutProps {
   children: React.ReactNode;
@@ -67,6 +76,9 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
   const { isAuthenticated, loading, logout, user } = useAuth();
   const router = useRouter();
 
+  // Initialize auth interceptor for automatic token handling
+  useAuthInterceptor();
+
   // Handle redirects in useEffect to avoid state updates during render
   useEffect(() => {
     if (!loading) {
@@ -112,6 +124,12 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
       href: '/admin',
       icon: LayoutDashboard,
       name: 'Dashboard',
+    },
+    {
+      current: false,
+      href: '/admin/notifications',
+      icon: Bell,
+      name: 'Notificaciones',
     },
     {
       current: false,

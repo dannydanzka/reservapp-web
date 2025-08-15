@@ -15,6 +15,9 @@ export interface ReservationFilters {
   serviceId?: string;
   userId?: string;
   venueId?: string;
+  startDate?: string;
+  endDate?: string;
+  search?: string;
 }
 
 export interface ReservationStats {
@@ -37,25 +40,25 @@ export interface UseReservationManagementReturn {
     page: number;
     limit: number;
     total: number;
-    hasNext: boolean;
-    hasPrev: boolean;
+    totalPages: number;
+    hasMore: boolean;
   };
 
   // Actions
   fetchReservations: (filters?: ReservationFilters) => Promise<void>;
   fetchReservationById: (id: string) => Promise<Reservation | null>;
-  createReservation: (reservationData: Partial<Reservation>) => Promise<Reservation | null>;
+  fetchReservationStats: (filters?: ReservationFilters) => Promise<void>;
   updateReservation: (id: string, updates: Partial<Reservation>) => Promise<boolean>;
   updateReservationStatus: (id: string, status: ReservationStatus) => Promise<boolean>;
   cancelReservation: (id: string, reason?: string) => Promise<boolean>;
   confirmReservation: (id: string) => Promise<boolean>;
-  rescheduleReservation: (id: string, newDateTime: Date) => Promise<boolean>;
 
   // Filters & Pagination
   setFilters: (filters: ReservationFilters) => void;
   setPage: (page: number) => void;
   setLimit: (limit: number) => void;
   clearFilters: () => void;
+  refresh: () => Promise<void>;
 }
 
 export const useReservationManagement = (): UseReservationManagementReturn => {
@@ -65,12 +68,26 @@ export const useReservationManagement = (): UseReservationManagementReturn => {
   const [stats, setStats] = useState<ReservationStats | null>(null);
   const [filters, setFilters] = useState<ReservationFilters>({});
   const [pagination, setPagination] = useState({
-    hasNext: false,
-    hasPrev: false,
+    hasMore: false,
     limit: 20,
     page: 1,
     total: 0,
+    totalPages: 0,
   });
+
+  /**
+   * Get auth token from localStorage (same pattern as other modules)
+   */
+  const getAuthToken = useCallback((): string => {
+    let token = typeof window !== 'undefined' ? localStorage.getItem('auth_token') : null;
+
+    if (!token) {
+      throw new Error('No se encontró token de autenticación');
+    }
+
+    // Remove quotes if present (localStorage sometimes stores with quotes)
+    return token.replace(/^"(.*)"$/, '$1');
+  }, []);
 
   const fetchReservations = useCallback(
     async (newFilters?: ReservationFilters) => {
@@ -78,26 +95,20 @@ export const useReservationManagement = (): UseReservationManagementReturn => {
         setLoading(true);
         setError(null);
 
+        const token = getAuthToken();
+
         const queryParams = new URLSearchParams();
         queryParams.append('page', pagination.page.toString());
         queryParams.append('limit', pagination.limit.toString());
 
         const activeFilters = newFilters || filters;
 
-        if (activeFilters?.status) {
-          queryParams.append('status', activeFilters?.status);
+        if (activeFilters.status) {
+          queryParams.append('status', activeFilters.status);
         }
 
-        if (activeFilters.dateFrom) {
-          queryParams.append('dateFrom', activeFilters.dateFrom.toISOString());
-        }
-
-        if (activeFilters.dateTo) {
-          queryParams.append('dateTo', activeFilters.dateTo.toISOString());
-        }
-
-        if (activeFilters.businessId) {
-          queryParams.append('businessId', activeFilters.businessId);
+        if (activeFilters.venueId) {
+          queryParams.append('venueId', activeFilters.venueId);
         }
 
         if (activeFilters.serviceId) {
@@ -108,114 +119,150 @@ export const useReservationManagement = (): UseReservationManagementReturn => {
           queryParams.append('userId', activeFilters.userId);
         }
 
-        if (activeFilters.venueId) {
-          queryParams.append('venueId', activeFilters.venueId);
+        if (activeFilters.businessId) {
+          queryParams.append('businessId', activeFilters.businessId);
         }
 
-        const response = await fetch(`/api/admin/reservations?${queryParams}`);
+        if (activeFilters.startDate || activeFilters.dateFrom) {
+          const startDate = activeFilters.startDate || activeFilters.dateFrom?.toISOString();
+          if (startDate) queryParams.append('startDate', startDate);
+        }
+
+        if (activeFilters.endDate || activeFilters.dateTo) {
+          const endDate = activeFilters.endDate || activeFilters.dateTo?.toISOString();
+          if (endDate) queryParams.append('endDate', endDate);
+        }
+
+        if (activeFilters.search) {
+          queryParams.append('search', activeFilters.search);
+        }
+
+        const response = await fetch(`/api/reservations?${queryParams}`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'application/json',
+          },
+          method: 'GET',
+        });
 
         if (!response.ok) {
-          throw new Error('Failed to fetch reservations');
+          throw new Error(`Failed to fetch reservations: ${response.statusText}`);
         }
 
         const data = await response.json();
 
-        setReservations(data.reservations);
-        setPagination(data.pagination);
-        setStats(data.stats);
+        console.log('Reservations API response:', data); // Debug log
+
+        if (!data.success) {
+          throw new Error(data.message || 'Failed to fetch reservations');
+        }
+
+        setReservations(data.data || data.reservations || []);
+        setPagination(
+          data.pagination || {
+            hasMore: false,
+            limit: 20,
+            page: 1,
+            total: 0,
+            totalPages: 0,
+          }
+        );
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Failed to fetch reservations');
+        console.error('Error fetching reservations:', err);
       } finally {
         setLoading(false);
       }
     },
-    [filters, pagination.page, pagination.limit]
+    [pagination.page, pagination.limit, getAuthToken]
   );
 
-  const fetchReservationById = useCallback(async (id: string): Promise<Reservation | null> => {
-    try {
-      setError(null);
-
-      const response = await fetch(`/api/admin/reservations/${id}`);
-
-      if (!response.ok) {
-        throw new Error('Failed to fetch reservation');
-      }
-
-      const data = await response.json();
-      return data.reservation;
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to fetch reservation');
-      return null;
-    }
-  }, []);
-
-  const createReservation = useCallback(
-    async (reservationData: Partial<Reservation>): Promise<Reservation | null> => {
+  const fetchReservationStats = useCallback(
+    async (statsFilters?: ReservationFilters) => {
       try {
         setError(null);
 
-        const response = await fetch('/api/admin/reservations', {
-          body: JSON.stringify(reservationData),
+        const token = getAuthToken();
+
+        const queryParams = new URLSearchParams();
+        queryParams.append('stats', 'true');
+
+        const activeFilters = statsFilters || filters;
+
+        if (activeFilters.status) {
+          queryParams.append('status', activeFilters.status);
+        }
+
+        if (activeFilters.venueId) {
+          queryParams.append('venueId', activeFilters.venueId);
+        }
+
+        if (activeFilters.startDate || activeFilters.dateFrom) {
+          const startDate = activeFilters.startDate || activeFilters.dateFrom?.toISOString();
+          if (startDate) queryParams.append('startDate', startDate);
+        }
+
+        if (activeFilters.endDate || activeFilters.dateTo) {
+          const endDate = activeFilters.endDate || activeFilters.dateTo?.toISOString();
+          if (endDate) queryParams.append('endDate', endDate);
+        }
+
+        const response = await fetch(`/api/reservations?${queryParams}`, {
           headers: {
+            Authorization: `Bearer ${token}`,
             'Content-Type': 'application/json',
           },
-          method: 'POST',
+          method: 'GET',
         });
 
         if (!response.ok) {
-          throw new Error('Failed to create reservation');
+          throw new Error(`Failed to fetch reservation stats: ${response.statusText}`);
         }
 
         const data = await response.json();
-        const newReservation = data.reservation;
 
-        // Add to local state
-        setReservations((prev) => [newReservation, ...prev]);
-
-        return newReservation;
+        if (data.success && data.stats) {
+          setStats(data.stats);
+        }
       } catch (err) {
-        setError(err instanceof Error ? err.message : 'Failed to create reservation');
+        console.error('Error fetching reservation stats:', err);
+      }
+    },
+    [getAuthToken]
+  );
+
+  const fetchReservationById = useCallback(
+    async (id: string): Promise<Reservation | null> => {
+      try {
+        setError(null);
+
+        const token = getAuthToken();
+
+        const response = await fetch(`/api/reservations/${id}`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'application/json',
+          },
+          method: 'GET',
+        });
+
+        if (!response.ok) {
+          throw new Error(`Failed to fetch reservation: ${response.statusText}`);
+        }
+
+        const data = await response.json();
+
+        if (!data.success) {
+          throw new Error(data.message || 'Failed to fetch reservation');
+        }
+
+        return data.data || data.reservation;
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'Failed to fetch reservation');
         return null;
       }
     },
-    []
-  );
-
-  const updateReservation = useCallback(
-    async (id: string, updates: Partial<Reservation>): Promise<boolean> => {
-      try {
-        setError(null);
-
-        const response = await fetch(`/api/admin/reservations/${id}`, {
-          body: JSON.stringify(updates),
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          method: 'PATCH',
-        });
-
-        if (!response.ok) {
-          throw new Error('Failed to update reservation');
-        }
-
-        const data = await response.json();
-        const updatedReservation = data.reservation;
-
-        // Update local state
-        setReservations((prevReservations) =>
-          prevReservations.map((reservation) =>
-            reservation.id === id ? updatedReservation : reservation
-          )
-        );
-
-        return true;
-      } catch (err) {
-        setError(err instanceof Error ? err.message : 'Failed to update reservation');
-        return false;
-      }
-    },
-    []
+    [getAuthToken]
   );
 
   const updateReservationStatus = useCallback(
@@ -223,24 +270,37 @@ export const useReservationManagement = (): UseReservationManagementReturn => {
       try {
         setError(null);
 
-        const response = await fetch(`/api/admin/reservations/${id}/status`, {
-          body: JSON.stringify({ status }),
+        const token = getAuthToken();
+
+        const response = await fetch(`/api/reservations/${id}`, {
+          body: JSON.stringify({
+            adminUpdate: true,
+            status,
+            timestamp: new Date().toISOString(),
+          }),
           headers: {
+            Authorization: `Bearer ${token}`,
             'Content-Type': 'application/json',
           },
           method: 'PATCH',
         });
 
         if (!response.ok) {
-          throw new Error('Failed to update reservation status');
+          const errorData = await response.json();
+          throw new Error(
+            errorData.message || `Failed to update reservation status: ${response.statusText}`
+          );
         }
 
-        // Update local state
-        setReservations((prevReservations) =>
-          prevReservations.map((reservation) =>
-            reservation.id === id ? { ...reservation, status } : reservation
-          )
-        );
+        const data = await response.json();
+
+        if (!data.success) {
+          throw new Error(data.message || 'Failed to update reservation status');
+        }
+
+        // Refresh reservations after successful update
+        await fetchReservations();
+        await fetchReservationStats();
 
         return true;
       } catch (err) {
@@ -248,40 +308,54 @@ export const useReservationManagement = (): UseReservationManagementReturn => {
         return false;
       }
     },
-    []
+    [getAuthToken, fetchReservations, fetchReservationStats]
   );
 
-  const cancelReservation = useCallback(async (id: string, reason?: string): Promise<boolean> => {
-    try {
-      setError(null);
+  const cancelReservation = useCallback(
+    async (id: string, reason?: string): Promise<boolean> => {
+      try {
+        setError(null);
 
-      const response = await fetch(`/api/admin/reservations/${id}/cancel`, {
-        body: JSON.stringify({ reason }),
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        method: 'POST',
-      });
+        const token = getAuthToken();
 
-      if (!response.ok) {
-        throw new Error('Failed to cancel reservation');
+        const response = await fetch(`/api/reservations/${id}/cancel`, {
+          body: JSON.stringify({
+            adminCancel: true,
+            reason: reason || 'Cancelación administrativa',
+            timestamp: new Date().toISOString(),
+          }),
+          headers: {
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'application/json',
+          },
+          method: 'POST',
+        });
+
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(
+            errorData.message || `Failed to cancel reservation: ${response.statusText}`
+          );
+        }
+
+        const data = await response.json();
+
+        if (!data.success) {
+          throw new Error(data.message || 'Failed to cancel reservation');
+        }
+
+        // Refresh reservations after successful cancellation
+        await fetchReservations();
+        await fetchReservationStats();
+
+        return true;
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'Failed to cancel reservation');
+        return false;
       }
-
-      // Update local state
-      setReservations((prevReservations) =>
-        prevReservations.map((reservation) =>
-          reservation.id === id
-            ? { ...reservation, status: ReservationStatus.CANCELLED }
-            : reservation
-        )
-      );
-
-      return true;
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to cancel reservation');
-      return false;
-    }
-  }, []);
+    },
+    [getAuthToken, fetchReservations, fetchReservationStats]
+  );
 
   const confirmReservation = useCallback(
     async (id: string): Promise<boolean> => {
@@ -290,84 +364,139 @@ export const useReservationManagement = (): UseReservationManagementReturn => {
     [updateReservationStatus]
   );
 
-  const rescheduleReservation = useCallback(
-    async (id: string, newDateTime: Date): Promise<boolean> => {
+  const updateReservation = useCallback(
+    async (id: string, updates: Partial<Reservation>): Promise<boolean> => {
       try {
         setError(null);
 
-        const response = await fetch(`/api/admin/reservations/${id}/reschedule`, {
+        const token = getAuthToken();
+
+        const response = await fetch(`/api/reservations/${id}`, {
           body: JSON.stringify({
-            dateTime: newDateTime.toISOString(),
+            ...updates,
+            adminUpdate: true,
+            timestamp: new Date().toISOString(),
           }),
           headers: {
+            Authorization: `Bearer ${token}`,
             'Content-Type': 'application/json',
           },
-          method: 'POST',
+          method: 'PATCH',
         });
 
         if (!response.ok) {
-          throw new Error('Failed to reschedule reservation');
+          const errorData = await response.json();
+          throw new Error(
+            errorData.message || `Failed to update reservation: ${response.statusText}`
+          );
         }
 
         const data = await response.json();
-        const updatedReservation = data.reservation;
 
-        // Update local state
-        setReservations((prevReservations) =>
-          prevReservations.map((reservation) =>
-            reservation.id === id ? updatedReservation : reservation
-          )
-        );
+        if (!data.success) {
+          throw new Error(data.message || 'Failed to update reservation');
+        }
+
+        // Refresh reservations after successful update
+        await fetchReservations();
+        await fetchReservationStats();
 
         return true;
       } catch (err) {
-        setError(err instanceof Error ? err.message : 'Failed to reschedule reservation');
+        setError(err instanceof Error ? err.message : 'Failed to update reservation');
         return false;
       }
     },
-    []
+    [getAuthToken, fetchReservations, fetchReservationStats]
   );
 
-  const handleSetFilters = useCallback((newFilters: ReservationFilters) => {
-    setFilters(newFilters);
-    setPagination((prev) => ({ ...prev, page: 1 }));
-  }, []);
+  const refresh = useCallback(async () => {
+    await Promise.all([fetchReservations(), fetchReservationStats()]);
+  }, [fetchReservations, fetchReservationStats]);
 
-  const handleSetPage = useCallback((page: number) => {
-    setPagination((prev) => ({ ...prev, page }));
-  }, []);
+  const setFiltersAndFetch = useCallback(
+    (newFilters: ReservationFilters) => {
+      setFilters(newFilters);
+      setPagination((prev) => ({ ...prev, page: 1 })); // Reset to first page
+      fetchReservations(newFilters);
+      fetchReservationStats(newFilters);
+    },
+    [fetchReservations, fetchReservationStats]
+  );
 
-  const handleSetLimit = useCallback((limit: number) => {
-    setPagination((prev) => ({ ...prev, limit, page: 1 }));
-  }, []);
+  const setPageAndFetch = useCallback(
+    (page: number) => {
+      setPagination((prev) => ({ ...prev, page }));
+      fetchReservations();
+    },
+    [fetchReservations]
+  );
+
+  const setLimitAndFetch = useCallback(
+    (limit: number) => {
+      setPagination((prev) => ({ ...prev, limit, page: 1 })); // Reset to first page
+      fetchReservations();
+    },
+    [fetchReservations]
+  );
 
   const clearFilters = useCallback(() => {
     setFilters({});
     setPagination((prev) => ({ ...prev, page: 1 }));
-  }, []);
+    fetchReservations({});
+    fetchReservationStats({});
+  }, [fetchReservations, fetchReservationStats]);
 
-  // Load reservations on mount and when filters/pagination change
+  // Initial load
   useEffect(() => {
-    fetchReservations();
-  }, [filters, pagination.page, pagination.limit]);
+    const loadInitialData = async () => {
+      console.log('Loading initial reservation data...'); // Debug log
+      try {
+        await fetchReservations({});
+        await fetchReservationStats({});
+        console.log('Initial reservation data loaded successfully'); // Debug log
+      } catch (error) {
+        console.error('Error loading initial reservation data:', error);
+      }
+    };
+
+    loadInitialData();
+  }, []); // Empty dependency array to load only once
 
   return {
-    cancelReservation,
-    clearFilters,
-    confirmReservation,
-    createReservation,
     error,
+
     fetchReservationById,
-    fetchReservations,
+
+    
+    fetchReservationStats,
+
+    // Actions
+fetchReservations,
+
+    cancelReservation,
+
     filters,
-    loading,
-    pagination,
-    rescheduleReservation,
-    reservations,
-    setFilters: handleSetFilters,
-    setLimit: handleSetLimit,
-    setPage: handleSetPage,
+
+    confirmReservation,
+
+loading,
+
+pagination,
+    
+clearFilters,
+    // State
+reservations,
+
+    refresh,
+
+    // Filters & Pagination
+setFilters: setFiltersAndFetch,
+
+    
     stats,
+    setLimit: setLimitAndFetch,
+    setPage: setPageAndFetch,
     updateReservation,
     updateReservationStatus,
   };

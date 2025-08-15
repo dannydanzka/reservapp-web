@@ -195,12 +195,6 @@ export const ReservationsDashboard = ({ className }: ReservationsDashboardProps)
     <S.DashboardContainer className={className}>
       <S.HeaderSection>
         <S.HeaderTitle>Dashboard de Reservaciones</S.HeaderTitle>
-        <S.HeaderActions>
-          <S.ExportButton>
-            <Download />
-            Exportar
-          </S.ExportButton>
-        </S.HeaderActions>
       </S.HeaderSection>
 
       {/* Stats Cards */}

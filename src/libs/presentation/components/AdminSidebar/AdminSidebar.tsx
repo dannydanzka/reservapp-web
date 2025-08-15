@@ -29,6 +29,12 @@ const navigationData: NavSectionData[] = [
         roles: [UserRoleEnum.SUPER_ADMIN, UserRoleEnum.ADMIN],
       },
       {
+        href: '/admin/notifications',
+        icon: '🔔',
+        label: 'Notificaciones',
+        roles: [UserRoleEnum.SUPER_ADMIN, UserRoleEnum.ADMIN],
+      },
+      {
         href: '/admin/business-accounts',
         icon: '🏢',
         label: 'Negocios',

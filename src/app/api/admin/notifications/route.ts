@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { AuthMiddleware } from '@libs/infrastructure/services/core/auth/authMiddleware';
-import { PrismaClient, UserRoleEnum, NotificationType } from '@prisma/client';
+import jwt from 'jsonwebtoken';
 
-const prisma = new PrismaClient();
+import { NotificationType, UserRoleEnum } from '@prisma/client';
+import { prisma } from '@libs/infrastructure/services/core/database/prismaService';
 
 interface NotificationFilters {
   isRead?: boolean;
@@ -17,11 +17,11 @@ interface NotificationFilters {
 /**
  * GET /api/admin/notifications
  * Admin endpoint to view all notifications sent via email
- * 
+ *
  * Permissions:
  * - SUPER_ADMIN: Can view ALL notifications
  * - ADMIN: Can only view notifications related to their venues/services
- * 
+ *
  * Query Parameters:
  * - page: Page number (default: 1)
  * - limit: Items per page (default: 20, max: 100)
@@ -36,21 +36,43 @@ interface NotificationFilters {
  */
 export async function GET(request: NextRequest) {
   try {
-    // Validate authentication and admin role
-    const authResult = await AuthMiddleware.validateRequest(request);
-    if (!authResult.success || !authResult.user) {
+    // Get auth token (same pattern as /api/admin/stats)
+    const authHeader = request.headers.get('authorization');
+    if (!authHeader?.startsWith('Bearer ')) {
       return NextResponse.json(
-        { success: false, error: 'Authentication required' },
+        { message: 'Token de autorización requerido', success: false },
         { status: 401 }
       );
     }
 
-    const { user } = authResult;
+    const token = authHeader.substring(7);
+    const jwtSecret = process.env.JWT_SECRET;
+    if (!jwtSecret) {
+      console.error('JWT_SECRET is not configured');
+      return NextResponse.json(
+        { message: 'Configuración del servidor incorrecta', success: false },
+        { status: 500 }
+      );
+    }
+
+    const decoded = jwt.verify(token, jwtSecret) as any;
+
+    // Get user from database
+    const user = await prisma.user.findUnique({
+      where: { id: decoded.userId },
+    });
+
+    if (!user) {
+      return NextResponse.json(
+        { message: 'Usuario no encontrado', success: false },
+        { status: 401 }
+      );
+    }
 
     // Check if user has admin privileges
     if (!['ADMIN', 'SUPER_ADMIN'].includes(user.role)) {
       return NextResponse.json(
-        { success: false, error: 'Admin access required' },
+        { message: 'Admin access required', success: false },
         { status: 403 }
       );
     }
@@ -106,33 +128,33 @@ export async function GET(request: NextRequest) {
     if (user.role === 'ADMIN') {
       // ADMIN can only see notifications related to their venues/services
       const adminVenues = await prisma.venue.findMany({
+        select: { id: true },
         where: { ownerId: user.id },
-        select: { id: true }
       });
 
-      const venueIds = adminVenues.map(venue => venue.id);
+      const venueIds = adminVenues.map((venue) => venue.id);
 
       if (venueIds.length === 0) {
         // Admin has no venues, return empty result
         return NextResponse.json({
-          success: true,
           data: {
             notifications: [],
             pagination: {
-              page,
-              limit,
-              total: 0,
-              totalPages: 0,
               hasNext: false,
               hasPrev: false,
+              limit,
+              page,
+              total: 0,
+              totalPages: 0,
             },
             summary: {
-              totalNotifications: 0,
-              unreadCount: 0,
               emailCount: 0,
               systemCount: 0,
+              totalNotifications: 0,
+              unreadCount: 0,
             },
           },
+          success: true,
         });
       }
 
@@ -194,29 +216,20 @@ export async function GET(request: NextRequest) {
     // Execute queries in parallel
     const [notifications, total] = await Promise.all([
       prisma.notification.findMany({
-        where: whereClause,
         include: {
-          user: {
+          reservation: {
             select: {
+              checkInDate: true,
+              confirmationId: true,
               id: true,
-              email: true,
-              firstName: true,
-              lastName: true,
-              role: true,
-            },
-          },
-          venue: {
-            select: {
-              id: true,
-              name: true,
-              category: true,
+              status: true,
             },
           },
           service: {
             select: {
+              category: true,
               id: true,
               name: true,
-              category: true,
               venue: {
                 select: {
                   id: true,
@@ -225,18 +238,27 @@ export async function GET(request: NextRequest) {
               },
             },
           },
-          reservation: {
+          user: {
             select: {
+              email: true,
+              firstName: true,
               id: true,
-              confirmationId: true,
-              status: true,
-              checkInDate: true,
+              lastName: true,
+              role: true,
+            },
+          },
+          venue: {
+            select: {
+              category: true,
+              id: true,
+              name: true,
             },
           },
         },
         orderBy: { createdAt: 'desc' },
         skip: offset,
         take: limit,
+        where: whereClause,
       }),
       prisma.notification.count({ where: whereClause }),
     ]);
@@ -257,52 +279,58 @@ export async function GET(request: NextRequest) {
     const totalPages = Math.ceil(total / limit);
 
     return NextResponse.json({
-      success: true,
       data: {
-        notifications: notifications.map(notification => ({
-          id: notification.id,
-          type: notification.type,
-          title: notification.title,
-          message: notification.message,
-          isRead: notification.isRead,
+        filters: {
+          appliedFilters: filters,
+          userId: user.id,
+          userRole: user.role,
+        },
+        notifications: notifications.map((notification) => ({
+          createdAt: notification.createdAt,
           emailSent: notification.emailSent,
           emailType: notification.emailType,
-          createdAt: notification.createdAt,
+          id: notification.id,
+          isRead: notification.isRead,
+          message: notification.message,
+          metadata: notification.metadata,
+          reservation: notification.reservation,
+          service: notification.service,
+          title: notification.title,
+          type: notification.type,
           updatedAt: notification.updatedAt,
           user: notification.user,
           venue: notification.venue,
-          service: notification.service,
-          reservation: notification.reservation,
-          metadata: notification.metadata,
         })),
         pagination: {
-          page,
-          limit,
-          total,
-          totalPages,
           hasNext: page < totalPages,
           hasPrev: page > 1,
+          limit,
+          page,
+          total,
+          totalPages,
         },
         summary: {
-          totalNotifications: total,
-          unreadCount,
           emailCount,
           systemCount,
-        },
-        filters: {
-          appliedFilters: filters,
-          userRole: user.role,
-          userId: user.id,
+          totalNotifications: total,
+          unreadCount,
         },
       },
+      success: true,
     });
-  } catch (error) {
+  } catch (error: any) {
     console.error('Error fetching admin notifications:', error);
+
+    // Handle authentication errors
+    if (error.message?.includes('Token') || error.message?.includes('autorización')) {
+      return NextResponse.json({ message: error.message, success: false }, { status: 401 });
+    }
+
     return NextResponse.json(
       {
-        success: false,
-        error: 'Internal server error',
         details: error instanceof Error ? error.message : 'Unknown error',
+        error: 'Internal server error',
+        success: false,
       },
       { status: 500 }
     );
@@ -312,7 +340,7 @@ export async function GET(request: NextRequest) {
 /**
  * PATCH /api/admin/notifications
  * Mark notifications as read/unread (bulk operation)
- * 
+ *
  * Body:
  * {
  *   notificationIds: string[];
@@ -321,31 +349,56 @@ export async function GET(request: NextRequest) {
  */
 export async function PATCH(request: NextRequest) {
   try {
-    // Validate authentication and admin role
-    const authResult = await AuthMiddleware.validateRequest(request);
-    if (!authResult.success || !authResult.user) {
+    // Get auth token (same pattern as /api/admin/stats)
+    const authHeader = request.headers.get('authorization');
+    if (!authHeader?.startsWith('Bearer ')) {
       return NextResponse.json(
-        { success: false, error: 'Authentication required' },
+        { message: 'Token de autorización requerido', success: false },
         { status: 401 }
       );
     }
 
-    const { user } = authResult;
+    const token = authHeader.substring(7);
+    const jwtSecret = process.env.JWT_SECRET;
+    if (!jwtSecret) {
+      console.error('JWT_SECRET is not configured');
+      return NextResponse.json(
+        { message: 'Configuración del servidor incorrecta', success: false },
+        { status: 500 }
+      );
+    }
+
+    const decoded = jwt.verify(token, jwtSecret) as any;
+
+    // Get user from database
+    const user = await prisma.user.findUnique({
+      where: { id: decoded.userId },
+    });
+
+    if (!user) {
+      return NextResponse.json(
+        { message: 'Usuario no encontrado', success: false },
+        { status: 401 }
+      );
+    }
 
     // Check if user has admin privileges
     if (!['ADMIN', 'SUPER_ADMIN'].includes(user.role)) {
       return NextResponse.json(
-        { success: false, error: 'Admin access required' },
+        { message: 'Admin access required', success: false },
         { status: 403 }
       );
     }
 
     const body = await request.json();
-    const { notificationIds, isRead } = body;
+    const { isRead, notificationIds } = body;
 
     if (!Array.isArray(notificationIds) || typeof isRead !== 'boolean') {
       return NextResponse.json(
-        { success: false, error: 'Invalid request body. Expected notificationIds array and isRead boolean' },
+        {
+          error: 'Invalid request body. Expected notificationIds array and isRead boolean',
+          success: false,
+        },
         { status: 400 }
       );
     }
@@ -358,15 +411,15 @@ export async function PATCH(request: NextRequest) {
     if (user.role === 'ADMIN') {
       // ADMIN can only update notifications related to their venues/services
       const adminVenues = await prisma.venue.findMany({
+        select: { id: true },
         where: { ownerId: user.id },
-        select: { id: true }
       });
 
-      const venueIds = adminVenues.map(venue => venue.id);
+      const venueIds = adminVenues.map((venue) => venue.id);
 
       if (venueIds.length === 0) {
         return NextResponse.json(
-          { success: false, error: 'No venues found for this admin' },
+          { error: 'No venues found for this admin', success: false },
           { status: 403 }
         );
       }
@@ -379,25 +432,31 @@ export async function PATCH(request: NextRequest) {
     }
 
     const updateResult = await prisma.notification.updateMany({
-      where: whereClause,
       data: { isRead },
+      where: whereClause,
     });
 
     return NextResponse.json({
-      success: true,
       data: {
-        updatedCount: updateResult.count,
         isRead,
         notificationIds,
+        updatedCount: updateResult.count,
       },
+      success: true,
     });
-  } catch (error) {
+  } catch (error: any) {
     console.error('Error updating admin notifications:', error);
+
+    // Handle authentication errors
+    if (error.message?.includes('Token') || error.message?.includes('autorización')) {
+      return NextResponse.json({ message: error.message, success: false }, { status: 401 });
+    }
+
     return NextResponse.json(
       {
-        success: false,
-        error: 'Internal server error',
         details: error instanceof Error ? error.message : 'Unknown error',
+        error: 'Internal server error',
+        success: false,
       },
       { status: 500 }
     );

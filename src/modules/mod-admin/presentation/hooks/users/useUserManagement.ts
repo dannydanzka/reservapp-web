@@ -92,11 +92,27 @@ export const useUserManagement = (): UseUserManagementReturn => {
     total: 0,
   });
 
+  /**
+   * Get auth token from localStorage (same pattern as AdminStatsService)
+   */
+  const getAuthToken = useCallback((): string => {
+    let token = typeof window !== 'undefined' ? localStorage.getItem('auth_token') : null;
+
+    if (!token) {
+      throw new Error('No se encontró token de autenticación');
+    }
+
+    // Remove quotes if present (localStorage sometimes stores with quotes)
+    return token.replace(/^"(.*)"$/, '$1');
+  }, []);
+
   const fetchUsers = useCallback(
     async (newFilters?: UserFilters) => {
       try {
         setLoading(true);
         setError(null);
+
+        const token = getAuthToken();
 
         const queryParams = new URLSearchParams();
         queryParams.append('page', pagination.page.toString());
@@ -136,7 +152,13 @@ export const useUserManagement = (): UseUserManagementReturn => {
           queryParams.append('search', activeFilters.searchQuery);
         }
 
-        const response = await fetch(`/api/admin/users?${queryParams}`);
+        const response = await fetch(`/api/admin/users?${queryParams}`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'application/json',
+          },
+          method: 'GET',
+        });
 
         if (!response.ok) {
           throw new Error('Failed to fetch users');
@@ -156,135 +178,172 @@ export const useUserManagement = (): UseUserManagementReturn => {
     [filters, pagination.page, pagination.limit]
   );
 
-  const fetchUserById = useCallback(async (id: string): Promise<User | null> => {
-    try {
-      setError(null);
+  const fetchUserById = useCallback(
+    async (id: string): Promise<User | null> => {
+      try {
+        setError(null);
 
-      const response = await fetch(`/api/admin/users/${id}`);
+        const token = getAuthToken();
 
-      if (!response.ok) {
-        throw new Error('Failed to fetch user');
+        const response = await fetch(`/api/admin/users/${id}`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'application/json',
+          },
+          method: 'GET',
+        });
+
+        if (!response.ok) {
+          throw new Error('Failed to fetch user');
+        }
+
+        const data = await response.json();
+        return data.user;
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'Failed to fetch user');
+        return null;
       }
+    },
+    [getAuthToken]
+  );
 
-      const data = await response.json();
-      return data.user;
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to fetch user');
-      return null;
-    }
-  }, []);
+  const createUser = useCallback(
+    async (userData: Partial<User>): Promise<User | null> => {
+      try {
+        setError(null);
 
-  const createUser = useCallback(async (userData: Partial<User>): Promise<User | null> => {
-    try {
-      setError(null);
+        const token = getAuthToken();
 
-      const response = await fetch('/api/admin/users', {
-        body: JSON.stringify(userData),
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        method: 'POST',
-      });
+        const response = await fetch('/api/admin/users', {
+          body: JSON.stringify(userData),
+          headers: {
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'application/json',
+          },
+          method: 'POST',
+        });
 
-      if (!response.ok) {
-        throw new Error('Failed to create user');
+        if (!response.ok) {
+          throw new Error('Failed to create user');
+        }
+
+        const data = await response.json();
+        const newUser = data.user;
+
+        // Add to local state
+        setUsers((prev) => [newUser, ...prev]);
+
+        return newUser;
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'Failed to create user');
+        return null;
       }
+    },
+    [getAuthToken]
+  );
 
-      const data = await response.json();
-      const newUser = data.user;
+  const updateUser = useCallback(
+    async (id: string, updates: Partial<User>): Promise<boolean> => {
+      try {
+        setError(null);
 
-      // Add to local state
-      setUsers((prev) => [newUser, ...prev]);
+        const token = getAuthToken();
 
-      return newUser;
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to create user');
-      return null;
-    }
-  }, []);
+        const response = await fetch(`/api/admin/users/${id}`, {
+          body: JSON.stringify(updates),
+          headers: {
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'application/json',
+          },
+          method: 'PATCH',
+        });
 
-  const updateUser = useCallback(async (id: string, updates: Partial<User>): Promise<boolean> => {
-    try {
-      setError(null);
+        if (!response.ok) {
+          throw new Error('Failed to update user');
+        }
 
-      const response = await fetch(`/api/admin/users/${id}`, {
-        body: JSON.stringify(updates),
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        method: 'PATCH',
-      });
+        const data = await response.json();
+        const updatedUser = data.user;
 
-      if (!response.ok) {
-        throw new Error('Failed to update user');
+        // Update local state
+        setUsers((prevUsers) => prevUsers.map((user) => (user.id === id ? updatedUser : user)));
+
+        return true;
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'Failed to update user');
+        return false;
       }
+    },
+    [getAuthToken]
+  );
 
-      const data = await response.json();
-      const updatedUser = data.user;
+  const updateUserStatus = useCallback(
+    async (id: string, status: UserStatus): Promise<boolean> => {
+      try {
+        setError(null);
 
-      // Update local state
-      setUsers((prevUsers) => prevUsers.map((user) => (user.id === id ? updatedUser : user)));
+        const token = getAuthToken();
 
-      return true;
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to update user');
-      return false;
-    }
-  }, []);
+        const response = await fetch(`/api/admin/users/${id}/status`, {
+          body: JSON.stringify({ status }),
+          headers: {
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'application/json',
+          },
+          method: 'PATCH',
+        });
 
-  const updateUserStatus = useCallback(async (id: string, status: UserStatus): Promise<boolean> => {
-    try {
-      setError(null);
+        if (!response.ok) {
+          throw new Error('Failed to update user status');
+        }
 
-      const response = await fetch(`/api/admin/users/${id}/status`, {
-        body: JSON.stringify({ status }),
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        method: 'PATCH',
-      });
+        // Update local state
+        setUsers((prevUsers) =>
+          prevUsers.map((user) => (user.id === id ? { ...user, status } : user))
+        );
 
-      if (!response.ok) {
-        throw new Error('Failed to update user status');
+        return true;
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'Failed to update user status');
+        return false;
       }
+    },
+    [getAuthToken]
+  );
 
-      // Update local state
-      setUsers((prevUsers) =>
-        prevUsers.map((user) => (user.id === id ? { ...user, status } : user))
-      );
+  const updateUserRole = useCallback(
+    async (id: string, role: UserRole): Promise<boolean> => {
+      try {
+        setError(null);
 
-      return true;
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to update user status');
-      return false;
-    }
-  }, []);
+        const token = getAuthToken();
 
-  const updateUserRole = useCallback(async (id: string, role: UserRole): Promise<boolean> => {
-    try {
-      setError(null);
+        const response = await fetch(`/api/admin/users/${id}/role`, {
+          body: JSON.stringify({ role }),
+          headers: {
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'application/json',
+          },
+          method: 'PATCH',
+        });
 
-      const response = await fetch(`/api/admin/users/${id}/role`, {
-        body: JSON.stringify({ role }),
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        method: 'PATCH',
-      });
+        if (!response.ok) {
+          throw new Error('Failed to update user role');
+        }
 
-      if (!response.ok) {
-        throw new Error('Failed to update user role');
+        // Update local state
+        setUsers((prevUsers) =>
+          prevUsers.map((user) => (user.id === id ? { ...user, role } : user))
+        );
+
+        return true;
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'Failed to update user role');
+        return false;
       }
-
-      // Update local state
-      setUsers((prevUsers) => prevUsers.map((user) => (user.id === id ? { ...user, role } : user)));
-
-      return true;
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to update user role');
-      return false;
-    }
-  }, []);
+    },
+    [getAuthToken]
+  );
 
   const activateUser = useCallback(
     async (id: string): Promise<boolean> => {
@@ -300,79 +359,109 @@ export const useUserManagement = (): UseUserManagementReturn => {
     [updateUser]
   );
 
-  const verifyUserEmail = useCallback(async (id: string): Promise<boolean> => {
-    try {
-      setError(null);
+  const verifyUserEmail = useCallback(
+    async (id: string): Promise<boolean> => {
+      try {
+        setError(null);
 
-      const response = await fetch(`/api/admin/users/${id}/verify-email`, {
-        method: 'POST',
-      });
+        const token = getAuthToken();
 
-      if (!response.ok) {
-        throw new Error('Failed to verify user email');
+        const response = await fetch(`/api/admin/users/${id}/verify-email`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'application/json',
+          },
+          method: 'POST',
+        });
+
+        if (!response.ok) {
+          throw new Error('Failed to verify user email');
+        }
+
+        // Update local state
+        setUsers((prevUsers) =>
+          prevUsers.map((user) => (user.id === id ? { ...user, emailVerified: true } : user))
+        );
+
+        return true;
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'Failed to verify user email');
+        return false;
       }
+    },
+    [getAuthToken]
+  );
 
-      // Update local state
-      setUsers((prevUsers) =>
-        prevUsers.map((user) => (user.id === id ? { ...user, emailVerified: true } : user))
-      );
+  const resetUserPassword = useCallback(
+    async (id: string): Promise<boolean> => {
+      try {
+        setError(null);
 
-      return true;
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to verify user email');
-      return false;
-    }
-  }, []);
+        const token = getAuthToken();
 
-  const resetUserPassword = useCallback(async (id: string): Promise<boolean> => {
-    try {
-      setError(null);
+        const response = await fetch(`/api/admin/users/${id}/reset-password`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'application/json',
+          },
+          method: 'POST',
+        });
 
-      const response = await fetch(`/api/admin/users/${id}/reset-password`, {
-        method: 'POST',
-      });
+        if (!response.ok) {
+          throw new Error('Failed to reset user password');
+        }
 
-      if (!response.ok) {
-        throw new Error('Failed to reset user password');
+        return true;
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'Failed to reset user password');
+        return false;
       }
+    },
+    [getAuthToken]
+  );
 
-      return true;
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to reset user password');
-      return false;
-    }
-  }, []);
+  const deleteUser = useCallback(
+    async (id: string): Promise<boolean> => {
+      try {
+        setError(null);
 
-  const deleteUser = useCallback(async (id: string): Promise<boolean> => {
-    try {
-      setError(null);
+        const token = getAuthToken();
 
-      const response = await fetch(`/api/admin/users/${id}`, {
-        method: 'DELETE',
-      });
+        const response = await fetch(`/api/admin/users/${id}`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'application/json',
+          },
+          method: 'DELETE',
+        });
 
-      if (!response.ok) {
-        throw new Error('Failed to delete user');
+        if (!response.ok) {
+          throw new Error('Failed to delete user');
+        }
+
+        // Remove from local state
+        setUsers((prevUsers) => prevUsers.filter((user) => user.id !== id));
+
+        return true;
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'Failed to delete user');
+        return false;
       }
-
-      // Remove from local state
-      setUsers((prevUsers) => prevUsers.filter((user) => user.id !== id));
-
-      return true;
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to delete user');
-      return false;
-    }
-  }, []);
+    },
+    [getAuthToken]
+  );
 
   const bulkUpdateStatus = useCallback(
     async (userIds: string[], status: UserStatus): Promise<boolean> => {
       try {
         setError(null);
 
+        const token = getAuthToken();
+
         const response = await fetch('/api/admin/users/bulk/status', {
           body: JSON.stringify({ status, userIds }),
           headers: {
+            Authorization: `Bearer ${token}`,
             'Content-Type': 'application/json',
           },
           method: 'PATCH',
@@ -393,7 +482,7 @@ export const useUserManagement = (): UseUserManagementReturn => {
         return false;
       }
     },
-    []
+    [getAuthToken]
   );
 
   const bulkUpdateRole = useCallback(
@@ -401,9 +490,12 @@ export const useUserManagement = (): UseUserManagementReturn => {
       try {
         setError(null);
 
+        const token = getAuthToken();
+
         const response = await fetch('/api/admin/users/bulk/role', {
           body: JSON.stringify({ role, userIds }),
           headers: {
+            Authorization: `Bearer ${token}`,
             'Content-Type': 'application/json',
           },
           method: 'PATCH',
@@ -424,73 +516,88 @@ export const useUserManagement = (): UseUserManagementReturn => {
         return false;
       }
     },
-    []
+    [getAuthToken]
   );
 
-  const bulkActivate = useCallback(async (userIds: string[]): Promise<boolean> => {
-    try {
-      setError(null);
+  const bulkActivate = useCallback(
+    async (userIds: string[]): Promise<boolean> => {
+      try {
+        setError(null);
 
-      const response = await fetch('/api/admin/users/bulk/activate', {
-        body: JSON.stringify({ userIds }),
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        method: 'PATCH',
-      });
+        const token = getAuthToken();
 
-      if (!response.ok) {
-        throw new Error('Failed to bulk activate users');
+        const response = await fetch('/api/admin/users/bulk/activate', {
+          body: JSON.stringify({ userIds }),
+          headers: {
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'application/json',
+          },
+          method: 'PATCH',
+        });
+
+        if (!response.ok) {
+          throw new Error('Failed to bulk activate users');
+        }
+
+        // Update local state
+        setUsers((prevUsers) =>
+          prevUsers.map((user) => (userIds.includes(user.id) ? { ...user, isActive: true } : user))
+        );
+
+        return true;
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'Failed to bulk activate users');
+        return false;
       }
+    },
+    [getAuthToken]
+  );
 
-      // Update local state
-      setUsers((prevUsers) =>
-        prevUsers.map((user) => (userIds.includes(user.id) ? { ...user, isActive: true } : user))
-      );
+  const bulkDeactivate = useCallback(
+    async (userIds: string[]): Promise<boolean> => {
+      try {
+        setError(null);
 
-      return true;
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to bulk activate users');
-      return false;
-    }
-  }, []);
+        const token = getAuthToken();
 
-  const bulkDeactivate = useCallback(async (userIds: string[]): Promise<boolean> => {
-    try {
-      setError(null);
+        const response = await fetch('/api/admin/users/bulk/deactivate', {
+          body: JSON.stringify({ userIds }),
+          headers: {
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'application/json',
+          },
+          method: 'PATCH',
+        });
 
-      const response = await fetch('/api/admin/users/bulk/deactivate', {
-        body: JSON.stringify({ userIds }),
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        method: 'PATCH',
-      });
+        if (!response.ok) {
+          throw new Error('Failed to bulk deactivate users');
+        }
 
-      if (!response.ok) {
-        throw new Error('Failed to bulk deactivate users');
+        // Update local state
+        setUsers((prevUsers) =>
+          prevUsers.map((user) => (userIds.includes(user.id) ? { ...user, isActive: false } : user))
+        );
+
+        return true;
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'Failed to bulk deactivate users');
+        return false;
       }
-
-      // Update local state
-      setUsers((prevUsers) =>
-        prevUsers.map((user) => (userIds.includes(user.id) ? { ...user, isActive: false } : user))
-      );
-
-      return true;
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to bulk deactivate users');
-      return false;
-    }
-  }, []);
+    },
+    [getAuthToken]
+  );
 
   const assignUserToBusiness = useCallback(
     async (userId: string, businessId: string): Promise<boolean> => {
       try {
         setError(null);
 
+        const token = getAuthToken();
+
         const response = await fetch(`/api/admin/users/${userId}/assign-business`, {
           body: JSON.stringify({ businessId }),
           headers: {
+            Authorization: `Bearer ${token}`,
             'Content-Type': 'application/json',
           },
           method: 'POST',
@@ -511,32 +618,41 @@ export const useUserManagement = (): UseUserManagementReturn => {
         return false;
       }
     },
-    []
+    [getAuthToken]
   );
 
-  const removeUserFromBusiness = useCallback(async (userId: string): Promise<boolean> => {
-    try {
-      setError(null);
+  const removeUserFromBusiness = useCallback(
+    async (userId: string): Promise<boolean> => {
+      try {
+        setError(null);
 
-      const response = await fetch(`/api/admin/users/${userId}/remove-business`, {
-        method: 'POST',
-      });
+        const token = getAuthToken();
 
-      if (!response.ok) {
-        throw new Error('Failed to remove user from business');
+        const response = await fetch(`/api/admin/users/${userId}/remove-business`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'application/json',
+          },
+          method: 'POST',
+        });
+
+        if (!response.ok) {
+          throw new Error('Failed to remove user from business');
+        }
+
+        // Update local state
+        setUsers((prevUsers) =>
+          prevUsers.map((user) => (user.id === userId ? { ...user, businessId: null } : user))
+        );
+
+        return true;
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'Failed to remove user from business');
+        return false;
       }
-
-      // Update local state
-      setUsers((prevUsers) =>
-        prevUsers.map((user) => (user.id === userId ? { ...user, businessId: null } : user))
-      );
-
-      return true;
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to remove user from business');
-      return false;
-    }
-  }, []);
+    },
+    [getAuthToken]
+  );
 
   const getUsersByBusiness = useCallback(
     async (businessId: string) => {
@@ -566,7 +682,15 @@ export const useUserManagement = (): UseUserManagementReturn => {
           }
         });
 
-        const response = await fetch(`/api/admin/users/export?${queryParams}`);
+        const token = getAuthToken();
+
+        const response = await fetch(`/api/admin/users/export?${queryParams}`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'application/json',
+          },
+          method: 'GET',
+        });
 
         if (!response.ok) {
           throw new Error('Failed to export users');
@@ -588,41 +712,61 @@ export const useUserManagement = (): UseUserManagementReturn => {
     [filters]
   );
 
-  const getUserActivity = useCallback(async (userId: string) => {
-    try {
-      setError(null);
+  const getUserActivity = useCallback(
+    async (userId: string) => {
+      try {
+        setError(null);
 
-      const response = await fetch(`/api/admin/users/${userId}/activity`);
+        const token = getAuthToken();
 
-      if (!response.ok) {
-        throw new Error('Failed to get user activity');
+        const response = await fetch(`/api/admin/users/${userId}/activity`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'application/json',
+          },
+          method: 'GET',
+        });
+
+        if (!response.ok) {
+          throw new Error('Failed to get user activity');
+        }
+
+        const data = await response.json();
+        return data.activity;
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'Failed to get user activity');
+        return null;
       }
+    },
+    [getAuthToken]
+  );
 
-      const data = await response.json();
-      return data.activity;
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to get user activity');
-      return null;
-    }
-  }, []);
+  const handleSetFilters = useCallback(
+    (newFilters: UserFilters) => {
+      setFilters(newFilters);
+      setPagination((prev) => ({ ...prev, page: 1 }));
+    },
+    [getAuthToken]
+  );
 
-  const handleSetFilters = useCallback((newFilters: UserFilters) => {
-    setFilters(newFilters);
-    setPagination((prev) => ({ ...prev, page: 1 }));
-  }, []);
+  const handleSetPage = useCallback(
+    (page: number) => {
+      setPagination((prev) => ({ ...prev, page }));
+    },
+    [getAuthToken]
+  );
 
-  const handleSetPage = useCallback((page: number) => {
-    setPagination((prev) => ({ ...prev, page }));
-  }, []);
-
-  const handleSetLimit = useCallback((limit: number) => {
-    setPagination((prev) => ({ ...prev, limit, page: 1 }));
-  }, []);
+  const handleSetLimit = useCallback(
+    (limit: number) => {
+      setPagination((prev) => ({ ...prev, limit, page: 1 }));
+    },
+    [getAuthToken]
+  );
 
   const clearFilters = useCallback(() => {
     setFilters({});
     setPagination((prev) => ({ ...prev, page: 1 }));
-  }, []);
+  }, [getAuthToken]);
 
   // Load users on mount and when filters/pagination change
   useEffect(() => {
