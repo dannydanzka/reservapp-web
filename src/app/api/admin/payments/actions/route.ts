@@ -32,11 +32,11 @@ export async function POST(request: NextRequest) {
     const token = authHeader.substring(7);
     const decoded = jwt.verify(token, process.env.JWT_SECRET || 'fallback-secret') as any;
 
-    // Only SUPER_ADMIN can perform payment actions
-    if (decoded.role !== UserRoleEnum.SUPER_ADMIN) {
+    // Check admin privileges for payment actions
+    if (!['ADMIN', 'SUPER_ADMIN'].includes(decoded.role)) {
       return NextResponse.json(
         {
-          message: 'Acceso denegado. Solo SUPER_ADMIN puede realizar acciones de pago',
+          message: 'Acceso denegado. Se requieren privilegios de administrador',
           success: false,
         },
         { status: 403 }
@@ -65,6 +65,28 @@ export async function POST(request: NextRequest) {
     if (!payment) {
       return NextResponse.json({ message: 'Pago no encontrado', success: false }, { status: 404 });
     }
+
+    // Check if ADMIN has permission to manage this payment
+    if (decoded.role === 'ADMIN') {
+      const adminVenues = await prisma.venue.findMany({
+        select: { id: true },
+        where: { ownerId: decoded.userId },
+      });
+
+      const venueIds = adminVenues.map((venue) => venue.id);
+      const paymentVenueId = payment.reservation?.venue.id;
+
+      if (!paymentVenueId || !venueIds.includes(paymentVenueId)) {
+        return NextResponse.json(
+          {
+            message: 'No tienes permisos para realizar acciones en este pago',
+            success: false,
+          },
+          { status: 403 }
+        );
+      }
+    }
+    // SUPER_ADMIN can manage all payments
 
     const oldValues = {
       amount: payment.amount,
@@ -282,12 +304,21 @@ export async function GET(request: NextRequest) {
     const token = authHeader.substring(7);
     const decoded = jwt.verify(token, process.env.JWT_SECRET || 'fallback-secret') as any;
 
-    // Only SUPER_ADMIN can access all venues
-    if (decoded.role !== UserRoleEnum.SUPER_ADMIN) {
-      return NextResponse.json({ message: 'Acceso denegado', success: false }, { status: 403 });
+    // Check admin privileges for venue access
+    if (!['ADMIN', 'SUPER_ADMIN'].includes(decoded.role)) {
+      return NextResponse.json(
+        {
+          message: 'Acceso denegado. Se requieren privilegios de administrador',
+          success: false,
+        },
+        { status: 403 }
+      );
     }
 
-    // Get venues with owner information for better context
+    // Get venues based on role
+    const venueFilter =
+      decoded.role === 'ADMIN' ? { isActive: true, ownerId: decoded.userId } : { isActive: true };
+
     const venues = await prisma.venue.findMany({
       orderBy: {
         name: 'asc',
@@ -308,9 +339,7 @@ export async function GET(request: NextRequest) {
           },
         },
       },
-      where: {
-        isActive: true,
-      },
+      where: venueFilter,
     });
 
     const venueOptions = venues.map((venue) => ({

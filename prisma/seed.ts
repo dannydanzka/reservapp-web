@@ -1646,6 +1646,243 @@ async function main() {
     }
 
     console.log('✅ Created 3 notifications for Juan Pérez');
+
+    // Create payments and receipts for Juan Pérez
+    console.log('💰 Creating payments and receipts for Juan Pérez...');
+
+    // Get some of Juan's reservations for payment creation
+    const juanReservationsWithVenues = await prisma.reservation.findMany({
+      where: { userId: juanUser.id },
+      include: {
+        service: true,
+        venue: true,
+      },
+      orderBy: { createdAt: 'desc' },
+      take: 5, // Create payments for 5 most recent reservations
+    });
+
+    const juanPayments = [];
+
+    for (const reservation of juanReservationsWithVenues) {
+      const paymentAmount = Number(reservation.service.price);
+      const isCompleted = reservation.status === ReservationStatus.COMPLETED || 
+                         reservation.status === ReservationStatus.CONFIRMED;
+      
+      const payment = await prisma.payment.create({
+        data: {
+          userId: juanUser.id,
+          reservationId: reservation.id,
+          amount: paymentAmount,
+          currency: 'MXN',
+          status: isCompleted ? PaymentStatus.COMPLETED : PaymentStatus.PENDING,
+          paymentMethod: 'stripe',
+          stripePaymentId: `pi_mock_${Date.now()}_${Math.random().toString(36).substring(7)}`,
+          description: `Pago por ${reservation.service.name} en ${reservation.venue.name}`,
+          transactionDate: isCompleted ? reservation.createdAt : null,
+          metadata: {
+            reservationType: 'service_reservation',
+            serviceName: reservation.service.name,
+            venueName: reservation.venue.name,
+            guests: reservation.guests,
+            checkInDate: reservation.checkInDate.toISOString(),
+            paymentType: 'reservation',
+          },
+          createdAt: reservation.createdAt,
+          updatedAt: reservation.updatedAt,
+        },
+      });
+
+      juanPayments.push(payment);
+
+      // Create receipt for completed payments
+      if (isCompleted) {
+        const taxRate = 0.16; // 16% IVA México
+        const subtotalAmount = paymentAmount / (1 + taxRate);
+        const taxAmount = paymentAmount - subtotalAmount;
+
+        await prisma.receipt.create({
+          data: {
+            userId: juanUser.id,
+            paymentId: payment.id,
+            type: ReceiptType.PAYMENT,
+            status: ReceiptStatus.VERIFIED,
+            amount: paymentAmount,
+            currency: 'MXN',
+            subtotalAmount,
+            taxAmount,
+            issueDate: reservation.createdAt,
+            paidDate: reservation.createdAt,
+            isVerified: true,
+            metadata: {
+              businessName: reservation.venue.name,
+              serviceName: reservation.service.name,
+              serviceCategory: reservation.service.category,
+              taxRate: 16,
+              paymentMethod: 'stripe',
+              reservationConfirmation: reservation.confirmationId,
+            },
+            createdAt: reservation.createdAt,
+            updatedAt: reservation.updatedAt,
+          },
+        });
+      }
+    }
+
+    // Create a subscription payment for Juan (Premium upgrade)
+    // Use first reservation as placeholder since Payment model requires reservationId
+    const firstReservation = juanReservationsWithVenues[0];
+    const subscriptionPayment = await prisma.payment.create({
+      data: {
+        userId: juanUser.id,
+        reservationId: firstReservation.id, // Placeholder until schema supports subscriptions
+        amount: 199.00,
+        currency: 'MXN',
+        status: PaymentStatus.COMPLETED,
+        paymentMethod: 'stripe',
+        stripePaymentId: `pi_subscription_${Date.now()}_${Math.random().toString(36).substring(7)}`,
+        description: 'Suscripción Premium mensual - ReservApp',
+        transactionDate: new Date(Date.now() - 15 * 24 * 60 * 60 * 1000), // 15 days ago
+        metadata: {
+          subscriptionType: 'premium',
+          billingPeriod: 'monthly',
+          features: ['priority_booking', 'exclusive_deals', 'concierge_service'],
+          paymentType: 'subscription',
+        },
+        createdAt: new Date(Date.now() - 15 * 24 * 60 * 60 * 1000),
+        updatedAt: new Date(Date.now() - 15 * 24 * 60 * 60 * 1000),
+      },
+    });
+
+    // Create receipt for subscription
+    const subscriptionTaxRate = 0.16;
+    const subscriptionSubtotal = 199.00 / (1 + subscriptionTaxRate);
+    const subscriptionTax = 199.00 - subscriptionSubtotal;
+
+    await prisma.receipt.create({
+      data: {
+        userId: juanUser.id,
+        paymentId: subscriptionPayment.id,
+        type: ReceiptType.PAYMENT,
+        status: ReceiptStatus.VERIFIED,
+        amount: 199.00,
+        currency: 'MXN',
+        subtotalAmount: subscriptionSubtotal,
+        taxAmount: subscriptionTax,
+        issueDate: new Date(Date.now() - 15 * 24 * 60 * 60 * 1000),
+        paidDate: new Date(Date.now() - 15 * 24 * 60 * 60 * 1000),
+        isVerified: true,
+        metadata: {
+          businessName: 'ReservApp Platform',
+          serviceName: 'Suscripción Premium',
+          serviceCategory: 'subscription',
+          taxRate: 16,
+          paymentMethod: 'stripe',
+          subscriptionPlan: 'premium_monthly',
+        },
+        createdAt: new Date(Date.now() - 15 * 24 * 60 * 60 * 1000),
+        updatedAt: new Date(Date.now() - 15 * 24 * 60 * 60 * 1000),
+      },
+    });
+
+    // Create a pending payment (upcoming reservation)
+    const pendingPayment = await prisma.payment.create({
+      data: {
+        userId: juanUser.id,
+        reservationId: firstReservation.id, // Use same placeholder
+        amount: 3500.00,
+        currency: 'MXN',
+        status: PaymentStatus.PENDING,
+        paymentMethod: 'stripe',
+        description: 'Pago pendiente - Reserva fin de semana en Casa Salazar',
+        metadata: {
+          reservationType: 'upcoming_reservation',
+          venueName: 'Casa Salazar Centro Histórico',
+          serviceName: 'Suite Presidencial - Fin de Semana',
+          guests: 2,
+          paymentType: 'reservation',
+          dueDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
+        },
+        createdAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000), // 2 days ago
+        updatedAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000),
+      },
+    });
+
+    // Create invoice for pending payment
+    const pendingTaxRate = 0.16;
+    const pendingSubtotal = 3500.00 / (1 + pendingTaxRate);
+    const pendingTax = 3500.00 - pendingSubtotal;
+
+    await prisma.receipt.create({
+      data: {
+        userId: juanUser.id,
+        paymentId: pendingPayment.id,
+        type: ReceiptType.INVOICE,
+        status: ReceiptStatus.PENDING,
+        amount: 3500.00,
+        currency: 'MXN',
+        subtotalAmount: pendingSubtotal,
+        taxAmount: pendingTax,
+        issueDate: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000),
+        dueDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // Due in 7 days
+        metadata: {
+          businessName: 'Casa Salazar Centro Histórico',
+          serviceName: 'Suite Presidencial - Fin de Semana',
+          serviceCategory: 'accommodation',
+          taxRate: 16,
+          paymentMethod: 'stripe',
+          invoiceType: 'advance_payment',
+          dueInDays: 7,
+        },
+        createdAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000),
+        updatedAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000),
+      },
+    });
+
+    console.log(`✅ Created ${juanPayments.length + 2} payments for Juan Pérez`);
+    console.log('✅ Created receipts and invoices for Juan Pérez');
+
+    // Create additional notifications related to payments
+    const paymentNotifications = [
+      {
+        type: NotificationType.PAYMENT_CONFIRMATION,
+        title: 'Pago Procesado Exitosamente',
+        message: 'Tu pago de $2,450 MXN para la reserva en Zentro Wellness ha sido confirmado.',
+        isRead: true,
+        daysAgo: 7,
+      },
+      {
+        type: NotificationType.SYSTEM_ALERT,
+        title: 'Pago Pendiente',
+        message: 'Tienes un pago pendiente de $3,500 MXN. Vence en 7 días.',
+        isRead: false,
+        daysAgo: 2,
+      },
+      {
+        type: NotificationType.PROMOTION,
+        title: 'Facturación Disponible',
+        message: 'Ya puedes descargar las facturas de tus últimos pagos desde tu perfil.',
+        isRead: false,
+        daysAgo: 1,
+      },
+    ];
+
+    for (const notifData of paymentNotifications) {
+      const notifDate = new Date();
+      notifDate.setDate(notifDate.getDate() - notifData.daysAgo);
+
+      await prisma.notification.create({
+        data: {
+          type: notifData.type,
+          title: notifData.title,
+          message: notifData.message,
+          isRead: notifData.isRead,
+          userId: juanUser.id,
+          createdAt: notifDate,
+        },
+      });
+    }
+
+    console.log('✅ Created 3 additional payment-related notifications for Juan Pérez');
   }
 
   console.log('⚙️ Creating system configuration...');

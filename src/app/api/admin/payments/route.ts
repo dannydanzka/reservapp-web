@@ -26,10 +26,10 @@ export async function GET(request: NextRequest) {
     const token = authHeader.substring(7);
     const decoded = jwt.verify(token, process.env.JWT_SECRET || 'fallback-secret') as any;
 
-    // Only SUPER_ADMIN can access all payments data
-    if (decoded.role !== UserRoleEnum.SUPER_ADMIN) {
+    // Check admin privileges
+    if (!['ADMIN', 'SUPER_ADMIN'].includes(decoded.role)) {
       return NextResponse.json(
-        { message: 'Acceso denegado. Solo SUPER_ADMIN puede ver todos los pagos', success: false },
+        { message: 'Acceso denegado. Se requieren privilegios de administrador', success: false },
         { status: 403 }
       );
     }
@@ -47,6 +47,37 @@ export async function GET(request: NextRequest) {
     // Build where clause with filters
     const where: any = {};
 
+    // Role-based filtering for payments
+    if (decoded.role === 'ADMIN') {
+      // ADMIN can only see payments related to their venues/services
+      const adminVenues = await prisma.venue.findMany({
+        select: { id: true },
+        where: { ownerId: decoded.userId },
+      });
+
+      const venueIds = adminVenues.map((venue) => venue.id);
+
+      if (venueIds.length === 0) {
+        // Admin has no venues, return empty result
+        return NextResponse.json({
+          data: [],
+          pagination: {
+            hasMore: false,
+            limit,
+            page,
+            total: 0,
+            totalPages: 0,
+          },
+          success: true,
+        });
+      }
+
+      where.reservation = {
+        venueId: { in: venueIds },
+      };
+    }
+    // SUPER_ADMIN sees all payments (no additional filtering needed)
+
     if (status && status !== 'ALL') {
       where.status = status as PaymentStatus;
     }
@@ -59,9 +90,32 @@ export async function GET(request: NextRequest) {
     }
 
     if (venueId) {
-      where.reservation = {
-        venueId: venueId,
-      };
+      if (decoded.role === 'ADMIN') {
+        // Ensure ADMIN can only filter by their own venues
+        const adminVenues = await prisma.venue.findMany({
+          select: { id: true },
+          where: { ownerId: decoded.userId },
+        });
+        const venueIds = adminVenues.map((venue) => venue.id);
+
+        if (venueIds.includes(venueId)) {
+          where.reservation = {
+            venueId: venueId,
+          };
+        } else {
+          return NextResponse.json(
+            {
+              message: 'No tienes permisos para ver pagos de este venue',
+              success: false,
+            },
+            { status: 403 }
+          );
+        }
+      } else {
+        where.reservation = {
+          venueId: venueId,
+        };
+      }
     }
 
     if (search) {
@@ -315,9 +369,15 @@ export async function POST(request: NextRequest) {
     const token = authHeader.substring(7);
     const decoded = jwt.verify(token, process.env.JWT_SECRET || 'fallback-secret') as any;
 
-    // Only SUPER_ADMIN can access payment statistics
-    if (decoded.role !== UserRoleEnum.SUPER_ADMIN) {
-      return NextResponse.json({ message: 'Acceso denegado', success: false }, { status: 403 });
+    // Check admin privileges for statistics
+    if (!['ADMIN', 'SUPER_ADMIN'].includes(decoded.role)) {
+      return NextResponse.json(
+        {
+          message: 'Acceso denegado. Se requieren privilegios de administrador',
+          success: false,
+        },
+        { status: 403 }
+      );
     }
 
     const body = await request.json();
@@ -335,6 +395,52 @@ export async function POST(request: NextRequest) {
             }
           : {};
 
+      // Role-based filtering for statistics
+      let roleFilter = {};
+      if (decoded.role === 'ADMIN') {
+        // ADMIN can only see stats for their venues
+        const adminVenues = await prisma.venue.findMany({
+          select: { id: true },
+          where: { ownerId: decoded.userId },
+        });
+
+        const venueIds = adminVenues.map((venue) => venue.id);
+
+        if (venueIds.length === 0) {
+          // Admin has no venues, return zero stats
+          return NextResponse.json({
+            data: {
+              averageTransaction: 0,
+              completedAmount: 0,
+              completedTransactions: 0,
+              failedAmount: 0,
+              failedTransactions: 0,
+              failureRate: 0,
+              monthlyGrowth: 0,
+              pendingAmount: 0,
+              pendingTransactions: 0,
+              platformCommissionRate: 0.05,
+              refundRate: 0,
+              refundedAmount: 0,
+              refundedTransactions: 0,
+              successRate: 0,
+              totalNetRevenue: 0,
+              totalPlatformFees: 0,
+              totalRevenue: 0,
+              totalTransactions: 0,
+            },
+            success: true,
+          });
+        }
+
+        roleFilter = {
+          reservation: {
+            venueId: { in: venueIds },
+          },
+        };
+      }
+      // SUPER_ADMIN sees all stats (no additional filtering needed)
+
       // Get comprehensive statistics
       const [
         totalPayments,
@@ -346,34 +452,34 @@ export async function POST(request: NextRequest) {
         previousPeriodRevenue,
       ] = await Promise.all([
         // Total payments count
-        prisma.payment.count({ where: dateFilter }),
+        prisma.payment.count({ where: { ...dateFilter, ...roleFilter } }),
 
         // Completed payments
         prisma.payment.aggregate({
           _count: true,
           _sum: { amount: true },
-          where: { ...dateFilter, status: PaymentStatus.COMPLETED },
+          where: { ...dateFilter, ...roleFilter, status: PaymentStatus.COMPLETED },
         }),
 
         // Pending payments
         prisma.payment.aggregate({
           _count: true,
           _sum: { amount: true },
-          where: { ...dateFilter, status: PaymentStatus.PENDING },
+          where: { ...dateFilter, ...roleFilter, status: PaymentStatus.PENDING },
         }),
 
         // Failed payments
         prisma.payment.aggregate({
           _count: true,
           _sum: { amount: true },
-          where: { ...dateFilter, status: PaymentStatus.FAILED },
+          where: { ...dateFilter, ...roleFilter, status: PaymentStatus.FAILED },
         }),
 
         // Refunded payments
         prisma.payment.aggregate({
           _count: true,
           _sum: { amount: true },
-          where: { ...dateFilter, status: PaymentStatus.REFUNDED },
+          where: { ...dateFilter, ...roleFilter, status: PaymentStatus.REFUNDED },
         }),
 
         // Overall revenue stats
@@ -381,7 +487,7 @@ export async function POST(request: NextRequest) {
           _avg: { amount: true },
           _count: true,
           _sum: { amount: true },
-          where: { ...dateFilter, status: PaymentStatus.COMPLETED },
+          where: { ...dateFilter, ...roleFilter, status: PaymentStatus.COMPLETED },
         }),
 
         // Previous period revenue for growth calculation (if date filters provided)
@@ -389,6 +495,7 @@ export async function POST(request: NextRequest) {
           ? prisma.payment.aggregate({
               _sum: { amount: true },
               where: {
+                ...roleFilter,
                 createdAt: {
                   gte: new Date(
                     new Date(filters.startDate).getTime() -

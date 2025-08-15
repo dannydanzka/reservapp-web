@@ -20,6 +20,7 @@ model User {
   phone     String?
   isActive  Boolean  @default(true)
   role      UserRoleEnum @default(USER)
+  isPremium Boolean  @default(false)
   stripeCustomerId String? @unique
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -33,6 +34,7 @@ model User {
   adminActions AdminAuditLog[] @relation("AdminActions")
   systemLogs   SystemLog[]     @relation("SystemLogs")
   favorites    Favorite[]      @relation("UserFavorites")
+  subscriptions Subscription[]  @relation("UserSubscriptions")
   // Venues owned by this admin (empty for regular users)
   ownedVenues  Venue[]                 @relation("VenueOwner")
   // Business account for ADMIN users
@@ -198,6 +200,7 @@ model Venue {
   reservations Reservation[]
   reviews      Review[]
   favorites    Favorite[]    @relation("VenueFavorites")
+  notifications Notification[]
   // Owner relationship (admin who manages this venue)
   ownerId      String?
   owner        User?         @relation("VenueOwner", fields: [ownerId], references: [id])
@@ -240,6 +243,7 @@ model Service {
   venueId      String
   reservations Reservation[]
   reviews      Review[]
+  notifications Notification[]
 
   @@map("services")
 }
@@ -266,6 +270,13 @@ model Reservation {
   currency       String            @default("MXN")
   notes          String?           @db.Text
   specialRequests String?          @db.Text
+  
+  // Cancellation fields
+  cancelledAt    DateTime?
+  cancelReason   String?           @db.Text
+  refundAmount   Decimal?          @db.Decimal(10, 2)
+  refundStatus   RefundStatus?
+  
   metadata       Json?             // Flexible additional data
   createdAt      DateTime          @default(now())
   updatedAt      DateTime          @updatedAt
@@ -280,6 +291,7 @@ model Reservation {
   payments  Payment[]
   reviews   Review[]
   paymentHistories PaymentHistory[]
+  notifications Notification[]
 
   @@map("reservations")
 }
@@ -336,12 +348,23 @@ model Notification {
   message     String           @db.Text
   isRead      Boolean          @default(false)
   metadata    Json?            // Flexible data storage
+  // Email tracking
+  emailSent   Boolean          @default(false) // Was an email sent for this notification?
+  emailType   String?          // Type of email template used
   createdAt   DateTime         @default(now())
   updatedAt   DateTime         @updatedAt
 
   // Relations
-  user        User             @relation(fields: [userId], references: [id], onDelete: Cascade)
-  userId      String
+  user         User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId       String
+  
+  // Optional relations for admin filtering
+  venue        Venue?       @relation(fields: [venueId], references: [id], onDelete: SetNull)
+  venueId      String?
+  service      Service?     @relation(fields: [serviceId], references: [id], onDelete: SetNull)
+  serviceId    String?
+  reservation  Reservation? @relation(fields: [reservationId], references: [id], onDelete: SetNull)
+  reservationId String?
 
   @@map("notifications")
 }
@@ -353,6 +376,10 @@ enum NotificationType {
   CHECK_IN_REMINDER
   SYSTEM_ALERT
   PROMOTION
+  WELCOME_EMAIL
+  CONTACT_FORM_SUBMISSION
+  PREMIUM_WELCOME
+  BUSINESS_REGISTRATION
 }
 
 // System Configuration
@@ -608,6 +635,63 @@ model Favorite {
   // Prevent duplicate favorites
   @@unique([userId, venueId])
   @@map("favorites")
+}
+
+// User Subscription Management
+model Subscription {
+  id                String              @id @default(cuid())
+  stripeSubscriptionId String          @unique
+  status            SubscriptionStatus  @default(ACTIVE)
+  planType          SubscriptionPlan    @default(PREMIUM)
+  priceId           String              // Stripe price ID
+  amount            Decimal             @db.Decimal(10, 2)
+  currency          String              @default("MXN")
+  
+  // Billing period
+  currentPeriodStart DateTime
+  currentPeriodEnd   DateTime
+  
+  // Cancellation
+  cancelAtPeriodEnd  Boolean             @default(false)
+  cancelledAt        DateTime?
+  cancellationReason String?             @db.Text
+  
+  // Payment method
+  paymentMethodId    String?
+  
+  // Timestamps
+  createdAt         DateTime            @default(now())
+  updatedAt         DateTime            @updatedAt
+  
+  // Relations
+  user              User                @relation("UserSubscriptions", fields: [userId], references: [id], onDelete: Cascade)
+  userId            String
+  
+  @@map("subscriptions")
+}
+
+enum SubscriptionStatus {
+  ACTIVE
+  PAST_DUE
+  CANCELED
+  UNPAID
+  INCOMPLETE
+  INCOMPLETE_EXPIRED
+  TRIALING
+}
+
+enum SubscriptionPlan {
+  PREMIUM
+  PREMIUM_PLUS
+  ENTERPRISE
+}
+
+enum RefundStatus {
+  PENDING
+  PROCESSING
+  COMPLETED
+  FAILED
+  CANCELLED
 }
 
 // Simplified for MVP - Complex role system removed

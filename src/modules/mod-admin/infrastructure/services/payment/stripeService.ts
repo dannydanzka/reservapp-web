@@ -308,4 +308,212 @@ export class StripeService {
   static getStripeInstance(): Stripe {
     return stripe;
   }
+
+  // Invoice Management Functions
+  static async createInvoice(
+    customerId: string,
+    params: {
+      description?: string;
+      dueDate?: Date;
+      metadata?: Record<string, string>;
+      autoFinalize?: boolean;
+      collectionMethod?: 'charge_automatically' | 'send_invoice';
+    }
+  ): Promise<Stripe.Invoice> {
+    try {
+      const invoice = await stripe.invoices.create({
+        auto_advance: params.autoFinalize || true,
+        collection_method: params.collectionMethod || 'send_invoice',
+        customer: customerId,
+        description: params.description,
+        due_date: params.dueDate ? Math.floor(params.dueDate.getTime() / 1000) : undefined,
+        metadata: params.metadata || {},
+        pending_invoice_items_behavior: 'exclude',
+      });
+
+      return invoice;
+    } catch (error) {
+      console.error('Error creating invoice:', error);
+      throw new Error(
+        `Failed to create invoice: ${error instanceof Error ? error.message : 'Unknown error'}`
+      );
+    }
+  }
+
+  static async addInvoiceItem(
+    customerId: string,
+    invoiceId: string,
+    params: {
+      amount: number;
+      currency?: string;
+      description?: string;
+      metadata?: Record<string, string>;
+    }
+  ): Promise<Stripe.InvoiceItem> {
+    try {
+      const invoiceItem = await stripe.invoiceItems.create({
+        amount: Math.round(params.amount * 100),
+        // Convert to cents
+        currency: params.currency || 'usd',
+
+        customer: customerId,
+        description: params.description,
+        invoice: invoiceId,
+        metadata: params.metadata || {},
+      });
+
+      return invoiceItem;
+    } catch (error) {
+      console.error('Error adding invoice item:', error);
+      throw new Error(
+        `Failed to add invoice item: ${error instanceof Error ? error.message : 'Unknown error'}`
+      );
+    }
+  }
+
+  static async finalizeInvoice(invoiceId: string): Promise<Stripe.Invoice> {
+    try {
+      const invoice = await stripe.invoices.finalizeInvoice(invoiceId);
+      return invoice;
+    } catch (error) {
+      console.error('Error finalizing invoice:', error);
+      throw new Error(
+        `Failed to finalize invoice: ${error instanceof Error ? error.message : 'Unknown error'}`
+      );
+    }
+  }
+
+  static async sendInvoice(invoiceId: string): Promise<Stripe.Invoice> {
+    try {
+      const invoice = await stripe.invoices.sendInvoice(invoiceId);
+      return invoice;
+    } catch (error) {
+      console.error('Error sending invoice:', error);
+      throw new Error(
+        `Failed to send invoice: ${error instanceof Error ? error.message : 'Unknown error'}`
+      );
+    }
+  }
+
+  static async retrieveInvoice(invoiceId: string): Promise<Stripe.Invoice> {
+    try {
+      const invoice = await stripe.invoices.retrieve(invoiceId);
+      return invoice;
+    } catch (error) {
+      console.error('Error retrieving invoice:', error);
+      throw new Error(
+        `Failed to retrieve invoice: ${error instanceof Error ? error.message : 'Unknown error'}`
+      );
+    }
+  }
+
+  static async listInvoices(
+    customerId?: string,
+    params?: {
+      status?: 'draft' | 'open' | 'paid' | 'uncollectible' | 'void';
+      limit?: number;
+      startingAfter?: string;
+      endingBefore?: string;
+    }
+  ): Promise<Stripe.Invoice[]> {
+    try {
+      const invoices = await stripe.invoices.list({
+        customer: customerId,
+        ending_before: params?.endingBefore,
+        limit: params?.limit || 10,
+        starting_after: params?.startingAfter,
+        status: params?.status,
+      });
+
+      return invoices.data;
+    } catch (error) {
+      console.error('Error listing invoices:', error);
+      throw new Error(
+        `Failed to list invoices: ${error instanceof Error ? error.message : 'Unknown error'}`
+      );
+    }
+  }
+
+  static async voidInvoice(invoiceId: string): Promise<Stripe.Invoice> {
+    try {
+      const invoice = await stripe.invoices.voidInvoice(invoiceId);
+      return invoice;
+    } catch (error) {
+      console.error('Error voiding invoice:', error);
+      throw new Error(
+        `Failed to void invoice: ${error instanceof Error ? error.message : 'Unknown error'}`
+      );
+    }
+  }
+
+  static async markInvoiceUncollectible(invoiceId: string): Promise<Stripe.Invoice> {
+    try {
+      const invoice = await stripe.invoices.markUncollectible(invoiceId);
+      return invoice;
+    } catch (error) {
+      console.error('Error marking invoice as uncollectible:', error);
+      throw new Error(
+        `Failed to mark invoice as uncollectible: ${error instanceof Error ? error.message : 'Unknown error'}`
+      );
+    }
+  }
+
+  static async payInvoice(invoiceId: string): Promise<Stripe.Invoice> {
+    try {
+      const invoice = await stripe.invoices.pay(invoiceId);
+      return invoice;
+    } catch (error) {
+      console.error('Error paying invoice:', error);
+      throw new Error(
+        `Failed to pay invoice: ${error instanceof Error ? error.message : 'Unknown error'}`
+      );
+    }
+  }
+
+  // Billing and Subscription Invoice Methods
+  static async createSubscriptionInvoice(
+    subscriptionId: string,
+    params?: {
+      description?: string;
+      metadata?: Record<string, string>;
+      daysUntilDue?: number;
+    }
+  ): Promise<Stripe.Invoice> {
+    try {
+      const invoice = await stripe.invoices.create({
+        days_until_due: params?.daysUntilDue,
+        description: params?.description,
+        metadata: params?.metadata || {},
+        subscription: subscriptionId,
+      });
+
+      return invoice;
+    } catch (error) {
+      console.error('Error creating subscription invoice:', error);
+      throw new Error(
+        `Failed to create subscription invoice: ${error instanceof Error ? error.message : 'Unknown error'}`
+      );
+    }
+  }
+
+  static async retrieveUpcomingInvoice(
+    customerId: string,
+    subscriptionId?: string
+  ): Promise<Stripe.Invoice> {
+    try {
+      // Note: Upcoming invoices require different API call
+      const upcomingParams: any = { customer: customerId };
+      if (subscriptionId) {
+        upcomingParams.subscription = subscriptionId;
+      }
+      const invoice = await (stripe.invoices as any).retrieveUpcoming(upcomingParams);
+
+      return invoice;
+    } catch (error) {
+      console.error('Error retrieving upcoming invoice:', error);
+      throw new Error(
+        `Failed to retrieve upcoming invoice: ${error instanceof Error ? error.message : 'Unknown error'}`
+      );
+    }
+  }
 }
