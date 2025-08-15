@@ -85,7 +85,29 @@ export class UnifiedNotificationService {
     success: boolean;
   }> {
     try {
-      const emailResult = await ResendService.sendReservationCancellation(data);
+      // Convert ReservationEmailData to CancellationEmailData format
+      const cancellationData = {
+        // Default, would need to be calculated
+        cancelReason: 'Cancelación solicitada',
+
+        cancelledAt: new Date().toLocaleDateString('es-MX'),
+
+        checkInDate: data.checkInDate,
+
+        refundAmount: '$0.00',
+
+        reservationId: data.reservationId,
+
+        serviceName: data.serviceName,
+
+        totalAmount: `${data.currency.toUpperCase()} $${data.totalAmount.toFixed(2)}`,
+
+        userEmail: data.guestEmail,
+        userName: data.guestName,
+        venueName: data.venueName,
+      };
+
+      const emailResult = await ResendService.sendReservationCancellationEmail(cancellationData);
 
       let notificationResult = null;
       if (data.userId) {

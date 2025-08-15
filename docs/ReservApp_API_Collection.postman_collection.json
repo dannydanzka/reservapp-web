@@ -1,20 +1,20 @@
 {
   "info": {
     "name": "ReservApp API - Complete Collection 2025",
-    "description": "Colección completa de la API de ReservApp con todos los endpoints actuales\n\n🌐 **ReservApp** es una plataforma de gestión de reservas para hoteles, spas, restaurantes, tours y eventos con dashboard administrativo completo.\n\n## 🔑 Autenticación\nLa mayoría de endpoints requieren autenticación JWT. Incluye el token en el header:\n```\nAuthorization: Bearer tu-jwt-token\n```\n\n## 🌐 Servidores\n- **Producción**: https://reservapp-web.vercel.app/api\n- **Desarrollo**: http://localhost:3000/api\n\n## 👤 Cuentas de Prueba\n- **Super Admin**: admin@reservapp.com (password: password123)\n- **Admin Hotel**: admin.salazar@reservapp.com (password: password123)\n- **Admin Restaurante**: admin.restaurant@reservapp.com (password: password123)\n- **Usuario Final**: juan.perez@gmail.com (password: password123)\n\n## 📚 Documentación\n- **API Docs**: https://reservapp-web.vercel.app/api/swagger\n- **Health Check**: https://reservapp-web.vercel.app/api/health",
+    "description": "Colección completa de la API de ReservApp con todos los endpoints actuales\n\n🌐 **ReservApp** es una plataforma de gestión de reservas para hoteles, spas, restaurantes, tours y eventos con dashboard administrativo completo.\n\n## 🆕 Nuevas Funcionalidades (Enero 2025)\n📱 **Dashboard Móvil**: Endpoint optimizado para apps móviles con estadísticas completas, favoritos y reservaciones en una sola llamada.\n❌ **Cancelaciones**: Sistema completo de cancelación con reembolsos automáticos basados en política de tiempo y emails de confirmación.\n⭐ **Premium**: Upgrade a suscripción premium con integración real de Stripe (sandbox), beneficios exclusivos y templates de email.\n🔧 **Perfil Mejorado**: Endpoint de perfil ahora incluye estado `isPremium` para identificar usuarios premium.\n💳 **Pagos Reales**: Creación de reservas ahora procesa pagos realmente en Stripe con Payment Intents, clientes automáticos y registros completos.\n🔔 **Notificaciones Completas**: Sistema de notificaciones en tiempo real con filtrado, paginación, estados de lectura y creación automática en reservas/pagos.\n👨‍💼 **Admin Notificaciones**: Panel administrativo para ver TODOS los emails enviados. SUPER_ADMIN ve todo, ADMIN solo ve emails de sus venues. Incluye estadísticas completas, filtros avanzados y seguimiento de templates.\n💰 **Sistema Completo de Pagos y Facturas**: APIs completas para usuarios y admins con historial de pagos, generación de facturas Stripe, descargas PDF, permisos diferenciados por rol y datos de ejemplo realistas para Juan Pérez.\n\n## 🔑 Autenticación\nLa mayoría de endpoints requieren autenticación JWT. Incluye el token en el header:\n```\nAuthorization: Bearer tu-jwt-token\n```\n\n## 🌐 Servidores\n- **Producción**: https://reservapp-web.vercel.app/api (URL por defecto)\n- **Desarrollo**: http://localhost:3000/api\n\n## 👤 Cuentas de Prueba\n- **Super Admin**: admin@reservapp.com (password: password123)\n- **Admin Hotel**: admin.salazar@reservapp.com (password: password123)\n- **Admin Restaurante**: admin.restaurant@reservapp.com (password: password123)\n- **Usuario Final**: juan.perez@gmail.com (password: password123) ⭐ **Con datos completos para mobile**\n\n## 💳 Stripe Testing (Sandbox)\nPara pruebas de suscripción premium:\n- **Visa**: `4242424242424242`\n- **Mastercard**: `5555555555554444`\n- **CVC**: `123`\n- **Fecha**: Cualquier fecha futura\n\n## 📧 Email Templates\nSistema completo de emails automáticos:\n- ✅ Cancelación de reservas con detalles de reembolso\n- ✅ Bienvenida premium con beneficios y facturación\n- ✅ Confirmación de reservas y pagos\n- ✅ Recordatorios de check-in\n\n## 📚 Documentación\n- **API Docs**: https://reservapp-web.vercel.app/api/swagger\n- **Health Check**: https://reservapp-web.vercel.app/api/health",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
     "version": {
       "major": 3,
-      "minor": 0,
+      "minor": 6,
       "patch": 0
     }
   },
   "variable": [
     {
       "key": "base_url",
-      "value": "http://localhost:3000/api",
+      "value": "https://reservapp-web.vercel.app/api",
       "type": "string",
-      "description": "Base URL para desarrollo local"
+      "description": "Base URL para producción (Vercel)"
     },
     {
       "key": "prod_url",
@@ -251,6 +251,32 @@
               "path": ["users", "{{user_id}}"]
             },
             "description": "Eliminar un usuario específico (soft delete - marca como inactivo)"
+          }
+        },
+        {
+          "name": "⭐ Upgrade a Premium",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"planType\": \"PREMIUM\",\n  \"paymentMethodId\": \"pm_card_visa_test\",\n  \"billingDetails\": {\n    \"name\": \"Juan Carlos Pérez\",\n    \"email\": \"juan.perez@gmail.com\",\n    \"phone\": \"+52 33 1234 5678\",\n    \"address\": {\n      \"line1\": \"Av. López Mateos 2375\",\n      \"city\": \"Guadalajara\",\n      \"state\": \"Jalisco\",\n      \"postal_code\": \"44550\",\n      \"country\": \"MX\"\n    }\n  }\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/users/upgrade-premium",
+              "host": ["{{base_url}}"],
+              "path": ["users", "upgrade-premium"]
+            },
+            "description": "🆕 Actualizar usuario a suscripción premium con integración completa de Stripe:\n\n**Planes Disponibles:**\n- **PREMIUM**: $299 MXN/mes\n- **PREMIUM_PLUS**: $499 MXN/mes\n- **ENTERPRISE**: $999 MXN/mes\n\n**Características:**\n- ✅ Integración real con Stripe (modo sandbox)\n- ✅ Creación automática de cliente Stripe\n- ✅ Configuración de método de pago predeterminado\n- ✅ Suscripción recurrente automática\n- ✅ Email de bienvenida premium automático\n- ✅ Actualización inmediata del estado del usuario\n\n**Beneficios Premium:**\n- Reservaciones ilimitadas\n- Soporte prioritario 24/7\n- Acceso a ofertas exclusivas\n- Cancelaciones flexibles\n- Dashboard avanzado\n- Notificaciones personalizadas\n\n**Tarjetas de Prueba (Stripe Test):**\n- Visa: `4242424242424242`\n- Mastercard: `5555555555554444`\n- CVC: `123`, Fecha: cualquier fecha futura\n\n**Respuesta incluye:**\n- Información completa de la suscripción\n- Detalles del usuario actualizado\n- Datos de facturación y próxima fecha de cobro"
           }
         }
       ],
@@ -517,7 +543,33 @@
               "host": ["{{base_url}}"],
               "path": ["reservations"]
             },
-            "description": "Crear una nueva reservación con pago automático integrado"
+            "description": "🆕 Crear una nueva reservación con procesamiento real de pagos Stripe:\n\n**Integración Completa de Stripe:**\n- ✅ Payment Intent automático en Stripe\n- ✅ Creación automática de cliente Stripe si no existe\n- ✅ Procesamiento inmediato del pago con tarjeta\n- ✅ Registro completo en tabla Payment con stripePaymentId\n- ✅ Estado de reserva automático basado en resultado del pago\n- ✅ Emails automáticos: confirmación de reserva + confirmación de pago\n\n**Estados Automáticos:**\n- Pago exitoso → Reserva CONFIRMED + emails enviados\n- Pago fallido → Reserva PENDING + no emails\n\n**Datos de Prueba Stripe:**\n- Visa: `4242424242424242`\n- Mastercard: `5555555555554444`\n- CVC: `123`, Fecha: cualquier fecha futura\n\n**Respuesta incluye:**\n- Datos completos de la reserva\n- Información del pago creado\n- Payment Intent de Stripe con client_secret\n- Manejo de errores específicos de Stripe\n\n**Campos Requeridos:**\n- `paymentInfo.paymentMethodId`: ID del método de pago de Stripe\n- Venue, servicio y fechas de check-in/out\n\n**IMPORTANTE:** Ahora los pagos SÍ se procesan realmente en Stripe (modo sandbox)"
+          }
+        },
+        {
+          "name": "❌ Cancelar Reservación",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"reason\": \"Cambio de planes - cancelación voluntaria del usuario\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/reservations/{{reservation_id}}/cancel",
+              "host": ["{{base_url}}"],
+              "path": ["reservations", "{{reservation_id}}", "cancel"]
+            },
+            "description": "🆕 Cancelar una reservación existente con cálculo automático de reembolso:\n\n**Política de Reembolso:**\n- Más de 48 horas antes: 100% reembolso\n- 24-48 horas antes: 50% reembolso  \n- Menos de 24 horas: Sin reembolso\n\n**Características:**\n- ✅ Email automático de confirmación de cancelación\n- ✅ Actualización automática del estado de la reserva\n- ✅ Cálculo de reembolso basado en política de tiempo\n- ✅ Usuarios solo pueden cancelar sus propias reservas\n- ✅ Admins pueden cancelar cualquier reserva\n\n**Respuesta incluye:**\n- Estado actualizado de la reserva\n- Monto de reembolso calculado\n- Fecha y razón de cancelación\n- Estado del proceso de reembolso"
           }
         }
       ],
@@ -836,9 +888,133 @@
             },
             "description": "Exportar logs del sistema en formato CSV o JSON"
           }
+        },
+        {
+          "name": "Notificaciones Admin - Listar",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/admin/notifications?page=1&limit=20&category=email&level=all&type=RESERVATION_CONFIRMATION",
+              "host": ["{{base_url}}"],
+              "path": ["admin", "notifications"],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1",
+                  "description": "Número de página"
+                },
+                {
+                  "key": "limit",
+                  "value": "20",
+                  "description": "Elementos por página (máx: 100)"
+                },
+                {
+                  "key": "isRead",
+                  "value": "false",
+                  "disabled": true,
+                  "description": "Filtrar por estado de lectura (true/false)"
+                },
+                {
+                  "key": "type",
+                  "value": "RESERVATION_CONFIRMATION",
+                  "description": "Tipo de notificación específico"
+                },
+                {
+                  "key": "category",
+                  "value": "email",
+                  "description": "Categoría: email (enviadas por email) o system (solo sistema)"
+                },
+                {
+                  "key": "level",
+                  "value": "all",
+                  "description": "Nivel: all, unread, read"
+                },
+                {
+                  "key": "startDate",
+                  "value": "2024-01-01T00:00:00Z",
+                  "disabled": true,
+                  "description": "Fecha inicio (ISO string)"
+                },
+                {
+                  "key": "endDate",
+                  "value": "2024-12-31T23:59:59Z",
+                  "disabled": true,
+                  "description": "Fecha fin (ISO string)"
+                },
+                {
+                  "key": "userId",
+                  "value": "{{user_id}}",
+                  "disabled": true,
+                  "description": "Filtrar por usuario específico"
+                },
+                {
+                  "key": "search",
+                  "value": "reserva",
+                  "disabled": true,
+                  "description": "Búsqueda en título y mensaje"
+                }
+              ]
+            },
+            "description": "Ver todas las notificaciones enviadas vía email y sistema. SUPER_ADMIN ve todas, ADMIN solo ve las relacionadas con sus venues/servicios."
+          }
+        },
+        {
+          "name": "Notificaciones Admin - Marcar como Leída",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"notificationIds\": [\"notification_123\", \"notification_456\"],\n  \"isRead\": true\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/admin/notifications",
+              "host": ["{{base_url}}"],
+              "path": ["admin", "notifications"]
+            },
+            "description": "Marcar notificaciones como leídas o no leídas (operación masiva). Solo se pueden actualizar notificaciones relacionadas con venues/servicios del admin."
+          }
+        },
+        {
+          "name": "Notificaciones Admin - Estadísticas",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/admin/notifications/stats?period=month&startDate=2024-01-01&endDate=2024-12-31",
+              "host": ["{{base_url}}"],
+              "path": ["admin", "notifications", "stats"],
+              "query": [
+                {
+                  "key": "period",
+                  "value": "month",
+                  "description": "Período: today, week, month, year"
+                },
+                {
+                  "key": "startDate",
+                  "value": "2024-01-01",
+                  "disabled": true,
+                  "description": "Fecha inicio personalizada (ISO string)"
+                },
+                {
+                  "key": "endDate",
+                  "value": "2024-12-31",
+                  "disabled": true,
+                  "description": "Fecha fin personalizada (ISO string)"
+                }
+              ]
+            },
+            "description": "Obtener estadísticas completas de notificaciones: totales, por tipo, por día, usuarios más activos, tipos de email. SUPER_ADMIN ve todo, ADMIN solo sus venues."
+          }
         }
       ],
-      "description": "Endpoints administrativos avanzados: estadísticas, pagos, logs del sistema"
+      "description": "Endpoints administrativos avanzados: estadísticas, pagos, logs del sistema, gestión de notificaciones"
     },
     {
       "name": "💳 Payments & Subscription",
@@ -901,11 +1077,261 @@
                 }
               ]
             },
-            "description": "Obtener notificaciones del usuario autenticado con filtros"
+            "description": "🆕 Obtener notificaciones del usuario autenticado con filtros avanzados:\n\n**Funcionalidades:**\n- ✅ Filtrado por estado de lectura (unread=true/false)\n- ✅ Filtrado por tipo de notificación\n- ✅ Paginación completa con límites\n- ✅ Contador de notificaciones no leídas\n- ✅ Ordenamiento por fecha de creación (más recientes primero)\n\n**Tipos de Notificación:**\n- `RESERVATION_CONFIRMATION` - Confirmaciones de reserva\n- `PAYMENT_CONFIRMATION` - Confirmaciones de pago\n- `RESERVATION_CANCELLATION` - Cancelaciones de reserva\n\n**Parámetros de Filtrado:**\n- `unread`: `true` (solo no leídas), `false` (solo leídas), omitir (todas)\n- `type`: Filtrar por tipo específico\n- `page`: Número de página (default: 1)\n- `limit`: Elementos por página (default: 20, máximo: 100)\n\n**Respuesta incluye:**\n- Array de notificaciones con metadata completa\n- Información de paginación\n- Contador de notificaciones no leídas\n- Timestamps de creación y actualización\n\n**Ejemplos de Uso:**\n- Solo no leídas: `?unread=true`\n- Solo confirmaciones: `?type=RESERVATION_CONFIRMATION`\n- Paginado: `?page=1&limit=10`\n\n**Autenticación:** Requiere JWT token de usuario"
+          }
+        },
+        {
+          "name": "Crear Notificación",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"userId\": \"{{user_id}}\",\n  \"type\": \"RESERVATION_CONFIRMATION\",\n  \"title\": \"🎉 ¡Reserva confirmada!\",\n  \"message\": \"Tu reserva en Hotel Plaza para Suite Deluxe ha sido confirmada. Código: RES123ABC\",\n  \"metadata\": {\n    \"reservationId\": \"res_123\",\n    \"confirmationId\": \"RES123ABC\",\n    \"venueName\": \"Hotel Plaza\",\n    \"serviceName\": \"Suite Deluxe\",\n    \"checkInDate\": \"2025-03-15T15:00:00Z\",\n    \"totalAmount\": 2500\n  }\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/notifications",
+              "host": ["{{base_url}}"],
+              "path": ["notifications"]
+            },
+            "description": "🆕 Crear nueva notificación para un usuario específico:\n\n**Casos de Uso:**\n- Administradores enviando notificaciones manuales\n- Sistema automatizado creando notificaciones\n- Integraciones externas notificando usuarios\n\n**Validaciones:**\n- Tipo de notificación válido\n- Usuario destinatario debe existir\n- Campos requeridos: userId, type, title, message\n\n**Tipos Válidos:**\n- `RESERVATION_CONFIRMATION`\n- `PAYMENT_CONFIRMATION` \n- `RESERVATION_CANCELLATION`\n\n**Metadata Opcional:**\n- Información adicional específica del tipo\n- Datos de reserva, pago, etc.\n- Formato JSON flexible\n\n**Respuesta:**\n- Notificación creada con información completa\n- Datos del usuario destinatario\n- ID único de la notificación\n\n**Automatización:**\nEste endpoint es usado automáticamente por:\n- Creación de reservas (→ RESERVATION_CONFIRMATION)\n- Procesamiento de pagos (→ PAYMENT_CONFIRMATION)\n- Cancelación de reservas (→ RESERVATION_CANCELLATION)"
+          }
+        },
+        {
+          "name": "Marcar Notificaciones como Leídas",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"notificationIds\": [\"notification_id_1\", \"notification_id_2\"]\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/notifications",
+              "host": ["{{base_url}}"],
+              "path": ["notifications"]
+            },
+            "description": "🆕 Marcar notificaciones como leídas:\n\n**Opciones de Marcado:**\n\n1. **Notificaciones específicas:**\n```json\n{\n  \"notificationIds\": [\"notif_123\", \"notif_456\"]\n}\n```\n\n2. **Todas las notificaciones no leídas:**\n```json\n{\n  \"markAllAsRead\": true\n}\n```\n\n**Seguridad:**\n- Solo puede marcar notificaciones propias\n- Validación de permisos automática\n- Filtrado por userId del token JWT\n\n**Respuesta:**\n- Contador de notificaciones actualizadas\n- Mensaje de confirmación\n- Estado de la operación\n\n**Casos de Uso:**\n- Usuario marca notificaciones individuales\n- Función \"Marcar todas como leídas\"\n- Apps móviles sincronizando estado\n- Limpieza automática de notificaciones\n\n**UX Recomendada:**\n- Marcar como leída al abrir/ver\n- Botón para marcar todas\n- Indicador visual de no leídas\n- Sincronización entre dispositivos"
           }
         }
       ],
-      "description": "Sistema de notificaciones en tiempo real"
+      "description": "🆕 Sistema completo de notificaciones en tiempo real con funcionalidad completa:\n\n**Características:**\n- ✅ Creación automática en reservas y pagos\n- ✅ Filtrado avanzado y paginación\n- ✅ Gestión de estado de lectura\n- ✅ Tipos específicos con metadata\n- ✅ Seguridad por usuario\n- ✅ API completa (GET, POST, PATCH)\n\n**Datos de Prueba:**\nJuan Pérez (juan.perez@gmail.com) tiene 5 notificaciones de ejemplo creadas automáticamente para testing."
+    },
+    {
+      "name": "📱 Mobile API",
+      "item": [
+        {
+          "name": "Dashboard Usuario Móvil",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "// Validar estructura del dashboard móvil",
+                  "pm.test('✅ Mobile dashboard structure is correct', function () {",
+                  "    const response = pm.response.json();",
+                  "    pm.expect(response.success).to.be.true;",
+                  "    pm.expect(response.data).to.exist;",
+                  "    ",
+                  "    const data = response.data;",
+                  "    pm.expect(data.user).to.exist;",
+                  "    pm.expect(data.statistics).to.exist;",
+                  "    pm.expect(data.favoriteVenues).to.be.an('array');",
+                  "    pm.expect(data.recentReservations).to.be.an('array');",
+                  "});",
+                  "",
+                  "pm.test('📊 Statistics contain required fields', function () {",
+                  "    const stats = pm.response.json().data.statistics;",
+                  "    pm.expect(stats.totalReservations).to.be.a('number');",
+                  "    pm.expect(stats.upcomingReservations).to.be.a('number');",
+                  "    pm.expect(stats.completedReservations).to.be.a('number');",
+                  "    pm.expect(stats.favoriteVenues).to.be.a('number');",
+                  "    pm.expect(stats.totalSpent).to.exist;",
+                  "    pm.expect(stats.unreadNotifications).to.be.a('number');",
+                  "});",
+                  "",
+                  "// Log de estadísticas para debugging",
+                  "const dashboardData = pm.response.json().data;",
+                  "console.log('📱 Dashboard Data Summary:');",
+                  "console.log('👤 Usuario:', dashboardData.user.firstName, dashboardData.user.lastName);",
+                  "console.log('📊 Total reservaciones:', dashboardData.statistics.totalReservations);",
+                  "console.log('⏰ Próximas:', dashboardData.statistics.upcomingReservations);",
+                  "console.log('✅ Completadas:', dashboardData.statistics.completedReservations);",
+                  "console.log('💖 Favoritos:', dashboardData.statistics.favoriteVenues);",
+                  "console.log('💰 Total gastado:', dashboardData.statistics.totalSpent);",
+                  "console.log('🔔 Notificaciones no leídas:', dashboardData.statistics.unreadNotifications);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/mobile/user/dashboard",
+              "host": ["{{base_url}}"],
+              "path": ["mobile", "user", "dashboard"]
+            },
+            "description": "Obtener dashboard completo para aplicación móvil del usuario autenticado. Incluye estadísticas, próximas reservaciones, favoritos y más. Este endpoint está optimizado para apps móviles con toda la información necesaria en una sola llamada.\n\n**Funcionalidades:**\n- 📊 Estadísticas del usuario (reservaciones, gastos, favoritos)\n- 🏨 Próxima reservación con detalles completos\n- 📅 Historial de reservaciones recientes (últimas 5)\n- 💖 Lista de lugares favoritos con stats\n- 🔔 Contador de notificaciones no leídas\n- 👤 Información básica del usuario\n\n**Datos retornados:**\n- Total de reservaciones, próximas, completadas\n- Total gastado en la plataforma\n- Lugares favoritos con información detallada\n- Próxima reservación programada\n- Reservaciones recientes con venue y servicio\n\n**Usuario demo:** `juan.perez@gmail.com` tiene datos completos para testing."
+          }
+        }
+      ],
+      "description": "Endpoints específicos para aplicaciones móviles con datos optimizados"
+    },
+    {
+      "name": "❌ Cancelaciones & Reembolsos",
+      "item": [
+        {
+          "name": "Cancelar Reservación",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "// Validar cancelación exitosa",
+                  "pm.test('✅ Cancellation successful', function () {",
+                  "    pm.expect(pm.response.code).to.equal(200);",
+                  "    const response = pm.response.json();",
+                  "    pm.expect(response.success).to.be.true;",
+                  "    pm.expect(response.data).to.exist;",
+                  "});",
+                  "",
+                  "pm.test('📋 Cancellation data structure', function () {",
+                  "    const data = pm.response.json().data;",
+                  "    pm.expect(data.status).to.equal('CANCELLED');",
+                  "    pm.expect(data.cancelledAt).to.exist;",
+                  "    pm.expect(data.cancelReason).to.exist;",
+                  "    pm.expect(data.refundAmount).to.exist;",
+                  "    pm.expect(data.refundStatus).to.exist;",
+                  "});",
+                  "",
+                  "// Log cancellation details",
+                  "const cancelData = pm.response.json().data;",
+                  "console.log('❌ Cancellation Details:');",
+                  "console.log('🆔 Reservation ID:', cancelData.reservationId);",
+                  "console.log('📅 Cancelled At:', cancelData.cancelledAt);",
+                  "console.log('📝 Reason:', cancelData.cancelReason);",
+                  "console.log('💰 Refund Amount:', cancelData.refundAmount);",
+                  "console.log('🔄 Refund Status:', cancelData.refundStatus);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\\n  \\\"reason\\\": \\\"Cambio de planes por emergencia familiar\\\"\\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/reservations/{{reservation_id}}/cancel",
+              "host": ["{{base_url}}"],
+              "path": ["reservations", "{{reservation_id}}", "cancel"]
+            },
+            "description": "Cancelar una reservación existente con cálculo automático de reembolso basado en política de cancelación.\\n\\n**Política de Reembolso:**\\n- ⏰ Más de 48 horas antes: 100% reembolso\\n- 🕐 24-48 horas antes: 50% reembolso\\n- ⚠️ Menos de 24 horas: Sin reembolso\\n\\n**Funcionalidades:**\\n- ✅ Validación de permisos (usuario propietario o admin)\\n- 💰 Cálculo automático de reembolso\\n- 📧 Email de confirmación automático\\n- 🔄 Actualización de estado en base de datos\\n- 💳 Procesamiento de reembolso (integración con Stripe)\\n\\n**Respuesta incluye:**\\n- Estado actualizado de la reservación\\n- Monto y estado del reembolso\\n- Fecha y razón de cancelación\\n- ID de confirmación para seguimiento"
+          }
+        }
+      ],
+      "description": "Gestión de cancelaciones de reservaciones con reembolsos automáticos"
+    },
+    {
+      "name": "⭐ Premium & Suscripciones",
+      "item": [
+        {
+          "name": "Upgrade a Premium",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "// Validar upgrade exitoso",
+                  "pm.test('✅ Premium upgrade successful', function () {",
+                  "    pm.expect(pm.response.code).to.equal(200);",
+                  "    const response = pm.response.json();",
+                  "    pm.expect(response.success).to.be.true;",
+                  "    pm.expect(response.data).to.exist;",
+                  "});",
+                  "",
+                  "pm.test('👤 User is now premium', function () {",
+                  "    const user = pm.response.json().data.user;",
+                  "    pm.expect(user.isPremium).to.be.true;",
+                  "});",
+                  "",
+                  "pm.test('📋 Subscription data structure', function () {",
+                  "    const subscription = pm.response.json().data.subscription;",
+                  "    pm.expect(subscription.stripeSubscriptionId).to.exist;",
+                  "    pm.expect(subscription.status).to.exist;",
+                  "    pm.expect(subscription.planType).to.exist;",
+                  "    pm.expect(subscription.amount).to.exist;",
+                  "    pm.expect(subscription.currentPeriodEnd).to.exist;",
+                  "});",
+                  "",
+                  "// Log premium upgrade details",
+                  "const upgradeData = pm.response.json().data;",
+                  "console.log('⭐ Premium Upgrade Details:');",
+                  "console.log('👤 User:', upgradeData.user.firstName, upgradeData.user.lastName);",
+                  "console.log('📦 Plan:', upgradeData.subscription.planType);",
+                  "console.log('💰 Amount:', upgradeData.subscription.amount, upgradeData.subscription.currency);",
+                  "console.log('🔄 Status:', upgradeData.subscription.status);",
+                  "console.log('📅 Next Billing:', upgradeData.subscription.currentPeriodEnd);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\\n  \\\"planType\\\": \\\"PREMIUM\\\",\\n  \\\"paymentMethodId\\\": \\\"pm_card_visa\\\",\\n  \\\"billingDetails\\\": {\\n    \\\"name\\\": \\\"Juan Pérez\\\",\\n    \\\"email\\\": \\\"juan.perez@gmail.com\\\",\\n    \\\"phone\\\": \\\"+52 33 1234 5678\\\"\\n  }\\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/users/upgrade-premium",
+              "host": ["{{base_url}}"],
+              "path": ["users", "upgrade-premium"]
+            },
+            "description": "Actualizar usuario a plan premium con integración real de Stripe (sandbox).\\n\\n**Planes Disponibles:**\\n- 💎 **PREMIUM**: $299 MXN/mes\\n- 🚀 **PREMIUM_PLUS**: $499 MXN/mes\\n- 🏢 **ENTERPRISE**: $999 MXN/mes\\n\\n**Funcionalidades:**\\n- 💳 Integración real con Stripe (sandbox)\\n- 🔒 Validación de método de pago\\n- 👤 Creación automática de customer en Stripe\\n- 📧 Email de bienvenida premium\\n- 💾 Guardado de suscripción en base de datos\\n- ⭐ Actualización inmediata a usuario premium\\n\\n**Beneficios Premium:**\\n- ✅ Reservaciones ilimitadas\\n- 🎧 Soporte prioritario 24/7\\n- 🎁 Acceso a ofertas exclusivas\\n- 🔄 Cancelaciones flexibles\\n- 📊 Dashboard avanzado\\n- 🔔 Notificaciones personalizadas\\n\\n**Datos de prueba Stripe:**\\n- **Visa**: `4242424242424242`\\n- **Mastercard**: `5555555555554444`\\n- **CVC**: `123`\\n- **Fecha**: Cualquier fecha futura"
+          }
+        }
+      ],
+      "description": "Gestión de suscripciones premium con Stripe real (sandbox)"
     },
     {
       "name": "⚙️ System Health & Utils",
@@ -957,9 +1383,9 @@
           "if (currentUrl.includes('localhost')) {",
           "    pm.collectionVariables.set('base_url', 'http://localhost:3000/api');",
           "    console.log('🏠 Ambiente: Desarrollo Local');",
-          "} else if (currentUrl.includes('vercel.app')) {",
+          "} else {",
           "    pm.collectionVariables.set('base_url', 'https://reservapp-web.vercel.app/api');",
-          "    console.log('🌐 Ambiente: Producción Vercel');",
+          "    console.log('🌐 Ambiente: Producción (URL por defecto)');",
           "}",
           "",
           "// Auto-configurar variables de test si no existen",
@@ -1098,6 +1524,332 @@
           "console.log(`${statusEmoji} Request completed: ${pm.response.code} ${pm.response.status} in ${pm.response.responseTime}ms`);"
         ]
       }
+    },
+    {
+      "name": "💰 Payments & Receipts (Users)",
+      "item": [
+        {
+          "name": "Get User Payments",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/payments?page=1&limit=20&status=COMPLETED&type=reservation",
+              "host": ["{{base_url}}"],
+              "path": ["payments"],
+              "query": [
+                {"key": "page", "value": "1", "description": "Page number"},
+                {"key": "limit", "value": "20", "description": "Items per page (max 50)"},
+                {"key": "status", "value": "COMPLETED", "description": "Filter by status"},
+                {"key": "type", "value": "reservation", "description": "reservation, subscription, business"},
+                {"key": "startDate", "value": "2025-01-01", "disabled": true},
+                {"key": "endDate", "value": "2025-01-31", "disabled": true}
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Payment Details",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/payments/{{payment_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["payments", "{{payment_id}}"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Cancel Payment",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"action\": \"cancel\",\n  \"reason\": \"User cancellation\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/payments/{{payment_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["payments", "{{payment_id}}"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get User Receipts",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/receipts?page=1&limit=20&type=PAYMENT&status=VERIFIED",
+              "host": ["{{base_url}}"],
+              "path": ["receipts"],
+              "query": [
+                {"key": "page", "value": "1"},
+                {"key": "limit", "value": "20"},
+                {"key": "type", "value": "PAYMENT", "description": "PAYMENT, INVOICE, REFUND, CREDIT_NOTE"},
+                {"key": "status", "value": "VERIFIED", "description": "PENDING, VERIFIED, REJECTED"},
+                {"key": "paymentId", "value": "payment_123", "disabled": true}
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Receipt Details",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/receipts/{{receipt_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["receipts", "{{receipt_id}}"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Download Receipt PDF",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/receipts/{{receipt_id}}/download",
+              "host": ["{{base_url}}"],
+              "path": ["receipts", "{{receipt_id}}", "download"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Request New Receipt",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"paymentId\": \"{{payment_id}}\",\n  \"type\": \"PAYMENT\",\n  \"metadata\": {\n    \"requestReason\": \"Tax purposes\"\n  }\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/receipts",
+              "host": ["{{base_url}}"],
+              "path": ["receipts"]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "🔧 Admin Payments & Invoices",
+      "item": [
+        {
+          "name": "Get All Payments (Admin)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/admin/payments?page=1&limit=20&status=ALL&search=juan",
+              "host": ["{{base_url}}"],
+              "path": ["admin", "payments"],
+              "query": [
+                {"key": "page", "value": "1"},
+                {"key": "limit", "value": "20"},
+                {"key": "status", "value": "ALL", "description": "COMPLETED, PENDING, FAILED, etc."},
+                {"key": "search", "value": "juan", "description": "Search by user name/email"},
+                {"key": "venueId", "value": "venue_123", "disabled": true},
+                {"key": "startDate", "value": "2025-01-01", "disabled": true},
+                {"key": "endDate", "value": "2025-01-31", "disabled": true}
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Payment Statistics (Admin)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"action\": \"getStats\",\n  \"filters\": {\n    \"startDate\": \"2025-01-01\",\n    \"endDate\": \"2025-01-31\"\n  }\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/admin/payments",
+              "host": ["{{base_url}}"],
+              "path": ["admin", "payments"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Refund Payment (Admin)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"action\": \"refund\",\n  \"paymentId\": \"{{payment_id}}\",\n  \"amount\": 100.00,\n  \"reason\": \"Customer request - unsatisfactory service\",\n  \"notes\": \"Processed by admin due to customer complaint\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/admin/payments/actions",
+              "host": ["{{base_url}}"],
+              "path": ["admin", "payments", "actions"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Generate Stripe Invoice",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"description\": \"Factura por servicios premium - ReservApp\",\n  \"dueDate\": \"2025-02-15T00:00:00.000Z\",\n  \"autoFinalize\": true,\n  \"metadata\": {\n    \"invoiceType\": \"service_charge\",\n    \"departmentCode\": \"premium_services\"\n  }\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/admin/payments/{{payment_id}}/invoice",
+              "host": ["{{base_url}}"],
+              "path": ["admin", "payments", "{{payment_id}}", "invoice"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Stripe Invoice",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/admin/payments/{{payment_id}}/invoice",
+              "host": ["{{base_url}}"],
+              "path": ["admin", "payments", "{{payment_id}}", "invoice"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Venues for Filtering",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/admin/payments/actions",
+              "host": ["{{base_url}}"],
+              "path": ["admin", "payments", "actions"]
+            }
+          },
+          "response": []
+        }
+      ]
     }
   ]
 }

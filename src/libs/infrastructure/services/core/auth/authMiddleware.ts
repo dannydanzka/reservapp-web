@@ -37,6 +37,7 @@ export class AuthMiddleware {
 
         // This would come from database
         isActive: true,
+        isPremium: false,
         lastName: '',
         password: '',
         phone: '',
@@ -131,6 +132,7 @@ export class AuthMiddleware {
 
         // This would come from database
         isActive: true,
+        isPremium: false,
         lastName: '',
         password: '',
         phone: '',
@@ -141,6 +143,21 @@ export class AuthMiddleware {
       };
     } catch {
       return null;
+    }
+  }
+
+  /**
+   * Validate request and return user with success status
+   */
+  static async validateRequest(
+    request: NextRequest
+  ): Promise<{ success: boolean; user?: User; error?: string }> {
+    try {
+      const user = await AuthMiddleware.verifyToken(request);
+      return { success: true, user };
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Error de autenticación';
+      return { error: message, success: false };
     }
   }
 }
