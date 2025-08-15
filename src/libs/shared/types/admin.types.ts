@@ -41,32 +41,102 @@ export interface AdminPaymentView {
   amount: number;
   currency: string;
   status: PaymentStatus;
-  userName: string;
-  userEmail: string;
-  venueName: string;
-  serviceName: string;
-  reservationId: string;
   createdAt: string;
+  transactionDate?: string;
+  updatedAt: string;
+  description?: string;
+  metadata?: any;
+  stripePaymentId?: string;
+  netAmount?: number;
+  platformFee?: number;
+  platformCommissionRate?: number;
+  user: {
+    id: string;
+    firstName: string;
+    lastName: string;
+    fullName: string;
+    email: string;
+    stripeCustomerId?: string;
+  };
+  venue: {
+    id: string;
+    name: string;
+    category: string;
+  };
+  service: {
+    id: string;
+    name: string;
+    category: string;
+  };
+  reservation: {
+    id: string;
+    checkInDate: string;
+    checkOutDate: string;
+    guests: number;
+    status: string;
+  };
+  business?: {
+    id: string;
+    name: string;
+    email: string;
+    ownerName: string;
+    type: string;
+  };
+  receipt?: {
+    id: string;
+    receiptNumber: string;
+    status: string;
+    pdfUrl?: string;
+    isVerified?: boolean;
+  };
+  stripeData?: {
+    id: string;
+    amount: number;
+    currency: string;
+    status: string;
+    created: Date;
+    paymentMethod?: string;
+    charges?: any[];
+    fees?: any;
+  };
+  stripeCustomer?: {
+    id: string;
+    email?: string;
+    name?: string;
+    defaultSource?: string;
+  };
   paymentMethod?: {
     type: string;
     brand?: string;
     last4?: string;
   };
+  // Legacy fields for backward compatibility
+  userName?: string;
+  userEmail?: string;
+  venueName?: string;
+  serviceName?: string;
+  reservationId?: string;
 }
 
 export interface AdminPaymentStats {
-  totalAmount: number;
-  totalPayments: number;
-  completedPayments: number;
-  pendingPayments: number;
-  failedPayments: number;
-  refundedPayments: number;
-  pendingAmount: number;
+  totalRevenue: number;
+  totalNetRevenue: number;
+  totalPlatformFees: number;
+  averageTransaction: number;
+  monthlyGrowth: number;
+  totalTransactions: number;
+  completedTransactions: number;
+  pendingTransactions: number;
+  failedTransactions: number;
+  refundedTransactions: number;
   completedAmount: number;
+  pendingAmount: number;
   failedAmount: number;
   refundedAmount: number;
-  averageAmount: number;
   successRate: number;
+  failureRate: number;
+  refundRate: number;
+  platformCommissionRate: number;
 }
 
 export interface AdminPaymentFilters {
@@ -94,6 +164,13 @@ export interface PaginatedAdminPayments {
 }
 
 export type PaymentStatus =
+  | 'PENDING'
+  | 'PROCESSING'
+  | 'COMPLETED'
+  | 'FAILED'
+  | 'CANCELLED'
+  | 'REFUNDED'
+  | 'PARTIALLY_REFUNDED'
   | 'pending'
   | 'processing'
   | 'completed'

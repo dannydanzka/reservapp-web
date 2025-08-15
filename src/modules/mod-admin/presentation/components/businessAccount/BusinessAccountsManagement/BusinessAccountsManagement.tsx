@@ -2,20 +2,8 @@
 
 import React, { useEffect, useMemo, useState } from 'react';
 
-import {
-  ArrowUpDown,
-  Building2,
-  DollarSign,
-  Eye,
-  Filter,
-  MapPin,
-  MoreHorizontal,
-  Search,
-  TrendingUp,
-  Users,
-} from 'lucide-react';
+import { ArrowUpDown } from 'lucide-react';
 
-import { Button } from '@ui/Button';
 import { useAuth } from '@providers/AuthProvider';
 import { useToast } from '@providers/ToastProvider';
 import { useTranslation } from '@i18n/index';
@@ -27,7 +15,6 @@ import type {
 } from './BusinessAccountsManagement.interfaces';
 
 import {
-  ActionButton,
   BusinessDetails,
   BusinessInfo,
   BusinessName,
@@ -253,11 +240,6 @@ export const BusinessAccountsManagement: React.FC<BusinessAccountsManagementProp
     }));
   };
 
-  const handleViewBusiness = (businessId: string) => {
-    // TODO: Navigate to business details view
-    console.log('View business:', businessId);
-  };
-
   if (loading) {
     return (
       <LoadingContainer>
@@ -359,7 +341,6 @@ export const BusinessAccountsManagement: React.FC<BusinessAccountsManagementProp
                 <TableHeaderCell onClick={() => handleSort('createdAt')}>
                   {t('admin.businessAccounts.table.joined')} <ArrowUpDown size={14} />
                 </TableHeaderCell>
-                <TableHeaderCell>{t('admin.businessAccounts.table.actions')}</TableHeaderCell>
               </TableRow>
             </TableHeader>
             <tbody>
@@ -439,13 +420,6 @@ export const BusinessAccountsManagement: React.FC<BusinessAccountsManagementProp
                       month: 'short',
                       year: 'numeric',
                     })}
-                  </TableCell>
-
-                  <TableCell>
-                    <ActionButton onClick={() => handleViewBusiness(account.id)}>
-                      <Eye size={14} />
-                      {t('common.view')}
-                    </ActionButton>
                   </TableCell>
                 </TableRow>
               ))}

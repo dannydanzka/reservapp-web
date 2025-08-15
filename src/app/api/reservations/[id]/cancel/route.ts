@@ -148,19 +148,19 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
       try {
         await prisma.notification.create({
           data: {
-            userId: reservation.user.id,
-            type: 'RESERVATION_CANCELLATION',
-            title: '❌ Reserva cancelada',
-            message: `Tu reserva en ${reservation.venue.name} ha sido cancelada. ${refundAmount > 0 ? `Reembolso de ${refundAmount.toLocaleString('es-MX', { style: 'currency', currency: 'MXN' })} será procesado.` : 'Sin reembolso aplicable.'}`,
+            message: `Tu reserva en ${reservation.venue.name} ha sido cancelada. ${refundAmount > 0 ? `Reembolso de ${refundAmount.toLocaleString('es-MX', { currency: 'MXN', style: 'currency' })} será procesado.` : 'Sin reembolso aplicable.'}`,
             metadata: {
-              reservationId: reservation.id,
-              confirmationId: reservation.confirmationId,
-              venueName: reservation.venue.name,
-              serviceName: reservation.service.name,
               cancelReason: reason || 'Cancelación solicitada',
-              refundAmount: refundAmount,
               cancelledAt: now.toISOString(),
+              confirmationId: reservation.confirmationId,
+              refundAmount: refundAmount,
+              reservationId: reservation.id,
+              serviceName: reservation.service.name,
+              venueName: reservation.venue.name,
             },
+            title: '❌ Reserva cancelada',
+            type: 'RESERVATION_CANCELLATION',
+            userId: reservation.user.id,
           },
         });
       } catch (notificationError) {

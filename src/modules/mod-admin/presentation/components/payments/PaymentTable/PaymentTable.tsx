@@ -24,6 +24,41 @@ import type { PaymentTableProps, StatusConfig } from './PaymentTable.interfaces'
 import * as S from './PaymentTable.styled';
 
 const STATUS_CONFIG: Record<PaymentStatus, StatusConfig> = {
+  CANCELLED: {
+    color: 'secondary',
+    icon: XCircle,
+    label: 'Cancelado',
+  },
+  COMPLETED: {
+    color: 'primary',
+    icon: CheckCircle,
+    label: 'Completado',
+  },
+  FAILED: {
+    color: 'error',
+    icon: XCircle,
+    label: 'Fallido',
+  },
+  PARTIALLY_REFUNDED: {
+    color: 'secondary',
+    icon: RotateCcw,
+    label: 'Parcialmente Reembolsado',
+  },
+  PENDING: {
+    color: 'secondary',
+    icon: Clock,
+    label: 'Pendiente',
+  },
+  PROCESSING: {
+    color: 'primary',
+    icon: RefreshCw,
+    label: 'Procesando',
+  },
+  REFUNDED: {
+    color: 'secondary',
+    icon: RotateCcw,
+    label: 'Reembolsado',
+  },
   cancelled: {
     color: 'secondary',
     icon: XCircle,
@@ -103,7 +138,7 @@ export const PaymentTable = ({
     actions.push({
       enabled: true,
       id: `view_${payment.id}`,
-      label: t('admin.payments.actions.viewReservation'),
+      label: 'Ver Reserva',
       type: 'view',
     });
 
@@ -146,7 +181,7 @@ export const PaymentTable = ({
         break;
       case 'view_reservation':
         // Navigate to reservation details
-        window.open(`/admin/reservations/${payment.reservationId}`, '_blank');
+        window.open(`/admin/reservations/${payment.reservation?.id}`, '_blank');
         break;
     }
   };
@@ -177,7 +212,7 @@ export const PaymentTable = ({
         <S.EmptyIcon>
           <AlertTriangle />
         </S.EmptyIcon>
-        <S.EmptyTitle>{t('admin.payments.table.noResults')}</S.EmptyTitle>
+        <S.EmptyTitle>Sin resultados</S.EmptyTitle>
         <S.EmptyDescription>{t('admin.payments.table.noResultsDescription')}</S.EmptyDescription>
       </S.EmptyStateContainer>
     );
@@ -190,7 +225,7 @@ export const PaymentTable = ({
         <S.Table>
           <S.TableHeader>
             <S.TableHeaderRow>
-              <S.TableHeaderCell>{t('admin.payments.table.payment')}</S.TableHeaderCell>
+              <S.TableHeaderCell>Pago</S.TableHeaderCell>
               <S.TableHeaderCell>{t('admin.payments.table.amount')}</S.TableHeaderCell>
               <S.TableHeaderCell>{t('admin.payments.table?.status')}</S.TableHeaderCell>
               <S.TableHeaderCell>{t('admin.payments.table.customer')}</S.TableHeaderCell>
@@ -217,7 +252,7 @@ export const PaymentTable = ({
                       </S.PaymentIcon>
                       <S.PaymentDetails>
                         <S.PaymentId>{payment.id.slice(-8)}</S.PaymentId>
-                        <S.ServiceName>{payment.serviceName}</S.ServiceName>
+                        <S.ServiceName>{payment.service?.name}</S.ServiceName>
                         {payment.paymentMethod && (
                           <S.PaymentMethod>
                             {payment.paymentMethod.brand} ****{payment.paymentMethod.last4}
@@ -243,14 +278,14 @@ export const PaymentTable = ({
                   {/* Customer */}
                   <S.TableCell>
                     <S.CustomerInfo>
-                      <S.CustomerName>{payment.userName}</S.CustomerName>
-                      <S.CustomerEmail>{payment.userEmail}</S.CustomerEmail>
+                      <S.CustomerName>{payment.user?.fullName}</S.CustomerName>
+                      <S.CustomerEmail>{payment.user?.email}</S.CustomerEmail>
                     </S.CustomerInfo>
                   </S.TableCell>
 
                   {/* Venue */}
                   <S.TableCell>
-                    <S.VenueName>{payment.venueName}</S.VenueName>
+                    <S.VenueName>{payment.venue?.name}</S.VenueName>
                   </S.TableCell>
 
                   {/* Date */}

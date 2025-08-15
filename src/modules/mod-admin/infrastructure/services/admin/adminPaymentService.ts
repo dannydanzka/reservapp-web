@@ -5,6 +5,7 @@ import {
   AdminVenueOption,
   PaginatedAdminPayments,
 } from '@shared/types/admin.types';
+import { authFetch } from '@libs/infrastructure/services/core/http/authInterceptor';
 
 class AdminPaymentService {
   private readonly baseUrl = process.env.NEXT_PUBLIC_API_URL || '/api';
@@ -13,22 +14,16 @@ class AdminPaymentService {
     const searchParams = new URLSearchParams();
 
     // Add filters to search params
-    if (filters.venueId) searchParams.append('venue', filters.venueId);
+    if (filters.venueId) searchParams.append('venueId', filters.venueId);
     if (filters?.status) searchParams.append('status', filters?.status);
-    if (filters.startDate) searchParams.append('dateFrom', filters.startDate);
-    if (filters.endDate) searchParams.append('dateTo', filters.endDate);
+    if (filters.startDate) searchParams.append('startDate', filters.startDate);
+    if (filters.endDate) searchParams.append('endDate', filters.endDate);
     if (filters.userId) searchParams.append('userId', filters.userId);
-    if (filters.amount?.min) searchParams.append('minAmount', filters.amount.min.toString());
-    if (filters.amount?.max) searchParams.append('maxAmount', filters.amount.max.toString());
+    if (filters.search) searchParams.append('search', filters.search);
     if (filters.page) searchParams.append('page', filters.page.toString());
     if (filters.limit) searchParams.append('limit', filters.limit.toString());
 
-    // Add admin flag for detailed information
-    searchParams.append('includeDetails', 'true');
-    searchParams.append('admin', 'true');
-
-    const response = await fetch(`${this.baseUrl}/payments?${searchParams.toString()}`, {
-      credentials: 'include',
+    const response = await authFetch(`${this.baseUrl}/admin/payments?${searchParams.toString()}`, {
       headers: {
         'Content-Type': 'application/json',
       },
@@ -42,29 +37,31 @@ class AdminPaymentService {
   }
 
   async getPaymentStats(filters?: any): Promise<AdminPaymentStats> {
-    const searchParams = new URLSearchParams();
-
-    if (filters?.venue) searchParams.append('venue', filters.venue);
-    if (filters?.dateFrom) searchParams.append('dateFrom', filters.dateFrom);
-    if (filters?.dateTo) searchParams.append('dateTo', filters.dateTo);
-
-    const response = await fetch(`${this.baseUrl}/payments/stats?${searchParams.toString()}`, {
-      credentials: 'include',
+    const response = await authFetch(`${this.baseUrl}/admin/payments`, {
+      body: JSON.stringify({
+        action: 'getStats',
+        filters: {
+          endDate: filters?.endDate || filters?.dateTo,
+          startDate: filters?.startDate || filters?.dateFrom,
+          venue: filters?.venue || filters?.venueId,
+        },
+      }),
       headers: {
         'Content-Type': 'application/json',
       },
+      method: 'POST',
     });
 
     if (!response.ok) {
       throw new Error(`Failed to fetch payment stats: ${response.statusText}`);
     }
 
-    return response.json();
+    const result = await response.json();
+    return result.data;
   }
 
   async getVenues(): Promise<AdminVenueOption[]> {
-    const response = await fetch(`${this.baseUrl}/admin/venues`, {
-      credentials: 'include',
+    const response = await authFetch(`${this.baseUrl}/admin/payments/actions`, {
       headers: {
         'Content-Type': 'application/json',
       },
@@ -75,21 +72,17 @@ class AdminPaymentService {
     }
 
     const data = await response.json();
-    return data.venues || data;
+    return data.data || data.venues || data;
   }
 
   async processRefund(data: any): Promise<AdminPaymentView> {
-    const response = await fetch(`${this.baseUrl}/payments/${data.paymentId}/refund`, {
+    const response = await authFetch(`${this.baseUrl}/admin/payments/actions`, {
       body: JSON.stringify({
+        action: 'refund',
         amount: data.amount,
-        metadata: {
-          ...data.metadata,
-          adminRefund: true,
-          timestamp: new Date().toISOString(),
-        },
+        paymentId: data.paymentId,
         reason: data.reason,
       }),
-      credentials: 'include',
       headers: {
         'Content-Type': 'application/json',
       },
@@ -101,25 +94,23 @@ class AdminPaymentService {
       throw new Error(error.message || `Failed to process refund: ${response.statusText}`);
     }
 
-    return response.json();
+    const result = await response.json();
+    return result.data;
   }
 
   async updatePaymentStatus(data: any): Promise<AdminPaymentView> {
-    const response = await fetch(`${this.baseUrl}/payments/${data.paymentId}`, {
+    const response = await authFetch(`${this.baseUrl}/admin/payments/actions`, {
       body: JSON.stringify({
-        metadata: {
-          adminUpdate: true,
-          notes: data.notes,
-          timestamp: new Date().toISOString(),
-          verificationMethod: data.verificationMethod || 'manual',
-        },
+        action: 'updateStatus',
+        notes: data.notes,
+        paymentId: data.paymentId,
         status: data?.status,
+        verificationMethod: data.verificationMethod || 'manual',
       }),
-      credentials: 'include',
       headers: {
         'Content-Type': 'application/json',
       },
-      method: 'PATCH',
+      method: 'POST',
     });
 
     if (!response.ok) {
@@ -127,7 +118,8 @@ class AdminPaymentService {
       throw new Error(error.message || `Failed to update payment status: ${response.statusText}`);
     }
 
-    return response.json();
+    const result = await response.json();
+    return result.data;
   }
 
   async getReservationsByPaymentStatus(
@@ -141,12 +133,14 @@ class AdminPaymentService {
     if (filters.startDate) searchParams.append('dateFrom', filters.startDate);
     if (filters.endDate) searchParams.append('dateTo', filters.endDate);
 
-    const response = await fetch(`${this.baseUrl}/admin/reservations?${searchParams.toString()}`, {
-      credentials: 'include',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-    });
+    const response = await authFetch(
+      `${this.baseUrl}/admin/reservations?${searchParams.toString()}`,
+      {
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      }
+    );
 
     if (!response.ok) {
       throw new Error(`Failed to fetch reservations: ${response.statusText}`);
@@ -161,14 +155,13 @@ class AdminPaymentService {
     status: string,
     notes?: string
   ): Promise<any> {
-    const response = await fetch(`${this.baseUrl}/reservations/${reservationId}`, {
+    const response = await authFetch(`${this.baseUrl}/reservations/${reservationId}`, {
       body: JSON.stringify({
         adminUpdate: true,
         notes: notes || `Status updated by admin to ${status}`,
         status,
         timestamp: new Date().toISOString(),
       }),
-      credentials: 'include',
       headers: {
         'Content-Type': 'application/json',
       },

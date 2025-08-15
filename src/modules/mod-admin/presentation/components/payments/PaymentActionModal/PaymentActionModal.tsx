@@ -150,15 +150,15 @@ export const PaymentActionModal: React.FC<PaymentActionModalProps> = ({
             </PaymentDetailRow>
             <PaymentDetailRow>
               <PaymentDetailLabel>{t('admin.payments.table.customer')}:</PaymentDetailLabel>
-              <PaymentDetailValue>{payment.userName}</PaymentDetailValue>
+              <PaymentDetailValue>{payment.user?.fullName}</PaymentDetailValue>
             </PaymentDetailRow>
             <PaymentDetailRow>
               <PaymentDetailLabel>{t('admin.payments.table.venue')}:</PaymentDetailLabel>
-              <PaymentDetailValue>{payment.venueName}</PaymentDetailValue>
+              <PaymentDetailValue>{payment.venue?.name}</PaymentDetailValue>
             </PaymentDetailRow>
             <PaymentDetailRow>
               <PaymentDetailLabel>{t('admin.payments.actions.service')}:</PaymentDetailLabel>
-              <PaymentDetailValue>{payment.serviceName}</PaymentDetailValue>
+              <PaymentDetailValue>{payment.service?.name}</PaymentDetailValue>
             </PaymentDetailRow>
           </PaymentDetailsGrid>
         </PaymentDetailsCard>

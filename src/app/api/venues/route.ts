@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import jwt from 'jsonwebtoken';
 
+import { extractAndVerifyJWT } from '@libs/middleware/jwtAuth';
 import { PrismaClient } from '@prisma/client';
 
 const prisma = new PrismaClient();
@@ -10,17 +10,8 @@ const prisma = new PrismaClient();
  */
 export async function GET(request: NextRequest) {
   try {
-    // Get auth token
-    const authHeader = request.headers.get('authorization');
-    if (!authHeader?.startsWith('Bearer ')) {
-      return NextResponse.json(
-        { message: 'Token de autorización requerido', success: false },
-        { status: 401 }
-      );
-    }
-
-    const token = authHeader.substring(7);
-    const decoded = jwt.verify(token, process.env.JWT_SECRET || 'fallback-secret') as any;
+    // Extract and verify JWT
+    const decoded = extractAndVerifyJWT(request);
 
     // Get query parameters
     const { searchParams } = new URL(request.url);
@@ -93,8 +84,14 @@ export async function GET(request: NextRequest) {
       },
       success: true,
     });
-  } catch (error) {
+  } catch (error: any) {
     console.error('Get venues error:', error);
+
+    // Handle authentication errors
+    if (error.message?.includes('Token') || error.message?.includes('autorización')) {
+      return NextResponse.json({ message: error.message, success: false }, { status: 401 });
+    }
+
     return NextResponse.json(
       { message: 'Error interno del servidor', success: false },
       { status: 500 }
@@ -109,20 +106,11 @@ export async function GET(request: NextRequest) {
  */
 export async function POST(request: NextRequest) {
   try {
-    // Get auth token
-    const authHeader = request.headers.get('authorization');
-    if (!authHeader?.startsWith('Bearer ')) {
-      return NextResponse.json(
-        { message: 'Token de autorización requerido', success: false },
-        { status: 401 }
-      );
-    }
+    // Extract and verify JWT
+    const decoded = extractAndVerifyJWT(request);
 
-    const token = authHeader.substring(7);
-    const decoded = jwt.verify(token, process.env.JWT_SECRET || 'fallback-secret') as any;
-
-    // Check if user is admin
-    if (decoded.role !== 'ADMIN') {
+    // Check if user is admin or super admin
+    if (decoded.role !== 'ADMIN' && decoded.role !== 'SUPER_ADMIN') {
       return NextResponse.json(
         { message: 'Acceso denegado. Se requiere rol de administrador', success: false },
         { status: 403 }

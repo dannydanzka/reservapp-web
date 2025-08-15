@@ -192,10 +192,6 @@ export const UsersManagement: React.FC<UsersManagementProps> = () => {
     }
   };
 
-  const handleExport = () => {
-    alert('Funcionalidad de exportar próximamente');
-  };
-
   const handleRoleFilterChange = (role: string) => {
     setLocalFilters((prev) => ({
       ...prev,
@@ -222,9 +218,6 @@ export const UsersManagement: React.FC<UsersManagementProps> = () => {
         <S.Actions>
           <S.Button $variant='primary' onClick={handleCreateNew}>
             + Nuevo Usuario
-          </S.Button>
-          <S.Button $variant='secondary' onClick={handleExport}>
-            📊 Exportar
           </S.Button>
         </S.Actions>
       </S.Header>

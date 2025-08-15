@@ -84,7 +84,8 @@
       "Bash(npm run build:*)",
       "Bash(git checkout:*)",
       "Bash(yarn db:studio:*)",
-      "Bash(timeout 300 yarn db:seed)"
+      "Bash(timeout 300 yarn db:seed)",
+      "Bash(source:*)"
     ],
     "deny": []
   }

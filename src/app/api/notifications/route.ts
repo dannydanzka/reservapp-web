@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import jwt from 'jsonwebtoken';
 
-import { PrismaClient, NotificationType } from '@prisma/client';
+import { NotificationType, PrismaClient } from '@prisma/client';
 
 const prisma = new PrismaClient();
 
@@ -47,20 +47,20 @@ export async function GET(request: NextRequest) {
     // Get notifications with pagination
     const [notifications, total] = await Promise.all([
       prisma.notification.findMany({
-        where,
         orderBy: { createdAt: 'desc' },
-        skip: (page - 1) * limit,
-        take: limit,
         select: {
-          id: true,
-          type: true,
-          title: true,
-          message: true,
-          isRead: true,
-          metadata: true,
           createdAt: true,
+          id: true,
+          isRead: true,
+          message: true,
+          metadata: true,
+          title: true,
+          type: true,
           updatedAt: true,
         },
+        skip: (page - 1) * limit,
+        take: limit,
+        where,
       }),
       prisma.notification.count({ where }),
     ]);
@@ -68,24 +68,24 @@ export async function GET(request: NextRequest) {
     // Get unread count for the user
     const unreadCount = await prisma.notification.count({
       where: {
-        userId: decoded.userId,
         isRead: false,
+        userId: decoded.userId,
       },
     });
 
     return NextResponse.json({
-      success: true,
-      message: 'Notificaciones obtenidas exitosamente',
       data: notifications,
-      pagination: {
-        page,
-        limit,
-        total,
-        pages: Math.ceil(total / limit),
-      },
+      message: 'Notificaciones obtenidas exitosamente',
       meta: {
         unreadCount,
       },
+      pagination: {
+        limit,
+        page,
+        pages: Math.ceil(total / limit),
+        total,
+      },
+      success: true,
     });
   } catch (error) {
     console.error('Get notifications error:', error);
@@ -116,13 +116,7 @@ export async function POST(request: NextRequest) {
     const decoded = jwt.verify(token, process.env.JWT_SECRET || 'fallback-secret') as any;
 
     const body = await request.json();
-    const {
-      userId,
-      type,
-      title,
-      message,
-      metadata,
-    } = body;
+    const { message, metadata, title, type, userId } = body;
 
     // Validate required fields
     if (!userId || !type || !title || !message) {
@@ -135,9 +129,9 @@ export async function POST(request: NextRequest) {
     // Validate notification type
     if (!Object.values(NotificationType).includes(type)) {
       return NextResponse.json(
-        { 
-          message: `Tipo de notificación inválido. Tipos válidos: ${Object.values(NotificationType).join(', ')}`, 
-          success: false 
+        {
+          message: `Tipo de notificación inválido. Tipos válidos: ${Object.values(NotificationType).join(', ')}`,
+          success: false,
         },
         { status: 400 }
       );
@@ -145,8 +139,8 @@ export async function POST(request: NextRequest) {
 
     // Verify target user exists
     const targetUser = await prisma.user.findUnique({
+      select: { firstName: true, id: true, lastName: true },
       where: { id: userId },
-      select: { id: true, firstName: true, lastName: true },
     });
 
     if (!targetUser) {
@@ -159,35 +153,35 @@ export async function POST(request: NextRequest) {
     // Create notification
     const notification = await prisma.notification.create({
       data: {
-        userId,
-        type,
-        title,
         message,
         metadata: metadata || null,
+        title,
+        type,
+        userId,
       },
       select: {
-        id: true,
-        type: true,
-        title: true,
-        message: true,
-        isRead: true,
-        metadata: true,
         createdAt: true,
+        id: true,
+        isRead: true,
+        message: true,
+        metadata: true,
+        title: true,
+        type: true,
         user: {
           select: {
-            id: true,
-            firstName: true,
-            lastName: true,
             email: true,
+            firstName: true,
+            id: true,
+            lastName: true,
           },
         },
       },
     });
 
     return NextResponse.json({
-      success: true,
-      message: 'Notificación creada exitosamente',
       data: notification,
+      message: 'Notificación creada exitosamente',
+      success: true,
     });
   } catch (error) {
     console.error('Create notification error:', error);
@@ -218,47 +212,50 @@ export async function PATCH(request: NextRequest) {
     const decoded = jwt.verify(token, process.env.JWT_SECRET || 'fallback-secret') as any;
 
     const body = await request.json();
-    const { notificationIds, markAllAsRead } = body;
+    const { markAllAsRead, notificationIds } = body;
 
     let updatedCount = 0;
 
     if (markAllAsRead === true) {
       // Mark all unread notifications as read for the user
       const result = await prisma.notification.updateMany({
-        where: {
-          userId: decoded.userId,
-          isRead: false,
-        },
         data: {
           isRead: true,
+        },
+        where: {
+          isRead: false,
+          userId: decoded.userId,
         },
       });
       updatedCount = result.count;
     } else if (notificationIds && Array.isArray(notificationIds)) {
       // Mark specific notifications as read
       const result = await prisma.notification.updateMany({
+        data: {
+          isRead: true,
+        },
         where: {
           id: { in: notificationIds },
           userId: decoded.userId, // Ensure user can only mark their own notifications
-        },
-        data: {
-          isRead: true,
         },
       });
       updatedCount = result.count;
     } else {
       return NextResponse.json(
-        { message: 'Se requiere notificationIds (array) o markAllAsRead (boolean)', success: false },
+        {
+          message: 'Se requiere notificationIds (array) o markAllAsRead (boolean)',
+          success: false,
+        },
         { status: 400 }
       );
     }
 
     return NextResponse.json({
-      success: true,
-      message: `${updatedCount} notificación(es) marcada(s) como leída(s)`,
       data: {
         updatedCount,
       },
+      message: `${updatedCount} notificación(es) marcada(s) como leída(s)`,
+      success: true,
     });
   } catch (error) {
     console.error('Update notifications error:', error);

@@ -26,13 +26,13 @@ export const PaymentStats = ({ stats }: PaymentStatsProps) => {
 
   const statsCards: StatCardData[] = [
     {
-      amount: formatCurrency(stats.totalAmount),
+      amount: formatCurrency(stats.totalRevenue),
       bgColor: 'bg-blue-50',
       color: 'blue',
       icon: DollarSign,
       iconColor: 'text-blue-600',
-      title: t('admin.payments.stats.totalPayments'),
-      value: stats.totalPayments.toLocaleString(),
+      title: 'Total de Pagos',
+      value: stats.totalTransactions.toLocaleString(),
     },
     {
       amount: formatCurrency(stats.completedAmount),
@@ -41,9 +41,11 @@ export const PaymentStats = ({ stats }: PaymentStatsProps) => {
       icon: CheckCircle,
       iconColor: 'text-green-600',
       percentage:
-        stats.totalPayments > 0 ? (stats.completedPayments / stats.totalPayments) * 100 : 0,
-      title: t('admin.payments.stats.completedPayments'),
-      value: stats.completedPayments.toLocaleString(),
+        stats.totalTransactions > 0
+          ? (stats.completedTransactions / stats.totalTransactions) * 100
+          : 0,
+      title: 'Pagos Completados',
+      value: stats.completedTransactions.toLocaleString(),
     },
     {
       amount: formatCurrency(stats.pendingAmount),
@@ -51,9 +53,12 @@ export const PaymentStats = ({ stats }: PaymentStatsProps) => {
       color: 'yellow',
       icon: Clock,
       iconColor: 'text-yellow-600',
-      percentage: stats.totalPayments > 0 ? (stats.pendingPayments / stats.totalPayments) * 100 : 0,
-      title: t('admin.payments.stats.pendingPayments'),
-      value: stats.pendingPayments.toLocaleString(),
+      percentage:
+        stats.totalTransactions > 0
+          ? (stats.pendingTransactions / stats.totalTransactions) * 100
+          : 0,
+      title: 'Pagos Pendientes',
+      value: stats.pendingTransactions.toLocaleString(),
     },
     {
       amount: formatCurrency(stats.failedAmount),
@@ -61,9 +66,12 @@ export const PaymentStats = ({ stats }: PaymentStatsProps) => {
       color: 'red',
       icon: XCircle,
       iconColor: 'text-red-600',
-      percentage: stats.totalPayments > 0 ? (stats.failedPayments / stats.totalPayments) * 100 : 0,
-      title: t('admin.payments.stats.failedPayments'),
-      value: stats.failedPayments.toLocaleString(),
+      percentage:
+        stats.totalTransactions > 0
+          ? (stats.failedTransactions / stats.totalTransactions) * 100
+          : 0,
+      title: 'Pagos Fallidos',
+      value: stats.failedTransactions.toLocaleString(),
     },
     {
       amount: formatCurrency(stats.refundedAmount),
@@ -72,18 +80,20 @@ export const PaymentStats = ({ stats }: PaymentStatsProps) => {
       icon: RotateCcw,
       iconColor: 'text-purple-600',
       percentage:
-        stats.completedPayments > 0 ? (stats.refundedPayments / stats.completedPayments) * 100 : 0,
-      title: t('admin.payments.stats.refundedPayments'),
-      value: stats.refundedPayments.toLocaleString(),
+        stats.completedTransactions > 0
+          ? (stats.refundedTransactions / stats.completedTransactions) * 100
+          : 0,
+      title: 'Pagos Reembolsados',
+      value: stats.refundedTransactions.toLocaleString(),
     },
     {
-      amount: formatCurrency(stats.averageAmount),
+      amount: formatCurrency(stats.averageTransaction),
       bgColor: 'bg-indigo-50',
       color: 'indigo',
       icon: TrendingUp,
       iconColor: 'text-indigo-600',
-      subtitle: t('admin.payments.stats.averageAmount'),
-      title: t('admin.payments.stats.successRate'),
+      subtitle: 'Monto Promedio',
+      title: 'Tasa de Éxito',
       value: formatPercentage(stats.successRate),
     },
   ];

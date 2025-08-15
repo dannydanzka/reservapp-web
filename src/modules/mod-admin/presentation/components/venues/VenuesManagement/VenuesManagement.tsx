@@ -116,10 +116,6 @@ export const VenuesManagement: React.FC<VenuesManagementProps> = () => {
     alert(`Ver detalles de venue: ${venueId}`);
   };
 
-  const handleExport = () => {
-    alert('Funcionalidad de exportar próximamente');
-  };
-
   const handleCategoryFilterChange = (category: string) => {
     setLocalFilters((prev) => ({
       ...prev,
@@ -194,9 +190,6 @@ export const VenuesManagement: React.FC<VenuesManagementProps> = () => {
         <S.Actions>
           <S.Button $variant='primary' onClick={handleCreateNew}>
             + Nuevo Venue
-          </S.Button>
-          <S.Button $variant='secondary' onClick={handleExport}>
-            📊 Exportar
           </S.Button>
         </S.Actions>
       </S.Header>

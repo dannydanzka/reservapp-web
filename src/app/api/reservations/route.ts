@@ -309,18 +309,18 @@ export async function POST(request: NextRequest) {
       try {
         await prisma.notification.create({
           data: {
-            userId: user.id,
-            type: 'RESERVATION_CONFIRMATION',
-            title: '🎉 ¡Reserva confirmada!',
             message: `Tu reserva en ${venue.name} para ${service.name} ha sido confirmada. Código de confirmación: ${reservation.confirmationId}`,
             metadata: {
-              reservationId: reservation.id,
-              confirmationId: reservation.confirmationId,
-              venueName: venue.name,
-              serviceName: service.name,
               checkInDate: reservation.checkInDate.toISOString(),
+              confirmationId: reservation.confirmationId,
+              reservationId: reservation.id,
+              serviceName: service.name,
               totalAmount: totalAmount,
+              venueName: venue.name,
             },
+            title: '🎉 ¡Reserva confirmada!',
+            type: 'RESERVATION_CONFIRMATION',
+            userId: user.id,
           },
         });
       } catch (notificationError) {
@@ -331,17 +331,17 @@ export async function POST(request: NextRequest) {
       try {
         await prisma.notification.create({
           data: {
-            userId: user.id,
-            type: 'PAYMENT_CONFIRMATION',
-            title: '💳 Pago procesado exitosamente',
-            message: `Tu pago de ${totalAmount.toLocaleString('es-MX', { style: 'currency', currency: 'MXN' })} ha sido procesado para la reserva ${reservation.confirmationId}`,
+            message: `Tu pago de ${totalAmount.toLocaleString('es-MX', { currency: 'MXN', style: 'currency' })} ha sido procesado para la reserva ${reservation.confirmationId}`,
             metadata: {
-              paymentId: payment.id,
-              stripePaymentId: payment.stripePaymentId,
               amount: totalAmount,
-              reservationId: reservation.id,
               confirmationId: reservation.confirmationId,
+              paymentId: payment.id,
+              reservationId: reservation.id,
+              stripePaymentId: payment.stripePaymentId,
             },
+            title: '💳 Pago procesado exitosamente',
+            type: 'PAYMENT_CONFIRMATION',
+            userId: user.id,
           },
         });
       } catch (notificationError) {
