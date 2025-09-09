@@ -6,8 +6,9 @@ generator client {
 }
 
 datasource db {
-  provider = "mysql"
+  provider = "postgresql"
   url      = env("DATABASE_URL")
+  directUrl = env("DIRECT_DATABASE_URL")
 }
 
 // User Management
@@ -577,7 +578,7 @@ model SystemLog {
   // Error context
   errorCode       String?           // Error code if applicable
   errorMessage    String?           @db.Text
-  stackTrace      String?           @db.LongText
+  stackTrace      String?           @db.Text
 
   createdAt       DateTime          @default(now())
 
