@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 
 import {
   Bell,
@@ -35,6 +35,7 @@ const ContentContainer = styled.div`
   flex: 1;
   overflow: hidden;
   margin-left: 288px; /* Width of sidebar */
+  transition: margin-left 0.3s ease;
 
   @media (max-width: ${({ theme }) => theme.breakpoints.lg}) {
     margin-left: 250px;
@@ -42,6 +43,7 @@ const ContentContainer = styled.div`
 
   @media (max-width: ${({ theme }) => theme.breakpoints.md}) {
     margin-left: 0;
+    padding-top: 56px; /* Height of fixed header in mobile */
   }
 `;
 
@@ -57,6 +59,23 @@ const MainContent = styled.main`
   @media (max-width: ${({ theme }) => theme.breakpoints.lg}) {
     margin: ${({ theme }) => theme.spacing[2]};
     padding: ${({ theme }) => theme.spacing[4]};
+  }
+
+  @media (max-width: ${({ theme }) => theme.breakpoints.md}) {
+    margin: ${({ theme }) => theme.spacing[1]};
+    padding: ${({ theme }) => theme.spacing[3]};
+    border-radius: ${({ theme }) => theme.borderRadius.md};
+  }
+
+  @media (max-width: ${({ theme }) => theme.breakpoints.sm}) {
+    margin: 0;
+    padding: ${({ theme }) => theme.spacing[2]};
+    border-radius: 0;
+    box-shadow: none;
+  }
+
+  @media (max-width: ${({ theme }) => theme.breakpoints.md}) {
+    margin-top: ${({ theme }) => theme.spacing[2]};
   }
 `;
 
@@ -75,6 +94,9 @@ const LoadingContainer = styled.div`
 export const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
   const { isAuthenticated, loading, logout, user } = useAuth();
   const router = useRouter();
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+
+  const toggleMobileMenu = () => setIsMobileMenuOpen(!isMobileMenuOpen);
 
   // Initialize auth interceptor for automatic token handling
   useAuthInterceptor();
@@ -165,10 +187,16 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
 
   return (
     <LayoutContainer>
-      <AdminSidebar navigation={navigation} user={user} onLogout={handleLogout} />
+      <AdminSidebar
+        isMobileOpen={isMobileMenuOpen}
+        navigation={navigation}
+        user={user}
+        onCloseMobile={() => setIsMobileMenuOpen(false)}
+        onLogout={handleLogout}
+      />
 
       <ContentContainer>
-        <AdminHeader user={user} onLogout={handleLogout} />
+        <AdminHeader user={user} onLogout={handleLogout} onToggleMobileMenu={toggleMobileMenu} />
 
         <MainContent>{children}</MainContent>
       </ContentContainer>

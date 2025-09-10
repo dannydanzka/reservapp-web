@@ -2,6 +2,7 @@
 
 import React, { useMemo } from 'react';
 
+import { LogOut } from 'lucide-react';
 import { usePathname } from 'next/navigation';
 
 import { UserRoleEnum } from '@prisma/client';
@@ -9,6 +10,9 @@ import { UserRoleEnum } from '@prisma/client';
 import type { AdminSidebarProps, NavSectionData } from './AdminSidebar.interfaces';
 
 import {
+  LogoutButton,
+  LogoutSection,
+  MobileOverlay,
   NavIcon,
   NavItem,
   NavLink,
@@ -119,7 +123,13 @@ const navigationData: NavSectionData[] = [
 /**
  * Admin sidebar navigation component with role-based visibility.
  */
-export const AdminSidebar: React.FC<AdminSidebarProps> = ({ navigation, onLogout, user }) => {
+export const AdminSidebar: React.FC<AdminSidebarProps> = ({
+  isMobileOpen = false,
+  navigation,
+  onCloseMobile,
+  onLogout,
+  user,
+}) => {
   const pathname = usePathname();
   const userRole = user?.role as UserRoleEnum;
 
@@ -144,22 +154,43 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({ navigation, onLogout
   }, [userRole]);
 
   return (
-    <SidebarContainer>
-      {visibleNavigation.map((section) => (
-        <NavSection key={section.title}>
-          <SectionTitle>{section.title}</SectionTitle>
-          <NavList>
-            {section.items.map((item) => (
-              <NavItem key={item.href}>
-                <NavLink $isActive={pathname === item.href} href={item.href}>
-                  <NavIcon>{item.icon}</NavIcon>
-                  <NavText>{item.label}</NavText>
-                </NavLink>
-              </NavItem>
-            ))}
-          </NavList>
-        </NavSection>
-      ))}
-    </SidebarContainer>
+    <>
+      <MobileOverlay $isOpen={isMobileOpen} onClick={onCloseMobile} />
+
+      <SidebarContainer $isOpen={isMobileOpen}>
+        {visibleNavigation.map((section) => (
+          <NavSection key={section.title}>
+            <SectionTitle>{section.title}</SectionTitle>
+            <NavList>
+              {section.items.map((item) => (
+                <NavItem key={item.href}>
+                  <NavLink
+                    $isActive={pathname === item.href}
+                    href={item.href}
+                    onClick={onCloseMobile}
+                  >
+                    <NavIcon>{item.icon}</NavIcon>
+                    <NavText>{item.label}</NavText>
+                  </NavLink>
+                </NavItem>
+              ))}
+            </NavList>
+          </NavSection>
+        ))}
+
+        <LogoutSection>
+          <LogoutButton
+            type='button'
+            onClick={() => {
+              onCloseMobile?.();
+              onLogout?.();
+            }}
+          >
+            <LogOut size={18} />
+            <span>Cerrar Sesión</span>
+          </LogoutButton>
+        </LogoutSection>
+      </SidebarContainer>
+    </>
   );
 };

@@ -13,6 +13,7 @@ export const HeaderContainer = styled.header`
 export const HeaderContent = styled.div`
   align-items: center;
   display: flex;
+  gap: ${({ theme }) => theme.spacing[2]};
   height: 64px;
   justify-content: space-between;
   margin: 0 auto;
@@ -20,7 +21,13 @@ export const HeaderContent = styled.div`
   padding: 0 ${({ theme }) => theme.spacing[4]};
 
   @media (min-width: ${({ theme }) => theme.breakpoints.sm}) {
+    gap: ${({ theme }) => theme.spacing[4]};
     padding: 0 ${({ theme }) => theme.spacing[6]};
+  }
+
+  @media (width <= 480px) {
+    gap: ${({ theme }) => theme.spacing[1]};
+    padding: 0 ${({ theme }) => theme.spacing[2]};
   }
 `;
 
@@ -31,6 +38,10 @@ export const Navigation = styled.nav`
 
   @media (max-width: ${({ theme }) => theme.breakpoints.md}) {
     gap: ${({ theme }) => theme.spacing[4]};
+  }
+
+  @media (width <= 320px) {
+    display: none; /* Hide only on very tiny screens, TODO: Add hamburger menu */
   }
 `;
 
@@ -70,9 +81,15 @@ export const RightSection = styled.div`
 
 export const NavLink = styled(Link)`
   color: ${({ theme }) => theme.colors.secondary[700]};
+  font-size: 0.875rem;
   font-weight: 500;
   text-decoration: none;
   transition: color 0.15s ease;
+  white-space: nowrap;
+
+  @media (max-width: ${({ theme }) => theme.breakpoints.sm}) {
+    font-size: 0.8rem;
+  }
 
   &:hover {
     color: ${({ theme }) => theme.colors.primary[600]};
@@ -84,6 +101,15 @@ export const AuthButtons = styled.div`
   align-items: center;
   display: flex;
   gap: ${({ theme }) => theme.spacing[3]};
+
+  @media (max-width: ${({ theme }) => theme.breakpoints.sm}) {
+    gap: ${({ theme }) => theme.spacing[2]};
+  }
+
+  @media (width <= 480px) {
+    flex-direction: column;
+    gap: ${({ theme }) => theme.spacing[1]};
+  }
 `;
 
 export const LogoText = styled(Link)`
@@ -113,6 +139,17 @@ export const Button = styled(Link)<{ $variant?: 'primary' | 'secondary' }>`
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  white-space: nowrap;
+
+  @media (max-width: ${({ theme }) => theme.breakpoints.sm}) {
+    font-size: 0.875rem;
+    padding: ${({ theme }) => theme.spacing[1]} ${({ theme }) => theme.spacing[3]};
+  }
+
+  @media (width <= 480px) {
+    font-size: 0.75rem;
+    padding: ${({ theme }) => theme.spacing[1]} ${({ theme }) => theme.spacing[2]};
+  }
 
   ${({ $variant, theme }) =>
     $variant === 'primary'

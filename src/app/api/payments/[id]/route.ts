@@ -277,7 +277,7 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
         });
         break;
 
-      case 'update_metadata':
+      case 'update_metadata': {
         // Allow users to update certain metadata fields
         const allowedMetadataFields = ['notes', 'preferences', 'contact_info'];
         const filteredMetadata = Object.keys(metadata || {})
@@ -299,6 +299,7 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
           where: { id },
         });
         break;
+      }
 
       default:
         return NextResponse.json({ error: 'Invalid action', success: false }, { status: 400 });

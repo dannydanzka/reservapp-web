@@ -2,12 +2,14 @@
 
 import React from 'react';
 
+import { Menu } from 'lucide-react';
+
 import type { AdminHeaderProps } from './AdminHeader.interfaces';
 
 import {
   HeaderContainer,
   LogoText,
-  LogoutButton,
+  MobileMenuButton,
   UserInfo,
   UserName,
   UserRole,
@@ -15,19 +17,9 @@ import {
 } from './AdminHeader.styled';
 
 /**
- * Admin header component with user info and logout functionality.
+ * Admin header component with user info and mobile menu toggle.
  */
-export const AdminHeader: React.FC<AdminHeaderProps> = ({ onLogout, user }) => {
-  const handleLogout = async () => {
-    try {
-      if (onLogout) {
-        await onLogout();
-      }
-    } catch (error) {
-      console.error('Logout error:', error);
-    }
-  };
-
+export const AdminHeader: React.FC<AdminHeaderProps> = ({ onToggleMobileMenu, user }) => {
   const getRoleDisplayName = (role: string) => {
     switch (role?.toUpperCase()) {
       case 'ADMIN':
@@ -43,17 +35,20 @@ export const AdminHeader: React.FC<AdminHeaderProps> = ({ onLogout, user }) => {
 
   return (
     <HeaderContainer>
-      <LogoText href='/admin'>ReservApp Admin</LogoText>
+      <div style={{ alignItems: 'center', display: 'flex', gap: '0.5rem' }}>
+        <MobileMenuButton type='button' onClick={onToggleMobileMenu}>
+          <Menu size={18} />
+        </MobileMenuButton>
+        <LogoText href='/admin'>ReservApp Admin</LogoText>
+      </div>
 
       <UserSection>
         {user && (
           <UserInfo>
-            <UserName>{user.name}</UserName>
+            <UserName>{user.name || `${user.firstName} ${user.lastName}`}</UserName>
             <UserRole>{getRoleDisplayName(user.role)}</UserRole>
           </UserInfo>
         )}
-
-        <LogoutButton onClick={handleLogout}>Cerrar Sesión</LogoutButton>
       </UserSection>
     </HeaderContainer>
   );

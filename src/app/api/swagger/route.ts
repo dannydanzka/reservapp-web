@@ -3,7 +3,7 @@ import { NextRequest, NextResponse } from 'next/server';
 /**
  * Swagger API documentation endpoint
  */
-export async function GET(request: NextRequest) {
+export async function GET(_request: NextRequest) {
   try {
     // Basic OpenAPI 3.0 specification for ReservApp API
     const swaggerSpec = {

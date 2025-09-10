@@ -2,4 +2,5 @@
 export interface AdminHeaderProps {
   user?: any;
   onLogout?: () => void;
+  onToggleMobileMenu?: () => void;
 }

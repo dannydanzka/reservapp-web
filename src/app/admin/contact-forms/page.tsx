@@ -2,16 +2,7 @@
 
 import React, { useEffect, useState } from 'react';
 
-import {
-  Calendar,
-  CheckCircle,
-  Clock,
-  Mail,
-  MessageSquare,
-  Phone,
-  User,
-  XCircle,
-} from 'lucide-react';
+import { Calendar, CheckCircle, Clock, Mail, MessageSquare, Phone, XCircle } from 'lucide-react';
 import { styled } from 'styled-components';
 
 import { Button } from '@ui/Button';
