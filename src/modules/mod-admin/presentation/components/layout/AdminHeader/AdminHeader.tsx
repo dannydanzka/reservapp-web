@@ -1,8 +1,6 @@
 'use client';
 
-import { useState } from 'react';
-
-import { Bell, ChevronDown, Menu, Search } from 'lucide-react';
+import { Bell, Menu, Search } from 'lucide-react';
 
 import { AdminHeaderProps } from './AdminHeader.interfaces';
 
@@ -10,17 +8,11 @@ import {
   ActionsContainer,
   Avatar,
   AvatarText,
-  ChevronIcon,
   HeaderContainer,
   LargeSeparator,
   MainContent,
-  MenuButton,
-  MenuDropdown,
-  MenuOverlay,
   MobileMenuButton,
   NotificationButton,
-  ProfileButton,
-  ProfileDropdown,
   ProfileInfo,
   ProfileName,
   SearchForm,
@@ -30,18 +22,20 @@ import {
   Separator,
 } from './AdminHeader.styled';
 
-export const AdminHeader: React.FC<AdminHeaderProps> = ({ onLogout, user }) => {
-  const [showUserMenu, setShowUserMenu] = useState(false);
+interface AdminHeaderWithToggleProps extends AdminHeaderProps {
+  onToggleMobileMenu?: () => void;
+}
 
-  const handleMobileMenu = () => {
-    // Handle mobile menu logic
-  };
-
+export const AdminHeader: React.FC<AdminHeaderWithToggleProps> = ({
+  onLogout,
+  onToggleMobileMenu,
+  user,
+}) => {
   return (
     <HeaderContainer>
       {/* Mobile menu button */}
-      <MobileMenuButton type='button' onClick={handleMobileMenu}>
-        <Menu size={24} />
+      <MobileMenuButton type='button' onClick={onToggleMobileMenu}>
+        <Menu size={20} />
       </MobileMenuButton>
 
       {/* Separator */}
@@ -66,44 +60,20 @@ export const AdminHeader: React.FC<AdminHeaderProps> = ({ onLogout, user }) => {
           {/* Separator */}
           <LargeSeparator />
 
-          {/* Profile dropdown */}
-          <ProfileDropdown>
-            <ProfileButton type='button' onClick={() => setShowUserMenu(!showUserMenu)}>
-              <Avatar>
-                <AvatarText>
-                  {user.firstName[0]}
-                  {user.lastName[0]}
-                </AvatarText>
-              </Avatar>
-              <ProfileInfo>
-                <ProfileName>
-                  {user.firstName} {user.lastName}
-                </ProfileName>
-                <ChevronIcon>
-                  <ChevronDown size={20} />
-                </ChevronIcon>
-              </ProfileInfo>
-            </ProfileButton>
-
-            {showUserMenu && (
-              <>
-                {/* Overlay */}
-                <MenuOverlay onClick={() => setShowUserMenu(false)} />
-
-                {/* Dropdown */}
-                <MenuDropdown>
-                  <MenuButton
-                    onClick={() => {
-                      setShowUserMenu(false);
-                      onLogout();
-                    }}
-                  >
-                    Cerrar sesión
-                  </MenuButton>
-                </MenuDropdown>
-              </>
-            )}
-          </ProfileDropdown>
+          {/* Profile info only - no dropdown */}
+          <div style={{ alignItems: 'center', display: 'flex', gap: '0.5rem' }}>
+            <Avatar>
+              <AvatarText>
+                {user.firstName?.[0] || user.name?.[0] || 'U'}
+                {user.lastName?.[0] || user.name?.split(' ')[1]?.[0] || 'U'}
+              </AvatarText>
+            </Avatar>
+            <ProfileInfo>
+              <ProfileName>
+                {user.name || `${user.firstName || ''} ${user.lastName || ''}`.trim() || user.email}
+              </ProfileName>
+            </ProfileInfo>
+          </div>
         </ActionsContainer>
       </MainContent>
     </HeaderContainer>

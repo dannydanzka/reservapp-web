@@ -30,4 +30,6 @@ export interface AdminSidebarProps {
     role: UserRoleEnum | string;
   };
   onLogout?: () => void;
+  isMobileOpen?: boolean;
+  onCloseMobile?: () => void;
 }

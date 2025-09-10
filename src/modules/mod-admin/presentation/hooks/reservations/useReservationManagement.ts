@@ -468,11 +468,10 @@ export const useReservationManagement = (): UseReservationManagementReturn => {
 
     fetchReservationById,
 
-    
     fetchReservationStats,
 
     // Actions
-fetchReservations,
+    fetchReservations,
 
     cancelReservation,
 
@@ -480,20 +479,19 @@ fetchReservations,
 
     confirmReservation,
 
-loading,
+    loading,
 
-pagination,
-    
-clearFilters,
+    pagination,
+
+    clearFilters,
     // State
-reservations,
+    reservations,
 
     refresh,
 
     // Filters & Pagination
-setFilters: setFiltersAndFetch,
+    setFilters: setFiltersAndFetch,
 
-    
     stats,
     setLimit: setLimitAndFetch,
     setPage: setPageAndFetch,

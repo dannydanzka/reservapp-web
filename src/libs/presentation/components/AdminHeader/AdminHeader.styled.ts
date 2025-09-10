@@ -12,6 +12,18 @@ export const HeaderContainer = styled.header`
   height: 64px;
   justify-content: space-between;
   padding: 0 ${({ theme }) => theme.spacing[6]};
+  position: relative;
+  z-index: 20;
+
+  @media (max-width: ${({ theme }) => theme.breakpoints.md}) {
+    height: 56px;
+    left: 0;
+    padding: 0 ${({ theme }) => theme.spacing[4]};
+    position: fixed;
+    right: 0;
+    top: 0;
+    z-index: 1002;
+  }
 `;
 
 export const LogoText = styled(Link)`
@@ -53,19 +65,24 @@ export const UserRole = styled.div`
   text-transform: uppercase;
 `;
 
-export const LogoutButton = styled.button`
-  background-color: ${({ theme }) => theme.colors.error[600]};
+export const MobileMenuButton = styled.button`
+  align-items: center;
+  background: transparent;
   border: none;
-  border-radius: ${({ theme }) => theme.borderRadius.md};
-  color: ${({ theme }) => theme.colors.white};
+  color: ${({ theme }) => theme.colors.secondary[600]};
   cursor: pointer;
-  font-family: Montserrat, sans-serif;
-  font-size: 0.875rem;
-  font-weight: 500;
-  padding: ${({ theme }) => theme.spacing[2]} ${({ theme }) => theme.spacing[4]};
-  transition: background-color 0.2s ease;
+  display: flex;
+  justify-content: center;
+  padding: ${({ theme }) => theme.spacing[1]};
+  transition: all 0.2s ease;
+
+  @media (min-width: ${({ theme }) => theme.breakpoints.md}) {
+    display: none;
+  }
 
   &:hover {
-    background-color: ${({ theme }) => theme.colors.error[700]};
+    background-color: ${({ theme }) => theme.colors.secondary[100]};
+    border-radius: ${({ theme }) => theme.borderRadius.md};
+    color: ${({ theme }) => theme.colors.primary[600]};
   }
 `;

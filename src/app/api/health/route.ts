@@ -7,7 +7,7 @@ const prisma = new PrismaClient();
 /**
  * Health check endpoint - verifies system status
  */
-export async function GET(request: NextRequest) {
+export async function GET(_request: NextRequest) {
   try {
     // Check database connection
     await prisma.$queryRaw`SELECT 1`;

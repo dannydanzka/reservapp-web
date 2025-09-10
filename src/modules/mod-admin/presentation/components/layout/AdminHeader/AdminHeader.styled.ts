@@ -7,20 +7,20 @@ export const HeaderContainer = styled.div`
   box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05);
   display: flex;
   flex-shrink: 0;
-  gap: 1rem;
-  height: 4rem;
-  padding: 0 1rem;
+  gap: 0.5rem;
+  height: 3rem;
+  padding: 0 0.75rem;
   position: sticky;
   top: 0;
   z-index: 40;
 
   @media (min-width: ${({ theme }) => theme.breakpoints.sm}) {
-    gap: 1.5rem;
-    padding: 0 1.5rem;
+    gap: 0.75rem;
+    padding: 0 1rem;
   }
 
   @media (min-width: ${({ theme }) => theme.breakpoints.lg}) {
-    padding: 0 2rem;
+    padding: 0 1.5rem;
   }
 `;
 
@@ -79,10 +79,10 @@ export const SearchIconWrapper = styled.div`
   display: flex;
   height: 100%;
   inset: 0 auto 0 0;
-  margin-left: 0.75rem;
+  margin-left: 0.5rem;
   pointer-events: none;
   position: absolute;
-  width: 1.25rem;
+  width: 1rem;
 `;
 
 export const SearchInput = styled.input`
@@ -90,9 +90,9 @@ export const SearchInput = styled.input`
   border: 0;
   color: ${({ theme }) => theme.colors.secondary[900]};
   display: block;
-  font-size: 0.875rem;
+  font-size: 0.75rem;
   height: 100%;
-  padding: 0 0 0 2.5rem;
+  padding: 0 0 0 2rem;
   width: 100%;
 
   &::placeholder {
@@ -153,14 +153,14 @@ export const Avatar = styled.div`
   background-color: ${({ theme }) => theme.colors.primary[500]};
   border-radius: 50%;
   display: flex;
-  height: 2rem;
+  height: 1.75rem;
   justify-content: center;
-  width: 2rem;
+  width: 1.75rem;
 `;
 
 export const AvatarText = styled.span`
   color: ${({ theme }) => theme.colors.white};
-  font-size: 0.875rem;
+  font-size: 0.75rem;
   font-weight: 500;
 `;
 
@@ -175,10 +175,10 @@ export const ProfileInfo = styled.span`
 
 export const ProfileName = styled.span`
   color: ${({ theme }) => theme.colors.secondary[900]};
-  font-size: 0.875rem;
+  font-size: 0.75rem;
   font-weight: 600;
-  line-height: 1.5;
-  margin-left: 1rem;
+  line-height: 1.4;
+  margin-left: 0.5rem;
 `;
 
 export const ChevronIcon = styled.div`

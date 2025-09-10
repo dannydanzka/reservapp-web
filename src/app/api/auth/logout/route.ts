@@ -3,7 +3,7 @@ import { NextRequest, NextResponse } from 'next/server';
 /**
  * Logout endpoint - invalidates user session
  */
-export async function POST(request: NextRequest) {
+export async function POST(_request: NextRequest) {
   try {
     // Since we're using JWT tokens, logout is handled client-side
     // by removing the token. Server-side logout could involve:

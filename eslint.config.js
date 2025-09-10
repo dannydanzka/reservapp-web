@@ -66,6 +66,7 @@ export default [
       'eslint.config.js',
       '.stylelintrc.js',
       'scripts/**/*.cjs',  // Ignore CommonJS scripts - avoid conflicts
+      'scripts/**/*.js',  // Ignore JavaScript scripts - avoid conflicts
       'scripts/eslint-rules/**',  // Ignore ESLint custom rules - avoid parsing conflicts
       'jest.setup.js',
       'jest.config.cjs',

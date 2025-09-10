@@ -9,6 +9,7 @@ import {
   BusinessRegistrationData,
   User,
 } from '@mod-auth/domain/auth/auth.interfaces';
+import { getUserFromToken, isTokenValid } from '@libs/utils/jwt';
 import { useLocalStorage } from '@hooks/index';
 
 interface AuthContextValue extends AuthState {
@@ -77,15 +78,17 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   }, []);
 
   /**
-   * Checks for existing authentication session with improved error handling.
+   * Checks for existing authentication session with client-side JWT validation.
+   * No server calls needed - validates token expiration locally.
    */
   const checkExistingSession = async () => {
-    try {
-      setAuthState((prev) => ({ ...prev, isLoading: true }));
+    setAuthState((prev) => ({ ...prev, isLoading: true }));
 
-      if (sessionToken) {
-        // Try to validate the existing token
-        const user = await authRepository.validateToken();
+    if (sessionToken && isTokenValid(sessionToken)) {
+      // Token exists and is valid - extract user data
+      const user = getUserFromToken(sessionToken);
+
+      if (user) {
         setAuthState({
           error: null,
           isLoading: false,
@@ -93,45 +96,23 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           token: sessionToken,
           user,
         });
-      } else {
-        setAuthState({
-          error: null,
-          isLoading: false,
-          status: 'unauthenticated',
-          token: null,
-          user: null,
-        });
-      }
-    } catch (error: any) {
-      console.error('Session validation failed:', error);
-
-      // Clear invalid/expired token
-      setSessionToken('');
-
-      // Check if it's a token expiration error
-      const isTokenExpired =
-        error.message?.includes('Token expirado') || error.message?.includes('TokenExpiredError');
-
-      // Set appropriate error message
-      const errorMessage = isTokenExpired
-        ? 'Tu sesión ha expirado. Por favor inicia sesión nuevamente.'
-        : null; // Don't show error for other validation failures
-
-      setAuthState({
-        error: errorMessage,
-        isLoading: false,
-        status: 'unauthenticated',
-        token: null,
-        user: null,
-      });
-
-      // If token expired, redirect to login after a short delay
-      if (isTokenExpired && typeof window !== 'undefined') {
-        setTimeout(() => {
-          window.location.href = '/auth/login?error=session_expired';
-        }, 2000);
+        return;
       }
     }
+
+    // No valid token - clear everything
+    if (sessionToken) {
+      // Token exists but is invalid/expired - clear it
+      setSessionToken('');
+    }
+
+    setAuthState({
+      error: null,
+      isLoading: false,
+      status: 'unauthenticated',
+      token: null,
+      user: null,
+    });
   };
 
   /**

@@ -12,4 +12,3 @@ export const useStripe = () => {
 export const usePaymentStats = () => {
   // Payment stats hooks logic will go here
 };
-
